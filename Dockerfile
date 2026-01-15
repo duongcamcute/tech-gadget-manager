@@ -24,6 +24,11 @@ RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
+# Install OpenSSL (required for Prisma) and Prisma CLI globally directly as root
+# We install prisma@5.22.0 to match project dependencies
+RUN apk add --no-cache openssl && \
+    npm install -g prisma@5.22.0
+
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -41,9 +46,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Copy entrypoint script
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
-
-# Install prisma CLI explicitly in the runner so we can migrate
-RUN npm install -g prisma@5.22.0
 
 # Set permissions
 RUN chmod +x ./docker-entrypoint.sh
