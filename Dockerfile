@@ -43,11 +43,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
 
 # Install prisma CLI explicitly in the runner so we can migrate
-# Using npm install -g prisma might be slow or heavy, but ensures we have the binary.
-# Alternatively, since we are using standalone, we can try to rely on npx to fetch it if needed, 
-# but that requires internet access every time container starts if not cached. 
-# Better: Install it here.
-RUN npm install -g prisma
+RUN npm install -g prisma@5.22.0
 
 # Set permissions
 RUN chmod +x ./docker-entrypoint.sh
