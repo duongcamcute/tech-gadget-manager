@@ -1,0 +1,62 @@
+"use client";
+
+import { Button, Input } from "@/components/ui/primitives";
+import { lendItem, returnItem } from "@/features/lending/actions";
+import { UserMinus, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export function ItemActions({ item }: { item: any }) {
+    const [isLending, setIsLending] = useState(false);
+    const [borrower, setBorrower] = useState("");
+    const router = useRouter();
+
+    async function handleLend() {
+        if (!borrower) return;
+        await lendItem(item.id, borrower);
+        setIsLending(false);
+        setBorrower("");
+        router.refresh();
+    }
+
+    async function handleReturn() {
+        if (confirm("Confirm return of this item?")) {
+            await returnItem(item.id);
+            router.refresh();
+        }
+    }
+
+    if (item.status === 'Lent') {
+        return (
+            <div className="mt-2">
+                 <Button className="h-7 px-2 text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80" onClick={handleReturn}>
+                    <RotateCcw className="h-3 w-3 mr-1" /> Mark Returned
+                 </Button>
+            </div>
+        );
+    }
+
+    if (isLending) {
+        return (
+            <div className="mt-2 flex gap-2">
+                <Input 
+                    value={borrower} 
+                    onChange={e => setBorrower(e.target.value)} 
+                    placeholder="Borrower name..." 
+                    className="h-7 text-xs"
+                    autoFocus
+                />
+                <Button className="h-7 px-2 text-xs bg-orange-600 hover:bg-orange-700 text-white" onClick={handleLend}>Confirm</Button>
+                <Button className="h-7 px-2 text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80" onClick={() => setIsLending(false)}>Cancel</Button>
+            </div>
+        )
+    }
+
+    return (
+        <div className="mt-2">
+            <Button className="h-7 px-2 text-xs text-muted-foreground bg-transparent hover:bg-muted" onClick={() => setIsLending(true)}>
+                <UserMinus className="h-3 w-3 mr-1" /> Lend
+            </Button>
+        </div>
+    );
+}

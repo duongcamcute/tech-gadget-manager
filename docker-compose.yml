@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: tech-gadget-manager
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Định nghĩa URL cho database SQLite
+      # Lưu ý: file: phải trỏ tới đường dẫn bên trong container
+      - DATABASE_URL=file:/app/db/prod.db
+      - NODE_ENV=production
+    volumes:
+      # Map thư mục local ./data vào /app/db trong container
+      # Đây là nơi file prod.db sẽ được tạo ra và lưu trữ
+      - ./data:/app/db

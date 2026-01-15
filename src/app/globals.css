@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter);
+
+  /* Map Tailwind colors to CSS variables */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+  --color-primary-950: var(--primary-950);
+
+  --color-primary: var(--primary-dynamic);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f3f4f6;
+  --color-accent: #f1f5f9;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+
+  /* Dynamic Theme Variables - Default to Orange 600 HEX */
+  --primary-dynamic: #ea580c;
+
+  /* Generate palette from single color */
+  --primary-50: color-mix(in srgb, var(--primary-dynamic), white 90%);
+  --primary-100: color-mix(in srgb, var(--primary-dynamic), white 80%);
+  --primary-200: color-mix(in srgb, var(--primary-dynamic), white 60%);
+  --primary-300: color-mix(in srgb, var(--primary-dynamic), white 40%);
+  --primary-400: color-mix(in srgb, var(--primary-dynamic), white 20%);
+  --primary-500: var(--primary-dynamic);
+  --primary-600: color-mix(in srgb, var(--primary-dynamic), black 10%);
+  --primary-700: color-mix(in srgb, var(--primary-dynamic), black 20%);
+  --primary-800: color-mix(in srgb, var(--primary-dynamic), black 30%);
+  --primary-900: color-mix(in srgb, var(--primary-dynamic), black 40%);
+  --primary-950: color-mix(in srgb, var(--primary-dynamic), black 50%);
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  color: var(--foreground);
+  /* Premium Tech Grid Background */
+  background-color: color-mix(in srgb, var(--primary-dynamic), white 97%);
+
+  /* Very subtle tint dot pattern */
+  background-image: radial-gradient(var(--primary-200) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-200);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-400);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

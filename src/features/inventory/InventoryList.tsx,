@@ -1,0 +1,64 @@
+import { prisma } from "@/lib/db";
+import Link from "next/link";
+import { QrCode, Package, Zap, HardDrive, Cable, Settings } from "lucide-react";
+
+function getItemIcon(type: string) {
+  switch (type) {
+    case 'Charger': return Zap;
+    case 'Cable': return Cable;
+    case 'Storage': return HardDrive;
+    default: return Package;
+  }
+}
+
+export async function InventoryList() {
+  const items = await prisma.item.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 20
+  });
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {items.length === 0 && (
+          <div className="col-span-2 text-center py-10 text-muted-foreground border rounded-lg border-dashed">
+            No items yet. Add one above!
+          </div>
+      )}
+      
+      {items.map((item) => {
+        const Icon = getItemIcon(item.type);
+        const specs = JSON.parse(item.specs);
+        
+        return (
+          <div key={item.id} className="group relative flex items-start space-x-4 p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors">
+             <div className="p-2 bg-secondary rounded-lg">
+                <Icon className="h-5 w-5 text-primary" />
+             </div>
+             
+             <div className="flex-1 space-y-1">
+                <div className="flex justify-between items-start">
+                    <h3 className="font-semibold leading-none">{item.name}</h3>
+                    <div className="bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider">
+                       {item.category}
+                    </div>
+                </div>
+                
+                <div className="text-sm text-muted-foreground flex flex-wrap gap-2">
+                    {specs.power && <span className="bg-muted px-1.5 rounded">{specs.power}</span>}
+                    {specs.length && <span className="bg-muted px-1.5 rounded">{specs.length}</span>}
+                    {specs.capacity && <span className="bg-muted px-1.5 rounded">{specs.capacity}</span>}
+                    {specs.ports && <span className="bg-muted px-1.5 rounded">{specs.ports}</span>}
+                </div>
+             </div>
+
+             <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 flex gap-2">
+                <Link href={`/items/${item.id}/qr`} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Print QR Code">
+                    <QrCode className="h-4 w-4" />
+                </Link>
+             </div>
+          </div>
+        )
+      })}
+    </div>
+  );
+}
