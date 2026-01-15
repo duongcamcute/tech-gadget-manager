@@ -81,17 +81,24 @@ export function ItemActions({ item }: { item: any }) {
     }
 
     return (
-        <div className="mt-2 text-right flex justify-end gap-2">
+        <div className="flex justify-end gap-1">
             <Button
-                className="h-7 w-7 p-0 rounded-full text-gray-500 hover:text-primary-600 hover:bg-gray-100 border-0 shadow-none"
                 variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                 onClick={() => router.push(`/?clone=${item.id}`)}
                 title="Sao chép / Tạo bản sao"
             >
-                <Copy className="h-4 w-4" />
+                <Copy className="h-3.5 w-3.5" />
             </Button>
-            <Button className="h-7 px-3 text-xs text-muted-foreground bg-transparent hover:bg-secondary border shadow-none group-hover:bg-white group-hover:border-primary-200 group-hover:text-primary-600 transition-colors" onClick={() => setIsLending(true)}>
-                <UserMinus className="h-3.5 w-3.5 mr-1.5" /> Cho mượn
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-100"
+                onClick={() => setIsLending(true)}
+                title="Cho mượn"
+            >
+                <UserMinus className="h-3.5 w-3.5" />
             </Button>
         </div>
     );

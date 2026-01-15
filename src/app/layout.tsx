@@ -16,6 +16,20 @@ import AuthWrapper from "@/components/auth/AuthWrapper";
 export const metadata: Metadata = {
   title: "TechGadget Manager",
   description: "Trợ lý quản lý kho đồ công nghệ cá nhân",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GadgetMgr",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png", // Reusing 192 icon for apple touch for now
+  }
+};
+
+export const viewport = {
+  themeColor: "#ea580c",
 };
 
 export default function RootLayout({

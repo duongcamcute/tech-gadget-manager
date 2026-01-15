@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Calendar, MapPin, History, Edit3, Trash2, Save, User, Clock, Package, ArrowRight, ArrowLeft } from "lucide-react";
+import { X, Calendar, MapPin, History, Edit3, Trash2, Save, User, Clock, Package, ArrowRight, ArrowLeft, Copy } from "lucide-react";
 import { Button, Input, Select, Label } from "@/components/ui/primitives";
 import { updateItem, deleteItem } from "@/app/actions";
 import { useToast } from "@/components/ui/toast";
@@ -153,7 +153,15 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                 {/* Actions */}
                 <div className="pt-4 flex gap-3">
                     <Button onClick={() => setMode("EDIT")} className="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm">
-                        <Edit3 className="h-4 w-4 mr-2" /> Chỉnh sửa / Cập nhật trạng thái
+                        <Edit3 className="h-4 w-4 mr-2" /> Chỉnh sửa / Cập nhật
+                    </Button>
+                    <Button
+                        onClick={() => window.location.href = `/?clone=${item.id}`}
+                        variant="ghost"
+                        className="text-gray-500 hover:bg-gray-100 hover:text-primary-600"
+                        title="Sao chép / Tạo bản sao"
+                    >
+                        <Copy className="h-4 w-4" />
                     </Button>
                     <Button onClick={onDelete} variant="ghost" className="text-red-500 hover:bg-red-50 hover:text-red-600">
                         <Trash2 className="h-4 w-4" />

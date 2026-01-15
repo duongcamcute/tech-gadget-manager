@@ -376,7 +376,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-1">
+                                    <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-50">
                                         {getStatusBadge(item.status)}
                                         {item.location && (
                                             <span className="flex items-center text-xs text-gray-500 max-w-[50%]" title={item.location.name}>
