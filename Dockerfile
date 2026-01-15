@@ -23,6 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # Production image, copy all the files and run next
+FROM base AS runner
 # Install OpenSSL (required for Prisma) and Prisma CLI globally directly as root
 # Install su-exec for user switching
 RUN apk add --no-cache openssl su-exec && \
