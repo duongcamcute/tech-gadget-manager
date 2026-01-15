@@ -23,10 +23,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # Production image, copy all the files and run next
-FROM base AS runner
 # Install OpenSSL (required for Prisma) and Prisma CLI globally directly as root
-# We install prisma@5.22.0 to match project dependencies
-RUN apk add --no-cache openssl && \
+# Install su-exec for user switching
+RUN apk add --no-cache openssl su-exec && \
     npm install -g prisma@5.22.0
 
 WORKDIR /app
@@ -50,7 +49,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
 # Set permissions
 RUN chmod +x ./docker-entrypoint.sh
 
-USER nextjs
+# Do not switch to user nextjs here, we let entrypoint handle it
+# USER nextjs
 
 EXPOSE 3000
 
