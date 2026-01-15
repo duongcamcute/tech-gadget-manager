@@ -13,14 +13,17 @@ Image của bạn được tự động build và lưu tại:
 
 1.  Vào tab **Docker**.
 2.  Chọn **Add Container** (cuối trang).
-3.  Điền các thông số sau:
+3.  **Quan trọng**: Bật chế độ **Advanced View** (nút gạt ở góc trên bên phải) để hiện đầy đủ các ô nhập liệu.
+
+4.  Điền các thông số sau:
 
 ### General Settings
 -   **Name**: `Tech-Gadget-Manager` (hoặc tên tùy thích).
 -   **Repository**: `ghcr.io/duongcamcute/tech-gadget-manager:latest`
 -   **Network Type**: `Bridge`.
--   **Icon URL**: (Bỏ qua hoặc paste link icon nếu có).
+-   **Icon URL**: `https://cdn-icons-png.flaticon.com/512/2649/2649223.png` (Icon cái hộp hàng, bạn copy link này dán vào).
 -   **WebUI**: `http://[IP]:[PORT:3000]`
+    *   *(Dòng này giúp khi bạn bấm vào icon container, nó sẽ tự mở trang web. `[IP]` sẽ tự động được thay bằng IP NAS của bạn).*
 
 ### Port Mappings (Thêm Port)
 Bấm **Add another Path, Port, Variable, Label or Device** -> Chọn Config Type là **Port**.
