@@ -1,8 +1,5 @@
 # 📦 Tech Gadget Manager
 
-![Docker Image Version (latest by date)](https://img.shields.io/github/v/release/duongcamcute/tech-gadget-manager?label=version)
-![Docker Pulls](https://img.shields.io/docker/pulls/duongcamcute/tech-gadget-manager?logo=docker)
-![License](https://img.shields.io/github/license/duongcamcute/tech-gadget-manager)
 
 **Tech Gadget Manager** là ứng dụng tự-host (self-hosted) giúp bạn quản lý kho đồ công nghệ, thiết bị Homelab, dây cáp, sạc... một cách khoa học. 
 
