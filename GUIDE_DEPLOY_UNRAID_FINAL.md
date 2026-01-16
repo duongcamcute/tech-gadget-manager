@@ -28,6 +28,9 @@ Vì ứng dụng này chưa có sẵn trên Community App Store công khai, bạ
 | **Network Type** | `Bridge` | Để mặc định |
 | **Console Shell Command** | `Shell` | |
 | **Privileged** | `Off` | Không cần quyền root cao nhất |
+| **Icon URL** | `https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/icons/icon-512.png` | Icon ứng dụng đẹp |
+| **WebUI** | `http://[IP]:[PORT:3000]/` | Để bấm vào icon là mở web |
+
 
 ### Thêm Port (Cổng truy cập)
 - Nhấn **Add another Path, Port, Variable, Label or Device**.
