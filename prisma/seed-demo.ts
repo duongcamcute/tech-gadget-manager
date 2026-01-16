@@ -16,7 +16,10 @@ async function main() {
         const existing = await prisma.location.findFirst({ where: { name: loc.name } });
         if (!existing) {
             await prisma.location.create({
-                data: { name: loc.name, description: loc.description },
+                data: {
+                    name: loc.name,
+                    type: "Demo Area" // Added required field, removed invalid 'description'
+                },
             });
             console.log(`Created Location: ${loc.name}`);
         } else {
