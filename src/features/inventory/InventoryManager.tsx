@@ -256,8 +256,8 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                 </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-primary-100 shadow-sm sticky top-[72px] z-10">
+            {/* Search Bar - Sticky only on Desktop */}
+            <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-primary-100 shadow-sm md:sticky md:top-[80px] z-10">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-2.5 h-5 w-5 text-primary-300" />
                     <Input
@@ -283,12 +283,12 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                 </div>
             </div>
 
-            <div className="flex items-center justify-between px-2 pt-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between px-2 pt-2 gap-4">
                 <h2 className="text-lg font-bold text-gray-900 border-l-4 border-primary-500 pl-3">Danh sách chi tiết</h2>
-                <div className="flex gap-2 items-center">
-                    <div className="h-8 w-px bg-gray-300 mx-2"></div>
+                <div className="flex flex-wrap gap-2 items-center justify-between md:justify-end w-full md:w-auto">
+                    <div className="hidden md:block h-8 w-px bg-gray-300 mx-2"></div>
                     <select
-                        className="h-8 text-xs border border-gray-300 rounded-md bg-white px-2 py-0 focus:ring-2 focus:ring-primary-500 outline-none"
+                        className="h-8 text-xs border border-gray-300 rounded-md bg-white px-2 py-0 focus:ring-2 focus:ring-primary-500 outline-none max-w-full"
                         onChange={(e) => {
                             if (e.target.value) {
                                 const loc = locations.find(l => l.id === e.target.value);
@@ -393,7 +393,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
 
             {/* Floating Action Bar */}
             {selectedIds.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-md border border-primary-200 shadow-2xl rounded-full px-6 py-3 z-50 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-300 ring-4 ring-primary-50/50">
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-md border border-primary-200 shadow-2xl rounded-2xl md:rounded-full px-4 py-3 z-50 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-300 ring-4 ring-primary-50/50 max-w-[95vw] overflow-x-auto no-scrollbar">
                     <span className="font-bold text-gray-700 text-sm whitespace-nowrap mr-2 pl-1">{selectedIds.size} đã chọn</span>
 
                     <div className="h-6 w-px bg-gray-200 mx-1"></div>

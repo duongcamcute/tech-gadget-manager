@@ -17,7 +17,9 @@ export const ITEM_STATUS = {
     Lost: { label: "Thất lạc", color: "bg-red-50 text-red-700 border-red-200 ring-1 ring-red-100" },
 } as const;
 
-export const ITEM_ICONS: Record<string, any> = {
+import { LucideIcon } from 'lucide-react';
+
+export const ITEM_ICONS: Record<string, { icon: LucideIcon, color: string, bg: string }> = {
     'Charger': { icon: Zap, color: 'text-amber-600', bg: 'bg-amber-100' },
     'Cable': { icon: Cable, color: 'text-blue-600', bg: 'bg-blue-100' },
     'Storage': { icon: HardDrive, color: 'text-purple-600', bg: 'bg-purple-100' },

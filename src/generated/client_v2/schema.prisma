@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client_v2"
+  provider      = "prisma-client-js"
+  output        = "../src/generated/client_v2"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -96,4 +97,12 @@ model User {
   avatar   String? // New field
   theme    String  @default("default")
   colors   String?
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  name      String
+  key       String    @unique
+  lastUsed  DateTime?
+  createdAt DateTime  @default(now())
 }

@@ -391,7 +391,7 @@ export default function SettingsPage() {
                 <Tabs defaultValue="account" className="w-full flex flex-col md:flex-row gap-8 items-start">
 
                     {/* Sidebar Navigation */}
-                    <TabsList className="flex flex-col w-full md:w-64 h-auto bg-white p-2 rounded-2xl shadow-sm border border-gray-100 gap-1 sticky top-24">
+                    <TabsList className="flex flex-col w-full md:w-64 h-auto bg-white p-2 rounded-2xl shadow-sm border border-gray-100 gap-1 md:sticky md:top-24">
                         <TabsTrigger value="account" className="w-full justify-start gap-3 py-3 px-4 rounded-xl data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 transition-all">
                             <User className="w-4 h-4" /> Tài khoản
                         </TabsTrigger>

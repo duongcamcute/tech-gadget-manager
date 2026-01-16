@@ -206,7 +206,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\duong\\Desktop\\Project\\DATA\\tech-gadget-manager\\src\\generated\\client_v2",
+      "value": "C:\\Users\\KINGPRO-002\\.gemini\\antigravity\\scratch\\tech-gadget-manager\\src\\generated\\client_v2",
       "fromEnvVar": null
     },
     "config": {
@@ -217,10 +217,14 @@ const config = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\duong\\Desktop\\Project\\DATA\\tech-gadget-manager\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\KINGPRO-002\\.gemini\\antigravity\\scratch\\tech-gadget-manager\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -242,8 +246,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/client_v2\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Item {\n  id         String    @id @default(uuid())\n  name       String\n  type       String\n  category   String\n  specs      String\n  locationId String?\n  location   Location? @relation(fields: [locationId], references: [id])\n  status     String    @default(\"Available\")\n\n  brand        String?\n  model        String?\n  color        String?\n  serialNumber String?\n\n  purchaseDate     DateTime?\n  warrantyEnd      DateTime?\n  purchaseLocation String?\n  purchaseUrl      String?\n  purchasePrice    Float? // Added field\n  notes            String?\n  image            String?\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  lendingRecords LendingRecord[]\n  history        ItemHistory[]\n}\n\nmodel ItemHistory {\n  id        String   @id @default(uuid())\n  itemId    String\n  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)\n  action    String // CREATED, MOVED, LENT, RETURNED, UPDATED\n  details   String? // e.g., \"Moved to Bag 1\", \"Lent to John\"\n  timestamp DateTime @default(now())\n}\n\nmodel Location {\n  id       String     @id @default(uuid())\n  name     String\n  type     String\n  parentId String?\n  parent   Location?  @relation(\"LocationHierarchy\", fields: [parentId], references: [id])\n  children Location[] @relation(\"LocationHierarchy\")\n  items    Item[]\n}\n\nmodel LendingRecord {\n  id           String    @id @default(uuid())\n  itemId       String\n  item         Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)\n  borrowerName String\n  borrowDate   DateTime  @default(now())\n  dueDate      DateTime?\n  returnDate   DateTime?\n}\n\nmodel Template {\n  id        String   @id @default(uuid())\n  name      String\n  category  String\n  config    String // JSON string of ItemFormData\n  createdAt DateTime @default(now())\n}\n\nmodel Contact {\n  id        String   @id @default(uuid())\n  name      String   @unique\n  phone     String?\n  notes     String?\n  createdAt DateTime @default(now())\n}\n\nmodel Brand {\n  id   String @id @default(uuid())\n  name String @unique\n}\n\nmodel User {\n  id       String  @id @default(uuid())\n  username String  @unique\n  password String\n  fullName String? // New field\n  avatar   String? // New field\n  theme    String  @default(\"default\")\n  colors   String?\n}\n\nmodel ApiKey {\n  id        String    @id @default(uuid())\n  name      String\n  key       String    @unique\n  lastUsed  DateTime?\n  createdAt DateTime  @default(now())\n}\n",
-  "inlineSchemaHash": "1ecface86c79c2381b455d72114bd4cec6e3933b87fa9103154f04f4b14739eb",
+  "inlineSchema": "generator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/client_v2\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Item {\n  id         String    @id @default(uuid())\n  name       String\n  type       String\n  category   String\n  specs      String\n  locationId String?\n  location   Location? @relation(fields: [locationId], references: [id])\n  status     String    @default(\"Available\")\n\n  brand        String?\n  model        String?\n  color        String?\n  serialNumber String?\n\n  purchaseDate     DateTime?\n  warrantyEnd      DateTime?\n  purchaseLocation String?\n  purchaseUrl      String?\n  purchasePrice    Float? // Added field\n  notes            String?\n  image            String?\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  lendingRecords LendingRecord[]\n  history        ItemHistory[]\n}\n\nmodel ItemHistory {\n  id        String   @id @default(uuid())\n  itemId    String\n  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)\n  action    String // CREATED, MOVED, LENT, RETURNED, UPDATED\n  details   String? // e.g., \"Moved to Bag 1\", \"Lent to John\"\n  timestamp DateTime @default(now())\n}\n\nmodel Location {\n  id       String     @id @default(uuid())\n  name     String\n  type     String\n  parentId String?\n  parent   Location?  @relation(\"LocationHierarchy\", fields: [parentId], references: [id])\n  children Location[] @relation(\"LocationHierarchy\")\n  items    Item[]\n}\n\nmodel LendingRecord {\n  id           String    @id @default(uuid())\n  itemId       String\n  item         Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)\n  borrowerName String\n  borrowDate   DateTime  @default(now())\n  dueDate      DateTime?\n  returnDate   DateTime?\n}\n\nmodel Template {\n  id        String   @id @default(uuid())\n  name      String\n  category  String\n  config    String // JSON string of ItemFormData\n  createdAt DateTime @default(now())\n}\n\nmodel Contact {\n  id        String   @id @default(uuid())\n  name      String   @unique\n  phone     String?\n  notes     String?\n  createdAt DateTime @default(now())\n}\n\nmodel Brand {\n  id   String @id @default(uuid())\n  name String @unique\n}\n\nmodel User {\n  id       String  @id @default(uuid())\n  username String  @unique\n  password String\n  fullName String? // New field\n  avatar   String? // New field\n  theme    String  @default(\"default\")\n  colors   String?\n}\n\nmodel ApiKey {\n  id        String    @id @default(uuid())\n  name      String\n  key       String    @unique\n  lastUsed  DateTime?\n  createdAt DateTime  @default(now())\n}\n",
+  "inlineSchemaHash": "7183a7cd8d724878f0c7eaaac9f2ca75cd31e07387339073528371a3161cb6b0",
   "copyEngine": true
 }
 config.dirname = '/'

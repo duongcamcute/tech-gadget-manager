@@ -272,9 +272,10 @@ export async function getContacts() {
 
 export async function loginUser(username: string, pass: string) {
     // Ensure default admin exists if needed
+    // Ensure default admin exists ONLY if database is empty
     if (username === 'admin') {
-        const admin = await prisma.user.findUnique({ where: { username: 'admin' } });
-        if (!admin) {
+        const userCount = await prisma.user.count();
+        if (userCount === 0) {
             await prisma.user.create({
                 data: {
                     username: 'admin',
@@ -301,7 +302,8 @@ export async function loginUser(username: string, pass: string) {
             username: user.username,
             fullName: user.fullName || user.username,
             theme: user.theme,
-            colors: user.colors
+            colors: user.colors,
+            avatar: user.avatar ?? null
         }
     };
 }
@@ -312,6 +314,12 @@ export async function updateUserProfile(id: string, newUsername: string, newPass
         if (newPass && newPass.trim() !== '') data.password = newPass;
         if (newFullName) data.fullName = newFullName;
         if (newAvatar) data.avatar = newAvatar;
+
+        // Check for existing username
+        const existingUser = await prisma.user.findUnique({ where: { username: newUsername } });
+        if (existingUser && existingUser.id !== id) {
+            return { success: false, error: "Tên đăng nhập đã được sử dụng" };
+        }
 
         const updated = await prisma.user.update({
             where: { id },
