@@ -10,6 +10,12 @@ export async function createItem(data: ItemFormData) {
     const result = ItemSchema.safeParse(data);
     if (!result.success) return { success: false, error: result.error.message };
 
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Tạo mới bị khóa." };
+    }
+    // -----------------------
+
     try {
         const { purchaseDate, locationId, specs, borrowerName, dueDate, borrowDate, purchasePrice, ...rest } = result.data;
         const dbPurchaseDate = purchaseDate ? new Date(purchaseDate) : null;
@@ -86,6 +92,12 @@ export async function createItem(data: ItemFormData) {
 export async function updateItem(id: string, data: ItemFormData) {
     const result = ItemSchema.safeParse(data);
     if (!result.success) return { success: false, error: result.error.message };
+
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Cập nhật bị khóa." };
+    }
+    // -----------------------
 
     try {
         const { purchaseDate, locationId, specs, borrowerName, dueDate, borrowDate, purchasePrice, ...rest } = result.data;
@@ -182,6 +194,11 @@ export async function updateItem(id: string, data: ItemFormData) {
 }
 
 export async function deleteItem(id: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Xóa bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.item.delete({ where: { id } });
         revalidatePath("/");
@@ -211,6 +228,11 @@ export async function getAllItems() {
 
 
 export async function bulkMoveItems(ids: string[], locationId: string | null) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Di chuyển hàng loạt bị khóa." };
+    }
+    // -----------------------
     try {
         const dbLocationId = (locationId && locationId !== "") ? locationId : null;
 
@@ -247,6 +269,11 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
 }
 
 export async function bulkDeleteItems(ids: string[]) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Xóa hàng loạt bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.item.deleteMany({
             where: { id: { in: ids } }
@@ -309,6 +336,11 @@ export async function loginUser(username: string, pass: string) {
 }
 
 export async function updateUserProfile(id: string, newUsername: string, newPass: string, newFullName?: string, newAvatar?: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Cập nhật hồ sơ bị khóa." };
+    }
+    // -----------------------
     try {
         const data: any = { username: newUsername };
         if (newPass && newPass.trim() !== '') data.password = newPass;
@@ -341,6 +373,11 @@ export async function updateUserProfile(id: string, newUsername: string, newPass
 }
 
 export async function saveThemeSettings(id: string, theme: string, colors: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Lưu giao diện bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.user.update({
             where: { id },
@@ -353,6 +390,11 @@ export async function saveThemeSettings(id: string, theme: string, colors: strin
 }
 
 export async function addBrandAction(name: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Thêm hãng bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.brand.create({ data: { name } });
         revalidatePath("/");
@@ -363,6 +405,11 @@ export async function addBrandAction(name: string) {
 }
 
 export async function createTemplate(data: TemplateData) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Tạo mẫu bị khóa." };
+    }
+    // -----------------------
     const result = TemplateSchema.safeParse(data);
     if (!result.success) return { success: false, error: result.error.message };
 
@@ -387,6 +434,11 @@ export async function getTemplates() {
 }
 
 export async function deleteTemplate(id: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Xóa mẫu bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.template.delete({ where: { id } });
         revalidatePath("/");
@@ -420,6 +472,11 @@ export async function exportDatabase() {
 }
 
 export async function importDatabase(jsonString: string, clearExisting = false) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Nhập dữ liệu bị khóa." };
+    }
+    // -----------------------
     try {
         const data = JSON.parse(jsonString);
         if (!data.version) throw new Error("File không hợp lệ");
@@ -497,6 +554,11 @@ export async function importDatabase(jsonString: string, clearExisting = false) 
 // --- API Key Management ---
 
 export async function generateApiKey(name: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Tạo API Key bị khóa." };
+    }
+    // -----------------------
     try {
         const key = 'tgm_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const record = await prisma.apiKey.create({
@@ -510,6 +572,11 @@ export async function generateApiKey(name: string) {
 }
 
 export async function revokeApiKey(id: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Xóa API Key bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.apiKey.delete({ where: { id } });
         revalidatePath("/settings");

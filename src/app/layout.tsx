@@ -42,7 +42,12 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased text-foreground bg-background`} suppressHydrationWarning>
         <AuthWrapper>
           <ToastProvider>
-            <div className="flex flex-col min-h-screen">
+            {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+              <div className="bg-orange-600 text-white text-xs font-medium py-1 text-center fixed top-0 w-full z-50">
+                ⚠️ CHẾ ĐỘ DEMO - Dữ liệu sẽ KHÔNG được lưu lại
+              </div>
+            )}
+            <div className={`flex flex-col min-h-screen ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'pt-6' : ''}`}>
               <main className="flex-1">
                 {children}
               </main>
