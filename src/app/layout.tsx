@@ -14,8 +14,8 @@ import AuthWrapper from "@/components/auth/AuthWrapper";
 // ... existing imports
 
 export const metadata: Metadata = {
-  title: "TechGadget Manager",
-  description: "Trợ lý quản lý kho đồ công nghệ cá nhân",
+  title: "Tech Gadget Manager",
+  description: "Quản lý kho đồ công nghệ cá nhân",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
