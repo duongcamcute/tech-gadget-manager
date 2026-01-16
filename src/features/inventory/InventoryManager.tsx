@@ -248,20 +248,20 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             {/* Dashboard Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 select-none">
                 <div onClick={() => setStatusFilter("All")} className={`cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 p-5 rounded-2xl text-white shadow-lg shadow-primary-500/20 transition-all active:scale-95 ${statusFilter === 'All' ? 'ring-2 ring-offset-2 ring-primary-500' : 'opacity-90 hover:opacity-100'}`}>
-                    <div className="flex items-center gap-2 opacity-80 mb-1"><LayoutDashboard className="h-4 w-4" /> Tổng giá trị</div>
+                    <div className="flex items-center gap-2 opacity-80 mb-1 whitespace-nowrap"><LayoutDashboard className="h-4 w-4" /> Tổng giá trị</div>
                     <div className="text-3xl font-bold tracking-tight">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(stats.value)}</div>
-                    <div className="text-[10px] opacity-70 mt-1 font-medium">{stats.total} thiết bị</div>
+                    <div className="text-[10px] opacity-70 mt-1 font-medium whitespace-nowrap">{stats.total} thiết bị</div>
                 </div>
                 <div onClick={() => setStatusFilter("Available")} className={`cursor-pointer bg-white p-5 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95 ${statusFilter === 'Available' ? 'ring-2 ring-offset-2 ring-blue-500 bg-blue-50' : 'hover:border-blue-300'}`}>
-                    <div className="flex items-center gap-2 text-blue-600 mb-1 font-medium"><Package className="h-4 w-4" /> Sẵn sàng</div>
+                    <div className="flex items-center gap-2 text-blue-600 mb-1 font-medium whitespace-nowrap"><Package className="h-4 w-4" /> Sẵn sàng</div>
                     <div className="text-2xl font-bold text-gray-800">{stats.available}</div>
                 </div>
                 <div onClick={() => setStatusFilter("Lent")} className={`cursor-pointer bg-white p-5 rounded-2xl border border-purple-100 shadow-sm transition-all active:scale-95 ${statusFilter === 'Lent' ? 'ring-2 ring-offset-2 ring-purple-500 bg-purple-50' : 'hover:border-purple-300'}`}>
-                    <div className="flex items-center gap-2 text-purple-600 mb-1 font-medium"><Wallet className="h-4 w-4" /> Đang cho mượn</div>
+                    <div className="flex items-center gap-2 text-purple-600 mb-1 font-medium whitespace-nowrap"><Wallet className="h-4 w-4" /> Đang cho mượn</div>
                     <div className="text-2xl font-bold text-gray-800">{stats.lending}</div>
                 </div>
                 <div className="cursor-default bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2 text-gray-500 mb-1 font-medium"><Tag className="h-4 w-4" /> Hãng/Brand</div>
+                    <div className="flex items-center gap-2 text-gray-500 mb-1 font-medium whitespace-nowrap"><Tag className="h-4 w-4" /> Hãng/Brand</div>
                     <div className="text-2xl font-bold text-gray-800">{new Set(initialItems.map(i => i.brand).filter(Boolean)).size}</div>
                 </div>
             </div>
@@ -368,17 +368,17 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                             </Link>
                                         </div>
                                         <div className="flex flex-wrap gap-1 mb-2">
-                                            <span className="text-[10px] items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">{item.category}</span>
-                                            {item.brand && <span className="text-[10px] items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">{item.brand}</span>}
+                                            <span className="text-[10px] items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium whitespace-nowrap">{item.category}</span>
+                                            {item.brand && <span className="text-[10px] items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium whitespace-nowrap">{item.brand}</span>}
                                         </div>
 
                                         {/* Specs Row - Restored */}
                                         <div className="flex flex-wrap gap-1 mb-2">
-                                            {specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-orange-700 border border-orange-100" title="Công suất">⚡ {specs.power}</span>}
-                                            {specs.length && <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-emerald-700 border border-emerald-100" title="Độ dài">📏 {specs.length}</span>}
-                                            {specs.capacity && <span className="bg-purple-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-purple-700 border border-purple-100" title="Dung lượng">🔋 {specs.capacity}</span>}
+                                            {specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-orange-700 border border-orange-100 whitespace-nowrap" title="Công suất">⚡ {specs.power}</span>}
+                                            {specs.length && <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-emerald-700 border border-emerald-100 whitespace-nowrap" title="Độ dài">📏 {specs.length}</span>}
+                                            {specs.capacity && <span className="bg-purple-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-purple-700 border border-purple-100 whitespace-nowrap" title="Dung lượng">🔋 {specs.capacity}</span>}
                                             {item.color && (
-                                                <span className="bg-gray-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-700 border flex items-center gap-1" title="Màu sắc">
+                                                <span className="bg-gray-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-700 border flex items-center gap-1 whitespace-nowrap" title="Màu sắc">
                                                     <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getColorHex(item.color) }}></div>
                                                     {item.color}
                                                 </span>
@@ -411,7 +411,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                     {/* Bulk Lend Popover */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button size="sm" variant="ghost" className="text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors h-8 px-3" disabled={isLending}>
+                            <Button size="sm" variant="ghost" className="text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors h-8 px-3 whitespace-nowrap" disabled={isLending}>
                                 <Wallet className="h-4 w-4 mr-2" /> Cho mượn
                             </Button>
                         </PopoverTrigger>
@@ -458,7 +458,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                     {/* Bulk Move Popover */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button size="sm" variant="ghost" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors h-8 px-3" disabled={isMoving}>
+                            <Button size="sm" variant="ghost" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors h-8 px-3 whitespace-nowrap" disabled={isMoving}>
                                 {isMoving ? <span className="animate-spin mr-2">⏳</span> : <ArrowRightLeft className="h-4 w-4 mr-2" />}
                                 Chuyển kho
                             </Button>
@@ -480,13 +480,13 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                         </PopoverContent>
                     </Popover>
 
-                    <Button size="sm" variant="ghost" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors h-8 px-3" onClick={() => setIsQrPreviewOpen(true)} disabled={isExporting}>
+                    <Button size="sm" variant="ghost" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors h-8 px-3 whitespace-nowrap" onClick={() => setIsQrPreviewOpen(true)} disabled={isExporting}>
                         <QrCode className="h-4 w-4 mr-2" /> Xuất QR
                     </Button>
 
                     <div className="h-6 w-px bg-gray-200 mx-1"></div>
 
-                    <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors h-8 px-3" onClick={handleBulkDelete} disabled={isDeleting}>
+                    <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors h-8 px-3 whitespace-nowrap" onClick={handleBulkDelete} disabled={isDeleting}>
                         {isDeleting ? <span className="animate-spin mr-2">⏳</span> : <Trash2 className="h-4 w-4 mr-2" />}
                         Xóa
                     </Button>
