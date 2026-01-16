@@ -132,11 +132,15 @@ async function main() {
         // For simplicity in this demo seed, we'll check by name
         const existing = await prisma.item.findFirst({ where: { name: item.name } });
         if (!existing) {
+            // Destructure to remove 'quantity' (not in schema) and keep valid fields
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { quantity, ...validFields } = item;
+
             await prisma.item.create({
                 data: {
-                    ...item,
+                    ...validFields,
                     specs: item.specs || '{}', // Ensure valid JSON string or empty
-                    buyDate: new Date(),
+                    purchaseDate: new Date(), // Fixed: mismatched field name (was buyDate)
                 }
             });
             console.log(`Created: ${item.name}`);
