@@ -4,27 +4,40 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/duongcamcute/tech-gadget-manager?logo=docker)
 ![License](https://img.shields.io/github/license/duongcamcute/tech-gadget-manager)
 
-**Tech Gadget Manager** là ứng dụng quản lý kho đồ công nghệ cá nhân (Homelab Inventory), giúp bạn theo dõi, phân loại và quản lý các thiết bị, dây cáp, sạc dự phòng... một cách trực quan và khoa học.
+**Tech Gadget Manager** là ứng dụng tự-host (self-hosted) giúp bạn quản lý kho đồ công nghệ, thiết bị Homelab, dây cáp, sạc... một cách khoa học. 
 
-![App Screenshot](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/demo.png)
-*(Lưu ý: Bạn cần thay link ảnh demo thực tế)*
+Được thiết kế với giao diện hiện đại **Mobile-First**, ứng dụng hoạt động mượt mà trên cả điện thoại và máy tính, hỗ trợ cài đặt dạng PWA.
 
-## ✨ Tính Năng Nổi Bật
+## 📸 Demo
 
--   📦 **Quản lý kho đồ**: Lưu trữ thông tin chi tiết (Tên, Loại, Thương hiệu, Thông số kỹ thuật, Vị trí...).
--   🔍 **Tìm kiếm & Lọc**: Tìm nhanh món đồ thất lạc chỉ trong vài giây.
--   📱 **Giao diện Mobile-First**: Tối ưu hoàn toàn cho điện thoại, hỗ trợ cài đặt như App (PWA).
--   📷 **QR Code**: Tạo và quét mã QR để xem nhanh thông tin thiết bị.
--   🌓 **Dark Mode**: Giao diện tối hiện đại, dịu mắt.
--   🐳 **Docker Ready**: Triển khai dễ dàng trên mọi nền tảng (Synology, Unraid, Portainer...).
+<table>
+  <tr>
+    <td align="center">
+      <img src="public/screenshots/dashboard.png" alt="Dashboard Desktop" width="100%">
+      <br>
+      <em>Giao diện quản lý chính</em>
+    </td>
+    <td align="center" width="30%">
+      <img src="public/screenshots/mobile_dashboard.png" alt="Mobile View" width="100%">
+      <br>
+      <em>Giao diện Mobile</em>
+    </td>
+  </tr>
+</table>
 
----
+## ✨ Tính Năng Chính
 
-## 🚀 Cài Đặt Nhanh (Docker Compose)
+-   📦 **Quản lý tồn kho**: Lưu trữ thông tin chi tiết (Ảnh, Tên, Loại, Serial, Vị trí...).
+-   ⚡ **Thao tác nhanh**: Tìm kiếm tức thì, chức năng chọn nhiều (bulk actions), xuất mã QR.
+-   📱 **Tối ưu Mobile**: Thanh công cụ nổi, bố cục thích ứng, hỗ trợ vuốt chạm.
+-   🌓 **Dark Mode**: Giao diện tối sang trọng, tự động theo hệ thống.
+-   🐳 **Dễ dàng triển khai**: Hỗ trợ Docker, Unraid, Portainer ngay lập tức.
 
-Cách đơn giản nhất để chạy ứng dụng là sử dụng Docker Compose.
+## 🚀 Cài Đặt (Docker Compose)
 
-### 1. Tạo file `docker-compose.yml`
+Đây là cách nhanh nhất để sử dụng ứng dụng.
+
+### 1. File `docker-compose.yml`
 
 ```yaml
 version: '3.8'
@@ -37,13 +50,15 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Database SQLite sẽ được lưu trong volume
       - DATABASE_URL=file:/app/db/prod.db
       - NODE_ENV=production
     volumes:
+      # Map thư mục lưu dữ liệu ra ngoài để không mất khi update
       - ./data:/app/db
 ```
 
-### 2. Khởi chạy
+### 2. Chạy lệnh
 
 ```bash
 docker-compose up -d
@@ -52,52 +67,34 @@ Truy cập: `http://localhost:3000`
 
 ---
 
-## 🐳 Hướng Dẫn Cho Unraid
+## 🔑 Đăng Nhập Lần Đầu (Quan Trọng)
 
-Ứng dụng đã được tối ưu cho Unraid (tự động xử lý quyền truy cập volume).
+Khi ứng dụng chạy lần đầu tiên (với database mới tinh), hệ thống sẽ tạo tài khoản mặc định:
 
-1.  **Add Container** > Bật **Advanced View**.
-2.  **Thông số**:
-    *   **Repository**: `ghcr.io/duongcamcute/tech-gadget-manager:latest`
-    *   **Network**: Bridge
-    *   **WebUI**: `http://[IP]:[PORT:3000]`
-3.  **Port Mappings**:
-    *   Container Port: `3000` <-> Host Port: `3000` (hoặc tùy chọn).
-4.  **Path Mappings** (Quan trọng):
-    *   Container Path: `/app/db`
-    *   Host Path: `/mnt/user/appdata/tech-gadget-manager`
-5.  **Environment Variables**:
-    *   Key: `DATABASE_URL` | Value: `file:/app/db/prod.db`
-    *   Key: `NODE_ENV` | Value: `production`
+-   **Username**: `admin`
+-   **Password**: `admin`
+
+> **Lưu ý**: Hãy đổi mật khẩu ngay trong phần **Cài đặt** -> **Tài khoản** sau khi đăng nhập.
 
 ---
 
-## 🛠️ Cập Nhật (Update)
+## 👩‍💻 Dành Cho Developer
 
-Để cập nhật lên phiên bản mới nhất:
-
-```bash
-# 1. Kéo image mới
-docker-compose pull
-
-# 2. Tái tạo container
-docker-compose up -d
-```
-
-*(Với Unraid: Chọn "Check for Updates" hoặc "Force Update" trong menu Docker)*
+Bạn muốn đóng góp code hoặc tùy biến chức năng? Xem chi tiết tại:
+👉 [**Hướng dẫn phát triển (Developer Guide)**](CONTRIBUTING.md)
 
 ---
 
-## ⚙️ Biến Môi Trường (Environment Variables)
+## ⚙️ Cấu Hình Nâng Cao
 
-| Biến | Mặc định | Mô tả |
+| Biến Môi Trường | Mặc Định | Giải Thích |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | `file:/app/db/prod.db` | Đường dẫn kết nối database (SQLite). Nên giữ nguyên để map volume. |
-| `NODE_ENV` | `production` | Môi trường chạy ứng dụng. |
+| `DATABASE_URL` | `file:/app/db/prod.db` | Đường dẫn SQLite (trong container). |
+| `NODE_ENV` | `production` | Chế độ chạy (dev/production). |
+| `PORT` | `3000` | Cổng mặc định của ứng dụng. |
 
 ---
 
 ## 📝 License
 
-Dự án được phát hành dưới giấy phép [MIT License](LICENSE).
-Copyright © 2024 DuongCam.
+Copyright © 2024 DuongCam. Released under the [MIT License](LICENSE).
