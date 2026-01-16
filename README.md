@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📦 Tech Gadget Manager
 
-## Getting Started
+![Docker Image Version (latest by date)](https://img.shields.io/github/v/release/duongcamcute/tech-gadget-manager?label=version)
+![Docker Pulls](https://img.shields.io/docker/pulls/duongcamcute/tech-gadget-manager?logo=docker)
+![License](https://img.shields.io/github/license/duongcamcute/tech-gadget-manager)
 
-First, run the development server:
+**Tech Gadget Manager** là ứng dụng quản lý kho đồ công nghệ cá nhân (Homelab Inventory), giúp bạn theo dõi, phân loại và quản lý các thiết bị, dây cáp, sạc dự phòng... một cách trực quan và khoa học.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+![App Screenshot](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/demo.png)
+*(Lưu ý: Bạn cần thay link ảnh demo thực tế)*
+
+## ✨ Tính Năng Nổi Bật
+
+-   📦 **Quản lý kho đồ**: Lưu trữ thông tin chi tiết (Tên, Loại, Thương hiệu, Thông số kỹ thuật, Vị trí...).
+-   🔍 **Tìm kiếm & Lọc**: Tìm nhanh món đồ thất lạc chỉ trong vài giây.
+-   📱 **Giao diện Mobile-First**: Tối ưu hoàn toàn cho điện thoại, hỗ trợ cài đặt như App (PWA).
+-   📷 **QR Code**: Tạo và quét mã QR để xem nhanh thông tin thiết bị.
+-   🌓 **Dark Mode**: Giao diện tối hiện đại, dịu mắt.
+-   🐳 **Docker Ready**: Triển khai dễ dàng trên mọi nền tảng (Synology, Unraid, Portainer...).
+
+---
+
+## 🚀 Cài Đặt Nhanh (Docker Compose)
+
+Cách đơn giản nhất để chạy ứng dụng là sử dụng Docker Compose.
+
+### 1. Tạo file `docker-compose.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    container_name: tech-gadget-manager
+    image: ghcr.io/duongcamcute/tech-gadget-manager:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/db/prod.db
+      - NODE_ENV=production
+    volumes:
+      - ./data:/app/db
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Khởi chạy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+docker-compose up -d
+```
+Truy cập: `http://localhost:3000`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🐳 Hướng Dẫn Cho Unraid
 
-To learn more about Next.js, take a look at the following resources:
+Ứng dụng đã được tối ưu cho Unraid (tự động xử lý quyền truy cập volume).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1.  **Add Container** > Bật **Advanced View**.
+2.  **Thông số**:
+    *   **Repository**: `ghcr.io/duongcamcute/tech-gadget-manager:latest`
+    *   **Network**: Bridge
+    *   **WebUI**: `http://[IP]:[PORT:3000]`
+3.  **Port Mappings**:
+    *   Container Port: `3000` <-> Host Port: `3000` (hoặc tùy chọn).
+4.  **Path Mappings** (Quan trọng):
+    *   Container Path: `/app/db`
+    *   Host Path: `/mnt/user/appdata/tech-gadget-manager`
+5.  **Environment Variables**:
+    *   Key: `DATABASE_URL` | Value: `file:/app/db/prod.db`
+    *   Key: `NODE_ENV` | Value: `production`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Cập Nhật (Update)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Để cập nhật lên phiên bản mới nhất:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# 1. Kéo image mới
+docker-compose pull
+
+# 2. Tái tạo container
+docker-compose up -d
+```
+
+*(Với Unraid: Chọn "Check for Updates" hoặc "Force Update" trong menu Docker)*
+
+---
+
+## ⚙️ Biến Môi Trường (Environment Variables)
+
+| Biến | Mặc định | Mô tả |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `file:/app/db/prod.db` | Đường dẫn kết nối database (SQLite). Nên giữ nguyên để map volume. |
+| `NODE_ENV` | `production` | Môi trường chạy ứng dụng. |
+
+---
+
+## 📝 License
+
+Dự án được phát hành dưới giấy phép [MIT License](LICENSE).
+Copyright © 2024 DuongCam.
