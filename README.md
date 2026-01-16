@@ -6,7 +6,7 @@
 
 ## 🌐 Web Demo
 
-Trải nghiệm ngay phiên bản Demo trực tuyến tại đây:
+Trải nghiệm ngay phiên bản Demo trực tuyến tại đây: (admin/admin)
 👉 **[Live Demo](https://tech-gadget-manager.vercel.app)**
 
 > **⚠️ Lưu ý Web Demo**:
