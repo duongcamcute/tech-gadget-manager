@@ -13,11 +13,15 @@ async function main() {
     ];
 
     for (const loc of locations) {
-        await prisma.location.upsert({
-            where: { name: loc.name }, // Assuming name is unique or just checking existence
-            update: {},
-            create: { name: loc.name, description: loc.description },
-        });
+        const existing = await prisma.location.findFirst({ where: { name: loc.name } });
+        if (!existing) {
+            await prisma.location.create({
+                data: { name: loc.name, description: loc.description },
+            });
+            console.log(`Created Location: ${loc.name}`);
+        } else {
+            console.log(`Skipped Location (Exists): ${loc.name}`);
+        }
     }
 
     // Get location IDs
