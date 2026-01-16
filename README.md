@@ -22,6 +22,23 @@
   </tr>
 </table>
 
+## ⚡ Live Demo (Trải nghiệm ngay)
+
+Bạn có thể trải nghiệm trực tiếp đầy đủ tính năng giao diện tại liên kết dưới đây:
+
+👉 **Link Demo:** [**https://tech-gadget-manager.vercel.app/**](https://tech-gadget-manager.vercel.app/)
+
+**Thông tin đăng nhập:**
+-   **Username**: `admin`
+-   **Password**: `admin`
+
+⚠️ **Lưu ý về bản Demo:**
+Do giới hạn của môi trường Serverless (Vercel) và database SQLite, bản Demo được thiết lập ở chế độ **"Read-Only" (Chỉ đọc)**.
+-   ❌ **Không thể**: Thêm đồ mới, Sửa thông tin, Xóa đồ, Upload ảnh.
+-   ✅ **Có thể**: Xem danh sách, tìm kiếm, xuất mã QR, xem chi tiết, và trải nghiệm toàn bộ UI/UX mượt mà.
+
+Để sử dụng đầy đủ tính năng (Thêm/Sửa/Xóa), hãy cài đặt bản **Self-hosted** (Docker) theo hướng dẫn bên dưới. 👇
+
 ## ✨ Tính Năng Chính
 
 -   📦 **Quản lý tồn kho**: Lưu trữ thông tin chi tiết (Ảnh, Tên, Loại, Serial, Vị trí...).
