@@ -15,7 +15,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-primary-50/30 pb-20">
       {/* Header - Full Width but centered content */}
-      <div className="bg-white/80 sticky top-0 z-10 backdrop-blur-md border-b border-primary-100 shadow-sm">
+      <div className="bg-white/80 sticky top-0 z-40 backdrop-blur-md border-b border-primary-100 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4 max-w-5xl">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
@@ -34,15 +34,16 @@ export default async function Home() {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <Tabs defaultValue="inventory" className="space-y-8">
           {/* Centered Tabs List */}
-          <div className="flex justify-center">
-            <TabsList className="grid w-full max-w-[500px] grid-cols-3 bg-white shadow-sm border border-primary-100 p-1.5 h-auto rounded-2xl">
-              <TabsTrigger value="inventory" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-xl transition-all duration-300">
+          {/* Centered Tabs List - Sticky Floating Pill */}
+          <div className="flex justify-center sticky top-20 z-50 py-2">
+            <TabsList className="grid w-full max-w-[500px] grid-cols-3 bg-white/80 backdrop-blur-md shadow-lg border border-primary-100 p-1.5 h-auto rounded-full ring-1 ring-black/5">
+              <TabsTrigger value="inventory" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium">
                 <LayoutGrid className="h-4 w-4 mr-2" /> Kho Đồ
               </TabsTrigger>
-              <TabsTrigger value="locations" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-xl transition-all duration-300">
+              <TabsTrigger value="locations" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium">
                 <Map className="h-4 w-4 mr-2" /> Vị trí
               </TabsTrigger>
-              <TabsTrigger value="add" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-xl transition-all duration-300">
+              <TabsTrigger value="add" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium">
                 <PlusCircle className="h-4 w-4 mr-2" /> Thêm Mới
               </TabsTrigger>
             </TabsList>

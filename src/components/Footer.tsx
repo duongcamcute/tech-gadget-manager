@@ -7,7 +7,7 @@ export default function Footer() {
                     TechGadget Manager <span className="text-primary/70">Horizon</span>
                 </p>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-mono">
-                    <span>v1.0.0</span>
+                    <span>v1.1.0</span>
                     <span>•</span>
                     <span>© 2026 Dương Cầm</span>
                 </div>

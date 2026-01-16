@@ -12,7 +12,9 @@ import { LendingFields } from "./LendingFields";
 import { formatDateVN, formatDateTimeVN } from "@/lib/utils/date";
 import { AutoCompleteInput } from "@/components/ui/AutoCompleteInput";
 import { ColorPicker } from "@/components/ui/ColorPicker";
+import { IconSelect } from "@/components/ui/IconSelect";
 import { getColorHex } from "@/lib/utils/colors";
+import { ITEM_TYPES } from "@/lib/constants/options";
 
 const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "---";
@@ -109,8 +111,8 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
 
                 {/* Image if exists */}
                 {item.image && (
-                    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                        <img src={item.image} alt={item.name} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500" />
+                    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 flex items-center justify-center">
+                        <img src={item.image} alt={item.name} className="w-full max-h-[350px] object-contain hover:scale-105 transition-transform duration-500" />
                     </div>
                 )}
 
@@ -249,7 +251,8 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
         const res = await updateItem(item.id, data as ItemFormData);
         if (res.success) {
             toast("Đã cập nhật!", "success");
-            window.location.reload();
+            onClose();
+            // Removed reload/navigation to prevent hanging
         } else {
             toast("Lỗi: " + res.error, "error");
         }
@@ -280,6 +283,22 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                     <div className="col-span-2">
                         <Label>Tên thiết bị</Label>
                         <Input {...form.register("name")} className="font-bold" />
+                    </div>
+                    <div className="col-span-1">
+                        <Label>Loại thiết bị</Label>
+                        <Select {...form.register("type")} className="bg-white">
+                            <option value="Other">Khác</option>
+                            {ITEM_TYPES.map(t => (
+                                <option key={t.value} value={t.value}>{t.label}</option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div className="col-span-1">
+                        <Label>Icon</Label>
+                        <IconSelect
+                            value={form.watch("category") || ""}
+                            onValueChange={(val) => form.setValue("category", val, { shouldDirty: true, shouldTouch: true })}
+                        />
                     </div>
                     <div>
                         <Label>Hãng</Label>
@@ -431,9 +450,13 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="ghost" onClick={onCancel}>Hủy bỏ</Button>
-                <Button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white font-bold">
-                    <Save className="h-4 w-4 mr-2" /> Lưu thay đổi
+                <Button type="button" variant="ghost" onClick={onCancel} disabled={form.formState.isSubmitting}>Hủy bỏ</Button>
+                <Button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white font-bold" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? "Đang lưu..." : (
+                        <>
+                            <Save className="h-4 w-4 mr-2" /> Lưu thay đổi
+                        </>
+                    )}
                 </Button>
             </div>
         </form>

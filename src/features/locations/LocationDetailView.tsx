@@ -5,6 +5,7 @@ import { Button, Input } from "@/components/ui/primitives"; // Check if dialog e
 import { Search, MapPin, ArrowRight, ArrowLeft, Package, Plus, Trash2 } from "lucide-react";
 import { updateItem, bulkMoveItems } from "@/app/actions";
 import { cn } from "@/lib/utils";
+import { ITEM_ICONS } from "@/lib/constants/options";
 
 // Assuming we pass all items and current location
 export function LocationDetailView({ location, allItems, onClose, onUpdate }: { location: any, allItems: any[], onClose: () => void, onUpdate: () => void }) {
@@ -96,29 +97,32 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                            {optimisticLeft.map(item => (
-                                <div key={item.id} className="group bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:border-primary-300 hover:shadow-sm transition-all shadow-sm">
-                                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                        {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <Package className="h-4 w-4 text-gray-400" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
-                                        <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
-                                            <span className="truncate max-w-[80px]">{item.type}</span>
-                                            {item.location && <span className="bg-gray-100 px-1 rounded text-gray-600 truncate max-w-[100px]">{item.location.name}</span>}
+                            {optimisticLeft.map(item => {
+                                const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
+                                return (
+                                    <div key={item.id} className="group bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:border-primary-300 hover:shadow-sm transition-all shadow-sm">
+                                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
+                                            {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
                                         </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+                                                <span className="truncate max-w-[80px]">{item.type}</span>
+                                                {item.location && <span className="bg-gray-100 px-1 rounded text-gray-600 truncate max-w-[100px]">{item.location.name}</span>}
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            className="h-8 w-8 p-0 rounded-full bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white"
+                                            onClick={() => handleMove(item, location.id)}
+                                            title="Chuyển vào túi này"
+                                        >
+                                            <div className="hidden md:block"><ArrowRight className="h-4 w-4" /></div>
+                                            <div className="md:hidden"><Plus className="h-4 w-4" /></div>
+                                        </Button>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        className="h-8 w-8 p-0 rounded-full bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white"
-                                        onClick={() => handleMove(item, location.id)}
-                                        title="Chuyển vào túi này"
-                                    >
-                                        <div className="hidden md:block"><ArrowRight className="h-4 w-4" /></div>
-                                        <div className="md:hidden"><Plus className="h-4 w-4" /></div>
-                                    </Button>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {optimisticLeft.length === 0 && <div className="text-center py-10 text-sm text-gray-400">Không tìm thấy thiết bị nào</div>}
                         </div>
                     </div>
@@ -140,27 +144,30 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                            {optimisticRight.map(item => (
-                                <div key={item.id} className="group bg-white border border-primary-100 rounded-xl p-3 flex items-center gap-3 hover:border-red-200 transition-colors shadow-sm">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50"
-                                        onClick={() => handleMove(item, null)} // Or move back to "Storage"
-                                        title="Bỏ ra khỏi túi"
-                                    >
-                                        <div className="hidden md:block"><ArrowLeft className="h-4 w-4" /></div>
-                                        <div className="md:hidden"><Trash2 className="h-4 w-4" /></div>
-                                    </Button>
-                                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                        {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <Package className="h-4 w-4 text-gray-400" />}
+                            {optimisticRight.map(item => {
+                                const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
+                                return (
+                                    <div key={item.id} className="group bg-white border border-primary-100 rounded-xl p-3 flex items-center gap-3 hover:border-red-200 transition-colors shadow-sm">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                            onClick={() => handleMove(item, null)} // Or move back to "Storage"
+                                            title="Bỏ ra khỏi túi"
+                                        >
+                                            <div className="hidden md:block"><ArrowLeft className="h-4 w-4" /></div>
+                                            <div className="md:hidden"><Trash2 className="h-4 w-4" /></div>
+                                        </Button>
+                                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
+                                            {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                                            <p className="text-[10px] text-gray-500">{item.type}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
-                                        <p className="text-[10px] text-gray-500">{item.type}</p>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {rightItems.length === 0 && (
                                 <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50 pb-20">
                                     <Package className="h-12 w-12 mb-2" />

@@ -14,6 +14,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { AutoCompleteInput } from "@/components/ui/AutoCompleteInput";
 import { ColorPicker } from "@/components/ui/ColorPicker";
+import { IconSelect } from "@/components/ui/IconSelect";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const COLORS = [
     { name: 'Đen', hex: '#000000', class: 'bg-black' },
@@ -49,7 +54,12 @@ const formatMoney = (value: string | number) => {
     return new Intl.NumberFormat('vi-VN').format(Number(value));
 };
 
-export function SmartAddForm({ locations = [] }: { locations: any[] }) {
+interface SmartAddFormProps {
+    locations: any[];
+    onSuccess?: () => void;
+}
+
+export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [warrantyMonths, setWarrantyMonths] = React.useState<string>("");
     const [serverBrands, setServerBrands] = React.useState<any[]>([]);
@@ -60,6 +70,7 @@ export function SmartAddForm({ locations = [] }: { locations: any[] }) {
     // New States
     const [quantity, setQuantity] = React.useState(1);
     const [displayPrice, setDisplayPrice] = React.useState("");
+    const [openType, setOpenType] = React.useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -221,6 +232,7 @@ export function SmartAddForm({ locations = [] }: { locations: any[] }) {
                 }
             }
             router.refresh();
+            onSuccess?.();
         } catch (e) {
             toast("Lỗi kết nối máy chủ.", "error");
         } finally {
@@ -372,12 +384,62 @@ export function SmartAddForm({ locations = [] }: { locations: any[] }) {
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="space-y-1.5 col-span-2 lg:col-span-1">
-                            <Label>Loại</Label>
-                            <Select {...form.register("type")} className="bg-white focus:border-primary-500 h-10">
-                                {ITEM_TYPES.map(op => (
-                                    <option key={op.value} value={op.value}>{op.label}</option>
-                                ))}
-                            </Select>
+                            <Label>Loại <span className="text-red-400">*</span></Label>
+                            <Popover open={openType} onOpenChange={setOpenType}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={openType}
+                                        className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200"
+                                    >
+                                        {watchedType
+                                            ? ITEM_TYPES.find((type) => type.value === watchedType)?.label
+                                            : "Chọn loại..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[280px] p-0" align="start">
+                                    <Command>
+                                        <CommandInput placeholder="Tìm loại thiết bị..." />
+                                        <CommandList>
+                                            <CommandEmpty>Không tìm thấy loại này.</CommandEmpty>
+                                            <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                                {ITEM_TYPES.map((type) => (
+                                                    <CommandItem
+                                                        key={type.value}
+                                                        value={type.label}
+                                                        onSelect={(currentValue) => {
+                                                            // We search by label but store value
+                                                            form.setValue("type", type.value);
+                                                            setOpenType(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                watchedType === type.value ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {type.label}
+                                                        <span className="ml-auto text-[10px] text-gray-400 opacity-70 border px-1 rounded bg-gray-50">{type.value}</span>
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            {/* Hidden input to ensure form validation if needed, though react-hook-form setValue handles it */}
+                            <input {...form.register("type")} type="hidden" />
+                        </div>
+
+                        <div className="space-y-1.5 col-span-2 lg:col-span-1">
+                            <Label>Icon / Danh mục</Label>
+                            <IconSelect
+                                value={form.watch("category") || ""}
+                                onValueChange={(val) => form.setValue("category", val)}
+                            />
                         </div>
 
                         {/* Color Picker */}

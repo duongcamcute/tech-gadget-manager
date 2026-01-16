@@ -23,7 +23,7 @@ const prismaClientSingleton = () => {
                 // For a demo, resetting to fresh state on every cold start is actually a FEATURE.
                 try {
                     fs.copyFileSync(dbPath, tmpDbPath);
-                    console.log(`[DB] Copied database from ${dbPath} to ${tmpDbPath}`);
+
                 } catch (e: any) {
                     console.error(`[DB] Failed to copy db: ${e.message}`);
                 }

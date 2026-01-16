@@ -20,6 +20,29 @@ export async function createLocation(data: { name: string; type: string; parentI
     }
 }
 
+export async function updateLocation(id: string, data: { name: string; type: string; parentId?: string | null }) {
+    try {
+        // Prevent setting parent to itself
+        if (data.parentId === id) {
+            return { success: false, error: "Cannot set location as its own parent" };
+        }
+
+        const location = await prisma.location.update({
+            where: { id },
+            data: {
+                name: data.name,
+                type: data.type,
+                parentId: data.parentId || null,
+            },
+        });
+        revalidatePath("/");
+        return { success: true, location };
+    } catch (error) {
+        console.error("Failed to update location:", error);
+        return { success: false, error: "Failed to update location" };
+    }
+}
+
 export async function deleteLocation(id: string) {
     try {
         await prisma.location.delete({

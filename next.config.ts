@@ -9,12 +9,16 @@ const withPWA = require("next-pwa")({
 
 const nextConfig: any = {
   output: "standalone",
+  // Move outputFileTracingIncludes to root as per warning
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./prisma/dev.db"],
+    "/**/*": ["./prisma/dev.db"]
+  },
   experimental: {
-    // Explicitly include the database file in the serverless function bundle
-    outputFileTracingIncludes: {
-      "/api/**/*": ["./prisma/dev.db"],
-      "/**/*": ["./prisma/dev.db"]
-    }
+    // Increase body size limit for Server Actions (image uploads)
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 };
 

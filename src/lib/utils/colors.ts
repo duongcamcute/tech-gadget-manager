@@ -2,6 +2,7 @@ import { PRESET_COLORS } from "@/components/ui/ColorPicker";
 
 export function getColorHex(colorName: string): string {
     if (!colorName) return "#e5e7eb"; // gray-200
+    if (colorName.startsWith('#')) return colorName;
 
     // Try to match preset first
     const preset = PRESET_COLORS.find(p => p.name.toLowerCase() === colorName.toLowerCase());

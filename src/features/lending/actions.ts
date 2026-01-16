@@ -7,6 +7,10 @@ import { formatDateVN } from "@/lib/utils/date";
 export async function lendItem(itemId: string, borrowerName: string, dueDate?: Date) {
     try {
         await prisma.$transaction(async (tx) => {
+            if (!borrowerName || borrowerName.trim() === '') {
+                throw new Error("Tên người mượn không được để trống");
+            }
+
             // Auto-save Contact
             try { await tx.contact.upsert({ where: { name: borrowerName }, update: {}, create: { name: borrowerName } }); } catch (e) { }
 
@@ -49,6 +53,10 @@ export async function lendItem(itemId: string, borrowerName: string, dueDate?: D
 export async function bulkLendItems(itemIds: string[], borrowerName: string, dueDate?: Date) {
     try {
         await prisma.$transaction(async (tx) => {
+            if (!borrowerName || borrowerName.trim() === '') {
+                throw new Error("Tên người mượn không được để trống");
+            }
+
             // Auto-save Contact
             try { await tx.contact.upsert({ where: { name: borrowerName }, update: {}, create: { name: borrowerName } }); } catch (e) { }
 
@@ -93,7 +101,7 @@ export async function bulkLendItems(itemIds: string[], borrowerName: string, due
 
 export async function returnItem(itemId: string) {
     try {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             const now = new Date();
 
             // Find active record
@@ -108,25 +116,18 @@ export async function returnItem(itemId: string) {
                 });
             }
 
-            // Update item status
+            // Update item status to Available and Location to NULL (Unsorted)
             const item = await tx.item.update({
                 where: { id: itemId },
-                data: { status: 'Available' }
+                data: { status: 'Available', locationId: null }
             });
 
             // Log History
-            // Try to find location name for context
-            let locName = "Kho";
-            if (item.locationId) {
-                const l = await tx.location.findUnique({ where: { id: item.locationId } });
-                if (l) locName = l.name;
-            }
-
             await tx.itemHistory.create({
                 data: {
                     itemId,
                     action: "RETURNED",
-                    details: `Đã được trả lại vào ${locName} (${formatDateVN(now)})`
+                    details: `Đã được trả lại vào Kho chưa phân loại (${formatDateVN(now)})`
                 }
             });
         });

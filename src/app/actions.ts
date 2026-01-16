@@ -31,7 +31,7 @@ export async function createItem(data: ItemFormData) {
         }
 
         // Transactions
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             // Auto-save Brand
             if (rest.brand) {
                 try { await tx.brand.upsert({ where: { name: rest.brand }, update: {}, create: { name: rest.brand } }); } catch (e) { }
@@ -57,7 +57,11 @@ export async function createItem(data: ItemFormData) {
             });
 
             // If Lent
-            if (rest.status === 'Lent' && borrowerName) {
+            if (rest.status === 'Lent') {
+                if (!borrowerName || borrowerName.trim() === '') {
+                    throw new Error("Vui lòng nhập tên người mượn");
+                }
+
                 // Auto-save Contact
                 try { await tx.contact.upsert({ where: { name: borrowerName }, update: {}, create: { name: borrowerName } }); } catch (e) { }
 
@@ -110,7 +114,7 @@ export async function updateItem(id: string, data: ItemFormData) {
         const oldItem = await prisma.item.findUnique({ where: { id }, include: { location: true } });
         if (!oldItem) return { success: false, error: "Không tìm thấy" };
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             // Auto-save Brand
             if (rest.brand) {
                 try { await tx.brand.upsert({ where: { name: rest.brand }, update: {}, create: { name: rest.brand } }); } catch (e) { }
@@ -147,6 +151,9 @@ export async function updateItem(id: string, data: ItemFormData) {
 
             // 2. Detect Lending (Available/InUse -> Lent)
             if (rest.status === 'Lent' && oldItem.status !== 'Lent') {
+                if (!borrowerName || borrowerName.trim() === '') {
+                    throw new Error("Vui lòng nhập tên người mượn");
+                }
                 const name = borrowerName || "Ai đó";
                 // Auto-save Contact
                 try { await tx.contact.upsert({ where: { name: name }, update: {}, create: { name: name } }); } catch (e) { }
@@ -242,7 +249,7 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
             if (l) locName = l.name;
         }
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             // Update all items
             await tx.item.updateMany({
                 where: { id: { in: ids } },
@@ -483,7 +490,7 @@ export async function importDatabase(jsonString: string, clearExisting = false) 
         const data = JSON.parse(jsonString);
         if (!data.version) throw new Error("File không hợp lệ");
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             if (clearExisting) {
                 // Delete everything in reverse order of dependency
                 await tx.itemHistory.deleteMany();

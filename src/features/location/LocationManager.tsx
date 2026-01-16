@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Folder, Box, Plus, User, Trash2, ChevronRight, ChevronDown, MapPin, Package, RefreshCw } from "lucide-react";
-import { createLocation, deleteLocation, getLocationItems } from "@/features/location/actions";
+import { Folder, Box, Plus, User, Trash2, ChevronRight, ChevronDown, MapPin, Package, RefreshCw, Pencil } from "lucide-react";
+import { createLocation, deleteLocation, getLocationItems, updateLocation } from "@/features/location/actions";
+import { ITEM_ICONS } from "@/lib/constants/options";
 import { Button, Input, Select, Label, Card, CardHeader, CardTitle, CardContent } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
@@ -14,6 +15,7 @@ interface LocationNode {
     id: string;
     name: string;
     type: string;
+    parentId?: string | null;
     children: LocationNode[];
     _count?: { items: number };
 }
@@ -49,8 +51,10 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
     }, [isManageOpen]);
 
     const [isCreating, setIsCreating] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [newLocName, setNewLocName] = useState("");
     const [newLocType, setNewLocType] = useState("Fixed");
+    const [newLocParentId, setNewLocParentId] = useState<string | null>(null);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -88,7 +92,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
         const res = await createLocation({
             name: newLocName,
             type: newLocType,
-            parentId: selectedLocationId
+            parentId: newLocParentId || selectedLocationId // Use explicit parent or current selected
         });
 
         if (res.success) {
@@ -98,6 +102,23 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             router.refresh();
         } else {
             toast("Lỗi khi tạo vị trí", "error");
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!newLocName || !selectedLocationId) return;
+        const res = await updateLocation(selectedLocationId, {
+            name: newLocName,
+            type: newLocType,
+            parentId: newLocParentId
+        });
+
+        if (res.success) {
+            toast("Đã cập nhật vị trí", "success");
+            setIsEditing(false);
+            router.refresh();
+        } else {
+            toast(res.error || "Lỗi cập nhật", "error");
         }
     };
 
@@ -154,6 +175,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                     onClick={() => {
                         setSelectedLocationId(node.id);
                         setIsCreating(false);
+                        setIsEditing(false);
                     }}
                 >
                     <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded) }} className="p-0.5 hover:bg-black/5 rounded text-gray-400">
@@ -215,7 +237,13 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                         <span>Danh sách vị trí</span>
                         <div className="flex gap-1">
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.refresh()}> <RefreshCw size={14} /> </Button>
-                            <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => { setSelectedLocationId(null); setIsCreating(true); }}>
+                            <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => {
+                                setSelectedLocationId(null);
+                                setIsCreating(true);
+                                setIsEditing(false);
+                                setNewLocParentId(null);
+                                setNewLocName("");
+                            }}>
                                 <Plus size={16} />
                             </Button>
                         </div>
@@ -234,11 +262,11 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                         <MapPin className="h-16 w-16 mb-4 opacity-20 text-primary-500" />
                         <p>Chọn vị trí để xem kho</p>
                     </div>
-                ) : isCreating ? (
+                ) : (isCreating || isEditing) ? (
                     <div className="p-8 max-w-lg mx-auto w-full">
                         <h3 className="font-bold text-lg text-primary-800 mb-6 flex items-center gap-2">
-                            <Plus className="h-5 w-5" />
-                            {selectedLocationId ? "Thêm vị trí con" : "Tạo vị trí gốc mới"}
+                            {isEditing ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+                            {isEditing ? "Chỉnh sửa vị trí" : (selectedLocationId && !isEditing ? "Thêm vị trí con" : "Tạo vị trí gốc mới")}
                         </h3>
                         <div className="space-y-4">
                             <div>
@@ -255,15 +283,29 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     </Select>
                                 </div>
                                 <div>
-                                    <Label>Vị trí cha</Label>
-                                    <div className="text-sm p-2 bg-gray-100 rounded-md truncate h-10 flex items-center">
-                                        {selectedLocationId ? (selectedLocation?.name || "Đang chọn...") : "Gốc (Root)"}
-                                    </div>
+                                    <Label>Vị trí cha (Di chuyển)</Label>
+                                    <Select
+                                        value={newLocParentId || ""}
+                                        onChange={e => setNewLocParentId(e.target.value || null)}
+                                        className="border-primary-200"
+                                        disabled={!isEditing && !!selectedLocationId && !isCreating} // If creating child, parent is fixed initially but let's allow changing
+                                    >
+                                        <option value="">-- Gốc (Root) --</option>
+                                        {flatLocations
+                                            .filter(l => l.id !== selectedLocationId) // Prevent self-parenting
+                                            .map(l => (
+                                                <option key={l.id} value={l.id}>
+                                                    {l.name} ({l.type})
+                                                </option>
+                                            ))}
+                                    </Select>
                                 </div>
                             </div>
                             <div className="flex gap-2 pt-4">
-                                <Button onClick={handleCreate} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-bold shadow-lg shadow-primary-500/20">Lưu vị trí</Button>
-                                <Button onClick={() => setIsCreating(false)} variant="outline" className="flex-1 border-primary-200 text-primary-600 hover:bg-primary-50">Hủy</Button>
+                                <Button onClick={isEditing ? handleUpdate : handleCreate} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-bold shadow-lg shadow-primary-500/20">
+                                    {isEditing ? "Cập nhật" : "Lưu vị trí"}
+                                </Button>
+                                <Button onClick={() => { setIsCreating(false); setIsEditing(false); }} variant="outline" className="flex-1 border-primary-200 text-primary-600 hover:bg-primary-50">Hủy</Button>
                             </div>
                         </div>
                     </div>
@@ -284,6 +326,14 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                             </div>
                             <div className="flex gap-2">
                                 <Button size="sm" onClick={async () => {
+                                    setNewLocName(selectedLocation?.name || "");
+                                    setNewLocType(selectedLocation?.type || "Fixed");
+                                    setNewLocParentId(selectedLocation?.parentId || null);
+                                    setIsEditing(true);
+                                }} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
+                                    <Pencil size={14} /> Sửa
+                                </Button>
+                                <Button size="sm" onClick={async () => {
                                     // Fetch all items on open
                                     const { getAllItems } = await import("@/app/actions");
                                     // We need to implement getAllItems if not exists
@@ -295,7 +345,11 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                 }} className="bg-primary-500 text-white hover:bg-primary-600 gap-1 shadow-sm">
                                     <Package size={14} /> Quản lý túi đồ
                                 </Button>
-                                <Button size="sm" onClick={() => setIsCreating(true)} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
+                                <Button size="sm" onClick={() => {
+                                    setIsCreating(true);
+                                    setNewLocName("");
+                                    setNewLocParentId(selectedLocationId); // Set current as parent for new child
+                                }} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
                                     <Plus size={14} /> Thêm con
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => handleDelete(selectedLocationId!)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
@@ -314,22 +368,25 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                 <div className="text-center py-10 text-gray-400 animate-pulse">Đang tải danh sách...</div>
                             ) : locationItems.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {locationItems.map(item => (
-                                        <div
-                                            key={item.id}
-                                            className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer hover:border-primary-300"
-                                            onClick={() => handleItemClick(item.id)}
-                                        >
-                                            <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-400 text-xs overflow-hidden">
-                                                {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : item.name.substring(0, 2).toUpperCase()}
+                                    {locationItems.map(item => {
+                                        const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer hover:border-primary-300"
+                                                onClick={() => handleItemClick(item.id)}
+                                            >
+                                                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
+                                                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-5 w-5 ${color}`} />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-sm truncate" title={item.name}>{item.name}</div>
+                                                    <div className="text-xs text-gray-500 truncate">{item.brand || "No Brand"} • {item.model || ""}</div>
+                                                </div>
+                                                <div className={`w-2 h-2 rounded-full ${item.status === 'Available' ? 'bg-green-500' : 'bg-primary-500'}`} />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-medium text-sm truncate" title={item.name}>{item.name}</div>
-                                                <div className="text-xs text-gray-500 truncate">{item.brand || "No Brand"} • {item.model || ""}</div>
-                                            </div>
-                                            <div className={`w-2 h-2 rounded-full ${item.status === 'Available' ? 'bg-green-500' : 'bg-primary-500'}`} />
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl bg-white/50">
