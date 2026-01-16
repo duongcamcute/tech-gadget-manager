@@ -138,6 +138,23 @@ async function main() {
         }
     }
 
+    // Seed Admin User
+    const adminExists = await prisma.user.findUnique({ where: { username: 'admin' } });
+    if (!adminExists) {
+        await prisma.user.create({
+            data: {
+                username: 'admin',
+                password: 'admin',
+                fullName: 'Administrator',
+                theme: 'default',
+                colors: null
+            }
+        });
+        console.log('Created Admin User');
+    } else {
+        console.log('Admin User already exists');
+    }
+
     console.log('Seeding completed!');
 }
 

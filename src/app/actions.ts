@@ -300,7 +300,9 @@ export async function getContacts() {
 export async function loginUser(username: string, pass: string) {
     // Ensure default admin exists if needed
     // Ensure default admin exists ONLY if database is empty
-    if (username === 'admin') {
+    // Ensure default admin exists if needed
+    // Ensure default admin exists ONLY if database is empty
+    if (username === 'admin' && process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') {
         const userCount = await prisma.user.count();
         if (userCount === 0) {
             await prisma.user.create({
