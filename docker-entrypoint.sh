@@ -22,7 +22,7 @@ fi
 # Switch to nextjs user to run migration and app
 # Deploy migrations (using db push for auto-sync without history conflicts)
 echo "Running database migrations..."
-su-exec nextjs npx prisma db push --accept-data-loss
+su-exec nextjs npx prisma db push --accept-data-loss --skip-generate
 
 echo "Starting Next.js application..."
 # exec replaces the shell process, su-exec switches user
