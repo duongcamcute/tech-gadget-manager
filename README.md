@@ -4,74 +4,72 @@
 
 ![Dashboard](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/dashboard.png)
 
+## 🌐 Web Demo
+
+Trải nghiệm ngay phiên bản Demo trực tuyến tại đây:
+👉 **[Live Demo](https://tech-gadget-manager.vercel.app)**
+
+> **⚠️ Lưu ý Web Demo**:
+> *   Dữ liệu mẫu có thể được reset định kỳ.
+> *   **Chế độ Read-Only**: Các tính năng Thêm/Sửa/Xóa sẽ bị khóa để đảm bảo an toàn.
+> *   Tốc độ có thể chậm hơn bản tự host do giới hạn của gói Free.
+
+---
+
 ## ✨ Giới Thiệu
 
-Tech Gadget Manager là ứng dụng web giúp bạn tổ chức và quản lý tài sản công nghệ của mình.
+Tech Gadget Manager là giải pháp tự-host (self-hosted) giúp bạn kiểm soát toàn bộ tài sản công nghệ.
 
 ### Tính Năng Nổi Bật
-*   📱 **Giao diện hiện đại**: Tối ưu cho Mobile & Desktop (PWA).
-*   🏷️ **Quản lý Vị trí (Bag Mode)**: Biết chính xác món đồ đang ở túi nào.
-*   ⚡ **Tra cứu nhanh**: Lọc theo công suất, độ dài, màu sắc...
-*   🤝 **Cho mượn**: Theo dõi ai mượn, ngày trả.
-*   🖨️ **QR Code**: In tem quản lý tài sản chuyên nghiệp.
+*   📱 **Mobile First**: Giao diện ứng dụng PWA mượt mà trên điện thoại.
+*   🏷️ **Bag Mode**: Quản lý đồ đạc theo từng Vị trí (Túi, Balo, Ngăn kéo).
+*   ⚡ **Tra cứu**: Tìm kiếm theo thông số (W, mm, mAh), màu sắc.
+*   🤝 **Mượn/Trả**: Quản lý lịch sử cho mượn đồ.
+*   🖨️ **QR Code**: In tem định danh tài sản.
+*   🔐 **Bảo mật**: Admin an toàn, tự động khóa setup.
 
-![Mobile](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/mobile_dashboard.png)
+![Mobile View](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/mobile_dashboard.png)
 
 ---
 
 ## 🚀 Cài Đặt (Docker)
 
-Bạn có thể tự build và chạy Docker container từ source code này:
+Chạy 1 lệnh duy nhất để khởi tạo server:
 
-1. **Build Image**:
-   ```bash
-   docker build -t tech-gadget-manager .
-   ```
+```bash
+docker run -d \
+  --name tech-gadget-manager \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v $(pwd)/db:/app/db \
+  -e DATABASE_URL="file:./db/prod.db" \
+  ghcr.io/duongcamcute/tech-gadget-manager:latest
+```
 
-2. **Chạy Container**:
-   ```bash
-   docker run -d \
-     --name tech-gadget-manager \
-     -p 3000:3000 \
-     -v $(pwd)/db:/app/db \
-     -e DATABASE_URL="file:./db/prod.db" \
-     tech-gadget-manager
-   ```
-
-3. **Truy cập**: `http://localhost:3000` (Tài khoản: `admin` / `admin`)
+*   **Truy cập**: `http://localhost:3000`
+*   **Tài khoản**: `admin` / `admin`
 
 ---
 
-## 💻 Hướng Dẫn Dev (Phát Triển)
+## 💻 Hướng Dẫn Dev
 
-Để chạy dự án trên máy tính cá nhân để chỉnh sửa code:
-
-### Yêu Cầu
-*   Node.js 20+
-*   Git
-
-### Các Bước
 1.  **Clone Source**:
     ```bash
     git clone https://github.com/duongcamcute/tech-gadget-manager.git
     cd tech-gadget-manager
     ```
 
-2.  **Cài Đặt Library**:
+2.  **Cài Đặt**:
     ```bash
     npm install
-    ```
-
-3.  **Khởi tạo Database**:
-    ```bash
     npx prisma migrate dev
     ```
 
-4.  **Chạy Localhost**:
+3.  **Chạy Local**:
     ```bash
     npm run dev
     ```
-    Web sẽ chạy tại: `http://localhost:3000`
+    Truy cập: `http://localhost:3000`
 
 ---
-*Project by DuongCamCute*
+*Created by [DuongCamCute](https://github.com/duongcamcute)*
