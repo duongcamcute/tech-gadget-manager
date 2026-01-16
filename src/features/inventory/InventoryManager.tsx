@@ -30,11 +30,21 @@ function getStatusBadge(status: string) {
     // @ts-ignore
     const config = ITEM_STATUS[status] || ITEM_STATUS['Available'];
     return (
-        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${config.color}`}>
+        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap ${config.color}`}>
             {config.label}
         </span>
     );
 }
+
+// ... (keep intervening code same if not editing, but here we are editing the footer too, which is inside the component export.
+// I can't easily skip lines in replace_file_content if they are far apart.
+// Actually, I can allow multiple chunks or just do two calls.
+// Using two calls or check if close enough.
+// Lines 29-37 for getStatusBadge.
+// Lines 379-386 for footer.
+// They are far apart (340 lines).
+// I will split into two edits. First getStatusBadge.
+
 
 export default function InventoryManager({ initialItems, locations }: { initialItems: any[], locations: any[] }) {
     const [search, setSearch] = useState("");
@@ -376,10 +386,10 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-50">
+                                    <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-50 gap-2">
                                         {getStatusBadge(item.status)}
                                         {item.location && (
-                                            <span className="flex items-center text-xs text-gray-500 max-w-[50%]" title={item.location.name}>
+                                            <span className="flex items-center text-xs text-gray-500 min-w-0 flex-1 justify-end" title={item.location.name}>
                                                 <Database className="h-3 w-3 mr-1 shrink-0" /> <span className="truncate">{item.location.name}</span>
                                             </span>
                                         )}
