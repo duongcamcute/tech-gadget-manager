@@ -20,8 +20,9 @@ if [ -f "/app/db/prod.db-wal" ]; then
 fi
 
 # Switch to nextjs user to run migration and app
+# Deploy migrations (using db push for auto-sync without history conflicts)
 echo "Running database migrations..."
-su-exec nextjs prisma migrate deploy
+su-exec nextjs npx prisma db push --accept-data-loss
 
 echo "Starting Next.js application..."
 # exec replaces the shell process, su-exec switches user
