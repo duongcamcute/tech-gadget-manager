@@ -1,114 +1,66 @@
-# 📦 Tech Gadget Manager
+# 📦 Tech Gadget Manager (TGM)
 
+![Docker Build](https://github.com/duongcamcute/tech-gadget-manager/actions/workflows/docker-publish.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
 
-**Tech Gadget Manager** là ứng dụng tự-host (self-hosted) giúp bạn quản lý kho đồ công nghệ, thiết bị Homelab, dây cáp, sạc... một cách khoa học. 
+**Tech Gadget Manager** là ứng dụng quản lý kho thiết bị cá nhân/gia đình hiện đại, giúp bạn theo dõi tài sản công nghệ, quản lý cho mượn và sắp xếp khoa học. Được thiết kế tối ưu cho **NAS Synology / Unraid** hoặc bất kỳ máy chủ Docker nào.
 
-Được thiết kế với giao diện hiện đại **Mobile-First**, ứng dụng hoạt động mượt mà trên cả điện thoại và máy tính, hỗ trợ cài đặt dạng PWA.
+![Screenshot](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/dashboard-preview.png)
+*(Lưu ý: Bạn cần thay link ảnh này bằng ảnh thực tế nếu có)*
 
-## 📸 Demo
+## ✨ Tính Năng Nổi Bật
 
-<table>
-  <tr>
-    <td align="center">
-      <img src="public/screenshots/dashboard.png" alt="Dashboard Desktop" width="100%">
-      <br>
-      <em>Giao diện quản lý chính</em>
-    </td>
-    <td align="center" width="30%">
-      <img src="public/screenshots/mobile_dashboard.png" alt="Mobile View" width="100%">
-      <br>
-      <em>Giao diện Mobile</em>
-    </td>
-  </tr>
-</table>
+*   **⚡ Quản lý Kho**: Theo dõi thiết bị theo Vị trí (Túi, Tủ, Phòng), Hãng, Loại (Phone, Laptop, Cable...).
+*   **🔍 Tìm kiếm & Lọc**: Tìm nhanh theo tên, thông số kỹ thuật (W, GB, mm...), màu sắc.
+*   **🤝 Quản lý Cho Mượn**: Ghi nhận ai đang mượn, ngày trả dự kiến. Tự động lưu danh bạ người mượn.
+*   **🏷️ QR Code**: Tạo và in thẻ QR Code cho từng món đồ hoặc từng túi (Bag Mode).
+*   **📱 PWA & Mobile First**: Giao diện ứng dụng như App thật trên điện thoại.
+*   **🔐 Bảo mật**: Hỗ trợ đăng nhập, phân quyền cơ bản. Chế độ **Admin Secure** (Tự khóa admin mặc định khi có user mới).
+*   **🚀 Hiệu năng cao**: Chạy cực nhẹ trên Docker (Alpine Linux), hỗ trợ nén ảnh tự động (Sharp).
 
-## ⚡ Live Demo (Trải nghiệm ngay)
+## 🚀 Cài Đặt Nhanh (Docker)
 
-Bạn có thể trải nghiệm trực tiếp đầy đủ tính năng giao diện tại liên kết dưới đây:
-
-👉 **Link Demo:** [**https://tech-gadget-manager.vercel.app/**](https://tech-gadget-manager.vercel.app/)
-
-**Thông tin đăng nhập:**
--   **Username**: `admin`
--   **Password**: `admin`
-
-⚠️ **Lưu ý về bản Demo:**
-Do giới hạn của môi trường Serverless (Vercel) và database SQLite, bản Demo được thiết lập ở chế độ **"Read-Only" (Chỉ đọc)**.
--   ❌ **Không thể**: Thêm đồ mới, Sửa thông tin, Xóa đồ, Upload ảnh.
--   ✅ **Có thể**: Xem danh sách, tìm kiếm, xuất mã QR, xem chi tiết, và trải nghiệm toàn bộ UI/UX mượt mà.
-
-Để sử dụng đầy đủ tính năng (Thêm/Sửa/Xóa), hãy cài đặt bản **Self-hosted** (Docker) theo hướng dẫn bên dưới. 👇
-
-## ✨ Tính Năng Chính
-
--   📦 **Quản lý tồn kho**: Lưu trữ thông tin chi tiết (Ảnh, Tên, Loại, Serial, Vị trí...).
--   ⚡ **Thao tác nhanh**: Tìm kiếm tức thì, chức năng chọn nhiều (bulk actions), xuất mã QR.
--   📱 **Tối ưu Mobile**: Thanh công cụ nổi, bố cục thích ứng, hỗ trợ vuốt chạm.
--   🌓 **Dark Mode**: Giao diện tối sang trọng, tự động theo hệ thống.
--   🐳 **Dễ dàng triển khai**: Hỗ trợ Docker, Unraid, Portainer ngay lập tức.
-
-## 🚀 Cài Đặt (Docker Compose)
-
-Đây là cách nhanh nhất để sử dụng ứng dụng.
-
-### 1. File `docker-compose.yml`
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    container_name: tech-gadget-manager
-    image: ghcr.io/duongcamcute/tech-gadget-manager:latest
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      # Database SQLite sẽ được lưu trong volume
-      - DATABASE_URL=file:/app/db/prod.db
-      - NODE_ENV=production
-    volumes:
-      # Map thư mục lưu dữ liệu ra ngoài để không mất khi update
-      - ./data:/app/db
-```
-
-### 2. Chạy lệnh
+Cách đơn giản nhất là dùng lệnh sau:
 
 ```bash
-docker-compose up -d
+docker run -d \
+  --name tech-gadget-manager \
+  -p 3000:3000 \
+  -v $(pwd)/db:/app/db \
+  -e DATABASE_URL="file:./db/prod.db" \
+  ghcr.io/duongcamcute/tech-gadget-manager:latest
 ```
+
 Truy cập: `http://localhost:3000`
+Tài khoản mặc định: `admin` / `admin` (Hãy đổi ngay sau khi đăng nhập!)
+
+## 📖 Hướng Dẫn Chi Tiết
+
+*   **[Hướng dẫn cho Unraid OS](./GUIDE_DEPLOY_UNRAID_FINAL.md)** (Chi tiết từ A-Z)
+*   [Hướng dẫn Cập nhật](./GUIDE_DEPLOY_UNRAID_FINAL.md#cập-nhật-phiên-bản-mới)
+
+## 🛠️ Phát Triển (Dev)
+
+Yêu cầu: Node.js 20+, Docker (tùy chọn).
+
+```bash
+# 1. Clone repo
+git clone https://github.com/duongcamcute/tech-gadget-manager.git
+
+# 2. Cài dependency
+npm install
+
+# 3. Chạy DB local
+npx prisma migrate dev
+
+# 4. Start App
+npm run dev
+```
+
+## 🤝 Đóng Góp
+
+Mọi đóng góp (Pull Request, Issue) đều được hoan nghênh!
 
 ---
-
-## 🔑 Đăng Nhập Lần Đầu (Quan Trọng)
-
-Khi ứng dụng chạy lần đầu tiên (với database mới tinh), hệ thống sẽ tạo tài khoản mặc định:
-
--   **Username**: `admin`
--   **Password**: `admin`
-
-> **Lưu ý**: Hãy đổi mật khẩu ngay trong phần **Cài đặt** -> **Tài khoản** sau khi đăng nhập.
-
----
-
-## 👩‍💻 Dành Cho Developer
-
-Bạn muốn đóng góp code hoặc tùy biến chức năng? Xem chi tiết tại:
-👉 [**Hướng dẫn phát triển (Developer Guide)**](CONTRIBUTING.md)
-
----
-
-## ⚙️ Cấu Hình Nâng Cao
-
-| Biến Môi Trường | Mặc Định | Giải Thích |
-| :--- | :--- | :--- |
-| `DATABASE_URL` | `file:/app/db/prod.db` | Đường dẫn SQLite (trong container). |
-| `NODE_ENV` | `production` | Chế độ chạy (dev/production). |
-| `PORT` | `3000` | Cổng mặc định của ứng dụng. |
-
----
-
-## 📝 License
-
-Copyright © 2024 DuongCam. Released under the [MIT License](LICENSE).
+*Created by [DuongCamCute](https://github.com/duongcamcute)*
