@@ -1,66 +1,77 @@
-# 📦 Tech Gadget Manager (TGM)
+# 📦 Tech Gadget Manager
 
-![Docker Build](https://github.com/duongcamcute/tech-gadget-manager/actions/workflows/docker-publish.yml/badge.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
+**Quản lý kho thiết bị công nghệ cá nhân - Đơn giản, Hiệu quả, Hiện đại.**
 
-**Tech Gadget Manager** là ứng dụng quản lý kho thiết bị cá nhân/gia đình hiện đại, giúp bạn theo dõi tài sản công nghệ, quản lý cho mượn và sắp xếp khoa học. Được thiết kế tối ưu cho **NAS Synology / Unraid** hoặc bất kỳ máy chủ Docker nào.
+![Dashboard](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/dashboard.png)
 
-![Screenshot](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/dashboard-preview.png)
-*(Lưu ý: Bạn cần thay link ảnh này bằng ảnh thực tế nếu có)*
+## ✨ Giới Thiệu
 
-## ✨ Tính Năng Nổi Bật
+Tech Gadget Manager là ứng dụng web giúp bạn tổ chức và quản lý tài sản công nghệ của mình.
 
-*   **⚡ Quản lý Kho**: Theo dõi thiết bị theo Vị trí (Túi, Tủ, Phòng), Hãng, Loại (Phone, Laptop, Cable...).
-*   **🔍 Tìm kiếm & Lọc**: Tìm nhanh theo tên, thông số kỹ thuật (W, GB, mm...), màu sắc.
-*   **🤝 Quản lý Cho Mượn**: Ghi nhận ai đang mượn, ngày trả dự kiến. Tự động lưu danh bạ người mượn.
-*   **🏷️ QR Code**: Tạo và in thẻ QR Code cho từng món đồ hoặc từng túi (Bag Mode).
-*   **📱 PWA & Mobile First**: Giao diện ứng dụng như App thật trên điện thoại.
-*   **🔐 Bảo mật**: Hỗ trợ đăng nhập, phân quyền cơ bản. Chế độ **Admin Secure** (Tự khóa admin mặc định khi có user mới).
-*   **🚀 Hiệu năng cao**: Chạy cực nhẹ trên Docker (Alpine Linux), hỗ trợ nén ảnh tự động (Sharp).
+### Tính Năng Nổi Bật
+*   📱 **Giao diện hiện đại**: Tối ưu cho Mobile & Desktop (PWA).
+*   🏷️ **Quản lý Vị trí (Bag Mode)**: Biết chính xác món đồ đang ở túi nào.
+*   ⚡ **Tra cứu nhanh**: Lọc theo công suất, độ dài, màu sắc...
+*   🤝 **Cho mượn**: Theo dõi ai mượn, ngày trả.
+*   🖨️ **QR Code**: In tem quản lý tài sản chuyên nghiệp.
 
-## 🚀 Cài Đặt Nhanh (Docker)
-
-Cách đơn giản nhất là dùng lệnh sau:
-
-```bash
-docker run -d \
-  --name tech-gadget-manager \
-  -p 3000:3000 \
-  -v $(pwd)/db:/app/db \
-  -e DATABASE_URL="file:./db/prod.db" \
-  ghcr.io/duongcamcute/tech-gadget-manager:latest
-```
-
-Truy cập: `http://localhost:3000`
-Tài khoản mặc định: `admin` / `admin` (Hãy đổi ngay sau khi đăng nhập!)
-
-## 📖 Hướng Dẫn Chi Tiết
-
-*   **[Hướng dẫn cho Unraid OS](./GUIDE_DEPLOY_UNRAID_FINAL.md)** (Chi tiết từ A-Z)
-*   [Hướng dẫn Cập nhật](./GUIDE_DEPLOY_UNRAID_FINAL.md#cập-nhật-phiên-bản-mới)
-
-## 🛠️ Phát Triển (Dev)
-
-Yêu cầu: Node.js 20+, Docker (tùy chọn).
-
-```bash
-# 1. Clone repo
-git clone https://github.com/duongcamcute/tech-gadget-manager.git
-
-# 2. Cài dependency
-npm install
-
-# 3. Chạy DB local
-npx prisma migrate dev
-
-# 4. Start App
-npm run dev
-```
-
-## 🤝 Đóng Góp
-
-Mọi đóng góp (Pull Request, Issue) đều được hoan nghênh!
+![Mobile](https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/public/screenshots/mobile_dashboard.png)
 
 ---
-*Created by [DuongCamCute](https://github.com/duongcamcute)*
+
+## 🚀 Cài Đặt (Docker)
+
+Bạn có thể tự build và chạy Docker container từ source code này:
+
+1. **Build Image**:
+   ```bash
+   docker build -t tech-gadget-manager .
+   ```
+
+2. **Chạy Container**:
+   ```bash
+   docker run -d \
+     --name tech-gadget-manager \
+     -p 3000:3000 \
+     -v $(pwd)/db:/app/db \
+     -e DATABASE_URL="file:./db/prod.db" \
+     tech-gadget-manager
+   ```
+
+3. **Truy cập**: `http://localhost:3000` (Tài khoản: `admin` / `admin`)
+
+---
+
+## 💻 Hướng Dẫn Dev (Phát Triển)
+
+Để chạy dự án trên máy tính cá nhân để chỉnh sửa code:
+
+### Yêu Cầu
+*   Node.js 20+
+*   Git
+
+### Các Bước
+1.  **Clone Source**:
+    ```bash
+    git clone https://github.com/duongcamcute/tech-gadget-manager.git
+    cd tech-gadget-manager
+    ```
+
+2.  **Cài Đặt Library**:
+    ```bash
+    npm install
+    ```
+
+3.  **Khởi tạo Database**:
+    ```bash
+    npx prisma migrate dev
+    ```
+
+4.  **Chạy Localhost**:
+    ```bash
+    npm run dev
+    ```
+    Web sẽ chạy tại: `http://localhost:3000`
+
+---
+*Project by DuongCamCute*
