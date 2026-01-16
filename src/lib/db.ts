@@ -7,36 +7,31 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Vercel /tmp strategy for SQLite
+// In production (Vercel), we MUST copy the DB to /tmp because the source task var is read-only.
 const dbName = "dev.db";
-const dbPath = path.join(process.cwd(), "prisma", dbName);
-const tmpDbPath = path.join("/tmp", dbName);
 
 const prismaClientSingleton = () => {
     if (process.env.NODE_ENV === "production") {
+        // PRODUCTION STRATEGY
         try {
-            // Attempt to find the DB file in potential locations (Vercel paths can vary)
-            // Priority: 1. standard path 2. current dir
-            let sourcePath = dbPath;
-            if (!fs.existsSync(sourcePath)) {
-                // Fallback try root
-                sourcePath = path.join(process.cwd(), dbName);
-            }
+            const dbPath = path.join(process.cwd(), "prisma", dbName);
+            const tmpDbPath = path.join("/tmp", dbName);
 
-            if (fs.existsSync(sourcePath)) {
-                // Only copy if not exists or force fresh copy? 
-                // For demo read-only, fresh copy is safer to reset state if needed
-                // But efficient lambda sharing might prefer existence check.
-                // Let's copy if not exists to be safe and fast.
-                if (!fs.existsSync(tmpDbPath)) {
-                    fs.copyFileSync(sourcePath, tmpDbPath);
-                    console.log(`[DB] Copied database from ${sourcePath} to ${tmpDbPath}`);
-                } else {
-                    console.log(`[DB] Using existing database at ${tmpDbPath}`);
+            // 1. Check if DB exists in source
+            if (fs.existsSync(dbPath)) {
+                // 2. Copy to /tmp if not already there (or always overwrite to ensure fresh demo data on cold start)
+                // For a demo, resetting to fresh state on every cold start is actually a FEATURE.
+                try {
+                    fs.copyFileSync(dbPath, tmpDbPath);
+                    console.log(`[DB] Copied database from ${dbPath} to ${tmpDbPath}`);
+                } catch (e: any) {
+                    console.error(`[DB] Failed to copy db: ${e.message}`);
                 }
             } else {
-                console.error(`[DB] Source database not found at ${sourcePath} or ${dbPath}`);
+                console.error(`[DB] Source database not found at ${dbPath}`);
             }
 
+            // 3. Initialize Prisma with /tmp path
             return new PrismaClient({
                 datasources: {
                     db: {
@@ -46,12 +41,12 @@ const prismaClientSingleton = () => {
             });
         } catch (error) {
             console.error("[DB] Initialization error:", error);
-            // Fallback to default which might fail but better than crashing here
             return new PrismaClient();
         }
+    } else {
+        // DEVELOPMENT STRATEGY
+        return new PrismaClient();
     }
-
-    return new PrismaClient();
 };
 
 export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();

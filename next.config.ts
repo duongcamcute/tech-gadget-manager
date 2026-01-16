@@ -8,10 +8,11 @@ const withPWA = require("next-pwa")({
 });
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   experimental: {
+    // Explicitly include the database file in the serverless function bundle
     outputFileTracingIncludes: {
-      "/api/**/*": ["./prisma/dev.db", "./dev.db"],
+      "/api/**/*": ["./prisma/dev.db"],
+      "/**/*": ["./prisma/dev.db"]
     }
   },
 };
