@@ -324,6 +324,16 @@ export async function loginUser(username: string, pass: string) {
         }
     }
 
+    // Security Check: If logging in as 'admin' with default password, BLOCK it if other users exist
+    if (username === 'admin' && pass === 'admin') {
+        const otherUsersCount = await prisma.user.count({
+            where: { username: { not: 'admin' } }
+        });
+        if (otherUsersCount > 0) {
+            return { success: false, error: "Tài khoản admin mặc định đã bị vô hiệu hóa vì hệ thống đã có người dùng mới." };
+        }
+    }
+
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) return { success: false, error: "Người dùng không tồn tại" };
 

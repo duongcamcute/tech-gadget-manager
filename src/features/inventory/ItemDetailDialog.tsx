@@ -275,7 +275,23 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                     </div>
                     <div className="flex-1">
                         <Label>Ảnh thiết bị</Label>
-                        <Input type="file" accept="image/*" onChange={handleImageChange} className="mt-1 h-9 text-xs file:hidden" />
+                        <div className="flex gap-2">
+                            <Input type="file" accept="image/*" onChange={handleImageChange} className="mt-1 h-9 text-xs file:hidden" />
+                            {imgPreview && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setImgPreview(null);
+                                        form.setValue("image", "", { shouldDirty: true });
+                                    }}
+                                    className="mt-1 h-9 text-red-500 hover:bg-red-50 hover:text-red-600"
+                                >
+                                    <Trash2 className="h-4 w-4 mr-1" /> Xóa ảnh
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
