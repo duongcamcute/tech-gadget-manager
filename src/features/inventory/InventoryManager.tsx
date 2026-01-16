@@ -26,14 +26,23 @@ function getItemIconData(type: string) {
     return ITEM_ICONS[type] || ITEM_ICONS['default'];
 }
 
-function getStatusBadge(status: string) {
+function getStatusColorClasses(status: string) {
     // @ts-ignore
     const config = ITEM_STATUS[status] || ITEM_STATUS['Available'];
-    return (
-        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap ${config.color}`}>
-            {config.label}
-        </span>
-    );
+    // Return just the color utility classes, strip text/bg if needed for overlay customization
+    // But since config.color has bg-*-50, let's keep it but for overlay we want white/clean background.
+    // Let's use text color mainly.
+    // Extracting color name roughly:
+    if (config.color.includes('emerald')) return "text-emerald-700 border-emerald-200";
+    if (config.color.includes('blue')) return "text-blue-700 border-blue-200";
+    if (config.color.includes('primary')) return "text-primary-700 border-primary-200";
+    if (config.color.includes('red')) return "text-red-700 border-red-200";
+    return "text-gray-700 border-gray-200";
+}
+
+function getItemStatusLabel(status: string) {
+    // @ts-ignore
+    return (ITEM_STATUS[status] || ITEM_STATUS['Available']).label;
 }
 
 // ... (keep intervening code same if not editing, but here we are editing the footer too, which is inside the component export.
@@ -348,7 +357,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                 </div>
 
                                 {/* Compact Image / Icon Area */}
-                                <div className="w-24 shrink-0 border-r border-gray-100 bg-gray-50 flex items-center justify-center relative cursor-pointer" onClick={() => setSelectedItem(item)}>
+                                <div className="w-24 shrink-0 border-r border-gray-100 bg-gray-50 flex flex-col items-center justify-center relative cursor-pointer group-hover/image overflow-hidden" onClick={() => setSelectedItem(item)}>
                                     {item.image ? (
                                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                     ) : (
@@ -356,6 +365,12 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                             <Icon className="h-8 w-8 opacity-70" />
                                         </div>
                                     )}
+                                    {/* Status Overlay - Optimized Placement */}
+                                    <div className="absolute bottom-1 w-full flex justify-center px-1">
+                                        <div className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm border bg-white/90 backdrop-blur-sm whitespace-nowrap ${getStatusColorClasses(item.status)}`}>
+                                            {getItemStatusLabel(item.status)}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Content Area */}
@@ -363,7 +378,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                     <div>
                                         <div className="flex justify-between items-start gap-2">
                                             <h3 className="font-bold text-sm text-gray-900 line-clamp-2 leading-tight mb-1" title={item.name}>{item.name}</h3>
-                                            <Link href={`/items/${item.id}/qr`} className="text-gray-300 hover:text-primary-600 p-1" title="QR">
+                                            <Link href={`/items/${item.id}/qr`} className="text-gray-300 hover:text-primary-600 p-1 shrink-0" title="QR">
                                                 <QrCode className="h-3.5 w-3.5" />
                                             </Link>
                                         </div>
@@ -372,7 +387,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                             {item.brand && <span className="text-[10px] items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium whitespace-nowrap">{item.brand}</span>}
                                         </div>
 
-                                        {/* Specs Row - Restored */}
+                                        {/* Specs Row */}
                                         <div className="flex flex-wrap gap-1 mb-2">
                                             {specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-orange-700 border border-orange-100 whitespace-nowrap" title="Công suất">⚡ {specs.power}</span>}
                                             {specs.length && <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-emerald-700 border border-emerald-100 whitespace-nowrap" title="Độ dài">📏 {specs.length}</span>}
@@ -386,12 +401,15 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-50 gap-2">
-                                        {getStatusBadge(item.status)}
-                                        {item.location && (
-                                            <span className="flex items-center text-xs text-gray-500 min-w-0 flex-1 justify-end" title={item.location.name}>
-                                                <Database className="h-3 w-3 mr-1 shrink-0" /> <span className="truncate">{item.location.name}</span>
-                                            </span>
+                                    {/* Footer - Dedicated to Location */}
+                                    <div className="mt-1 pt-2 border-t border-gray-50 flex items-center text-xs text-gray-500">
+                                        {item.location ? (
+                                            <>
+                                                <Database className="h-3 w-3 mr-1.5 shrink-0 text-gray-400" />
+                                                <span className="truncate font-medium">{item.location.name}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-gray-300 italic text-[10px]">Chưa xếp chỗ</span>
                                         )}
                                     </div>
                                 </div>
