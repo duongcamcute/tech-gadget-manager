@@ -177,12 +177,14 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                         {item.purchaseDate && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Ngày mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatDateVN(item.purchaseDate)}</p></div>}
                         {item.purchasePrice && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Giá mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(item.purchasePrice)}</p></div>}
                         {item.warrantyEnd && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Bảo hành đến</p><p className="font-medium text-green-700 dark:text-green-400">{formatDateVN(item.warrantyEnd)}</p></div>}
+                        {item.purchaseLocation && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Nơi mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{item.purchaseLocation}</p></div>}
+                        {item.purchaseUrl && <div className="col-span-2"><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Link mua hàng</p><a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 dark:text-blue-400 hover:underline break-words block">{item.purchaseUrl}</a></div>}
 
                         {/* Dynamic Specs */}
                         {Object.entries(item.specs ? JSON.parse(item.specs as string) : {}).map(([k, v]: any) => (
                             <div key={k} className="col-span-1">
                                 <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{k}</p>
-                                <p className="font-medium text-gray-900 dark:text-gray-100 truncate" title={v}>{v}</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 break-words" title={v}>{v}</p>
                             </div>
                         ))}
                     </div>
@@ -500,6 +502,10 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                             <Input type="date" {...form.register("purchaseDate")} />
                         </div>
                         <div>
+                            <Label>Nơi mua</Label>
+                            <Input {...form.register("purchaseLocation")} placeholder="Cửa hàng, Shopee..." />
+                        </div>
+                        <div>
                             <Label>Hết hạn bảo hành</Label>
                             <div className="flex gap-2">
                                 <Input type="date" {...form.register("warrantyEnd")} className="flex-1" />
@@ -529,7 +535,10 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <Label>Ghi chú</Label>
+                            <Label>Link mua hàng</Label>
+                            <Input {...form.register("purchaseUrl")} placeholder="https://..." />
+                        </div>
+                        <div className="col-span-2">
                             <Label>Ghi chú</Label>
                             <textarea
                                 {...form.register("notes")}

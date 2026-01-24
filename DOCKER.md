@@ -1,183 +1,37 @@
-# 🐳 Docker Deployment Guide
+# 🐳 Hướng dẫn Docker & Bảo vệ Dữ liệu (Quan Trọng)
 
-> **Hướng dẫn triển khai Tech Gadget Manager trên Docker / Unraid / NAS**
+File này chứa hướng dẫn vận hành và update Docker an toàn cho Tech Gadget Manager.
 
----
+## 🛑 BẢO VỆ DỮ LIỆU (Đọc kỹ)
+Để tránh mất dữ liệu khi cập nhật phiên bản mới, hệ thống đã được cấu hình an toàn hơn:
 
-## ⚠️ CẢNH BÁO QUAN TRỌNG
+1.  **Cơ chế An toàn:** Script khởi động (`docker-entrypoint.sh`) đã **BỎ** cờ `--accept-data-loss`.
+    - **Trước đây:** Nếu cấu trúc DB thay đổi ảnh hưởng dữ liệu cũ -> Tự động XÓA dữ liệu cũ để chạy tiếp.
+    - **Hiện tại:** Nếu cấu trúc DB thay đổi ảnh hưởng dữ liệu cũ -> **BÁO LỖI và DỪNG LẠI**. Container sẽ không khởi động được. Dữ liệu cũ được **GIỮ NGUYÊN AN TOÀN**.
 
-### Data Loss với `--accept-data-loss`
+2.  **Cách xử lý khi update bị lỗi DB:**
+    - Nếu container báo lỗi liên quan đến DB migration, bạn cần backup file `prod.db` (trong thư mục `db/`) ra chỗ khác.
+    - Sau đó xóa file `prod.db` cũ đi (hoặc move đi) để app tạo DB mới với cấu trúc mới.
+    - Dùng tính năng **Import/Export** trong phần Cài đặt của App để chuyển dữ liệu cũ sang mới (nếu có thể).
 
-File `docker-entrypoint.sh` sử dụng:
-```bash
-npx prisma db push --accept-data-loss --skip-generate
-```
-
-**Điều này có nghĩa:**
-- Mỗi khi schema Prisma thay đổi (thêm/xóa field, đổi type), Prisma **CÓ THỂ XÓA DỮ LIỆU**
-- User, Items, Locations **SẼ BỊ MẤT** nếu schema không tương thích
-
-### 🛡️ BACKUP TRƯỚC KHI UPDATE
+## 🚀 Cách Update phiên bản mới
+Mỗi khi có thông báo code mới đã được push lên GitHub:
 
 ```bash
-# Trên Unraid/NAS, backup file database trước khi update:
-cp ./db/prod.db ./db/prod.db.backup.$(date +%Y%m%d)
-```
-
----
-
-## 📦 Cấu Trúc Files
-
-```
-├── Dockerfile              # Multi-stage build
-├── docker-compose.yml      # Compose config cho Unraid
-├── docker-entrypoint.sh    # Startup script (migration + start)
-└── src/lib/db.ts           # Database connection logic
-```
-
----
-
-## 🔧 Cách Hoạt Động
-
-### 1. Database Connection (`src/lib/db.ts`)
-
-```typescript
-// PRIORITY 1: Use DATABASE_URL from environment (Docker)
-if (process.env.DATABASE_URL) {
-    return new PrismaClient();  // Uses env var directly
-}
-
-// PRIORITY 2: Vercel /tmp strategy (Read-only filesystem)
-// Copy dev.db to /tmp
-
-// PRIORITY 3: Development mode
-```
-
-**Quan trọng:** Khi `DATABASE_URL` được set (trong docker-compose.yml), Prisma sẽ dùng path đó trực tiếp.
-
-### 2. Docker Compose (`docker-compose.yml`)
-
-```yaml
-services:
-  app:
-    image: ghcr.io/duongcamcute/tech-gadget-manager:latest
-    environment:
-      - DATABASE_URL=file:/app/db/prod.db  # ← Path TRONG container
-      - NODE_ENV=production
-      - DISABLE_SECURE_COOKIES=true        # ← Cho HTTP (không có SSL)
-      - JWT_SECRET=your_secret_here         # ← ĐỔI THÀNH RANDOM STRING
-    volumes:
-      - ./db:/app/db          # ← Data persist qua restart/update
-      - ./uploads:/app/public/uploads
-```
-
-### 3. Entrypoint (`docker-entrypoint.sh`)
-
-1. Fix permissions cho `/app/db` volume
-2. Chạy `prisma db push` để sync schema
-3. Start `node server.js`
-
----
-
-## 🚀 Triển Khai
-
-### Option 1: Docker Run (Đơn giản)
-
-```bash
-docker run -d \
-  --name tech-gadget-manager \
-  --restart unless-stopped \
-  -p 3000:3000 \
-  -v $(pwd)/db:/app/db \
-  -e DATABASE_URL="file:/app/db/prod.db" \
-  -e JWT_SECRET="change_this_to_random_string" \
-  -e DISABLE_SECURE_COOKIES=true \
-  ghcr.io/duongcamcute/tech-gadget-manager:latest
-```
-
-### Option 2: Docker Compose (Khuyến nghị)
-
-```bash
-# Clone hoặc tạo docker-compose.yml
-wget https://raw.githubusercontent.com/duongcamcute/tech-gadget-manager/main/docker-compose.yml
-
-# Khởi chạy
-docker-compose up -d
-
-# Xem logs
-docker-compose logs -f
-```
-
-### Option 3: Unraid Community Applications
-
-1. Tìm "Tech Gadget Manager" trong Community Apps
-2. Cấu hình paths và variables
-3. Apply
-
----
-
-## 🔄 Update Container
-
-```bash
-# 1. BACKUP DATABASE TRƯỚC
-cp ./db/prod.db ./db/prod.db.backup
-
-# 2. Pull image mới
+# 1. Tải ảnh mới nhất về
 docker-compose pull
 
-# 3. Restart container
-docker-compose down && docker-compose up -d
+# 2. Khởi động lại (dữ liệu nằm ngoài container nên vẫn còn)
+docker-compose up -d
 ```
 
----
+## 📂 Cấu trúc thư mục
+- `./db/prod.db`: File Database chính. **TUYỆT ĐỐI KHÔNG XÓA** trừ khi đã backup.
+- `./uploads/`: File ảnh đã upload.
 
-## 🐛 Troubleshooting
-
-### Container crash loop
+## 🛠️ Backup Thủ công
+Khuyên dùng trước mỗi lần update lớn:
 ```bash
-docker logs tech-gadget-manager
+# Copy file db ra file backup có ngày giờ
+cp db/prod.db db/prod.db.bak.$(date +%F)
 ```
-Thường do:
-- Permission denied trên `/app/db` → Kiểm tra ownership
-- Schema conflict → Xóa file `prod.db` và tạo lại (mất data!)
-
-### Database file bị lock
-```bash
-# Trong container
-rm /app/db/prod.db-journal /app/db/prod.db-wal /app/db/prod.db-shm
-```
-
-### Permission denied
-```bash
-# Trên host
-sudo chown -R 1001:1001 ./db
-```
-
----
-
-## 📁 Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | ✅ Yes | - | Path to SQLite file (`file:/app/db/prod.db`) |
-| `NODE_ENV` | No | production | Environment mode |
-| `JWT_SECRET` | ⚠️ Recommended | hardcoded | Secret for JWT tokens |
-| `DISABLE_SECURE_COOKIES` | For HTTP | false | Set `true` if not using HTTPS |
-| `NEXT_PUBLIC_DEMO_MODE` | No | false | Enable read-only demo mode |
-
----
-
-## 👨‍💻 Dành Cho Agent/Developer
-
-Khi thay đổi schema Prisma (`prisma/schema.prisma`):
-
-1. **Thêm field mới (nullable):** An toàn, không mất data
-2. **Thêm field mới (required):** Cần `@default()` hoặc sẽ fail
-3. **Xóa field/table:** `--accept-data-loss` sẽ xóa data!
-4. **Đổi type field:** Có thể mất data
-
-**Best practice:** Luôn test schema change trên dev DB trước khi push lên production.
-
----
-
-*Last updated: 2026-01-25*
