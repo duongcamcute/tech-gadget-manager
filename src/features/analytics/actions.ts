@@ -24,6 +24,8 @@ export interface AnalyticsData {
     topBrands: BrandStats[];
     monthlyPurchaseTrend: MonthlyTrend[];
     statusDistribution: CategoryStats[];
+    priceDistribution: CategoryStats[];
+    locationDistribution: CategoryStats[];
     totalValue: number;
     totalItems: number;
     averageItemValue: number;
@@ -54,8 +56,50 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
                 purchasePrice: true,
                 purchaseDate: true,
                 createdAt: true,
+                location: { select: { id: true, name: true } }
             }
         });
+
+        // Price Distribution
+        const priceRanges = {
+            'Under 500k': 0,
+            '500k - 2M': 0,
+            '2M - 10M': 0,
+            '10M - 30M': 0,
+            'Over 30M': 0
+        };
+
+        items.forEach(item => {
+            const price = item.purchasePrice || 0;
+            if (price < 500000) priceRanges['Under 500k']++;
+            else if (price < 2000000) priceRanges['500k - 2M']++;
+            else if (price < 10000000) priceRanges['2M - 10M']++;
+            else if (price < 30000000) priceRanges['10M - 30M']++;
+            else priceRanges['Over 30M']++;
+        });
+
+        const priceDistribution: CategoryStats[] = Object.entries(priceRanges).map(([name, value]) => ({
+            name,
+            value,
+            fill: '#ea580c' // Orange theme
+        }));
+
+        // Location Distribution
+        const locationCount: Record<string, number> = {};
+        items.forEach(item => {
+            const locName = item.location?.name || 'Chưa phân loại';
+            locationCount[locName] = (locationCount[locName] || 0) + 1;
+        });
+
+        const locationDistribution: CategoryStats[] = Object.entries(locationCount)
+            .map(([name, value]) => ({
+                name,
+                value,
+                fill: '#3b82f6' // Blue theme
+            }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10);
+
 
         // Category Distribution
         const categoryCount: Record<string, number> = {};
@@ -133,6 +177,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 
         return {
             categoryDistribution,
+            priceDistribution,
+            locationDistribution,
             topBrands,
             monthlyPurchaseTrend,
             statusDistribution,
@@ -144,6 +190,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         console.error("Analytics error:", error);
         return {
             categoryDistribution: [],
+            priceDistribution: [],
+            locationDistribution: [],
             topBrands: [],
             monthlyPurchaseTrend: [],
             statusDistribution: [],

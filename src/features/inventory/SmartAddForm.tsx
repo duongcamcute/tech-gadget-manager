@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +20,8 @@ import { IconSelect } from "@/components/ui/IconSelect";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, buildLocationTree } from "@/lib/utils";
+import { LOCATION_ICONS, ITEM_ICONS } from "@/lib/constants/options";
 
 const COLORS = [
     { name: 'Đen', hex: '#000000', class: 'bg-black' },
@@ -121,6 +123,32 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
             }
         });
     }, [cloneId]);
+
+    // --- Dynamic Item Types ---
+    const [availableItemTypes, setAvailableItemTypes] = useState<any[]>([...ITEM_TYPES]);
+    const [openLocation, setOpenLocation] = useState(false);
+    const flatLocations = React.useMemo(() => buildLocationTree(locations || []), [locations]);
+
+    useEffect(() => {
+        const loadTypes = async () => {
+            try {
+                const { getItemTypes } = await import("@/app/actions");
+                const dynamicTypes = await getItemTypes();
+                if (dynamicTypes && dynamicTypes.length > 0) {
+                    // Merge dynamic types, ensuring no duplicates if value conflicts (priority to dynamic?)
+                    // Actually, simple concat is fine, usually dynamic types are new.
+                    // Or we can filter out duplicates.
+                    const combined = [...ITEM_TYPES, ...dynamicTypes];
+                    // Remove duplicates by value just in case
+                    const unique = combined.filter((v, i, a) => a.findIndex(t => t.value === v.value) === i);
+                    setAvailableItemTypes(unique);
+                }
+            } catch (e) {
+                console.error("Failed to load dynamic item types", e);
+            }
+        };
+        loadTypes();
+    }, []);
 
     const form = useForm({
         resolver: zodResolver(ItemSchema),
@@ -243,6 +271,11 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
 
     const handleReset = () => {
         form.reset({
+            name: '',
+            type: '',
+            category: '',
+            model: '',
+            serialNumber: '',
             status: "Available",
             specs: {},
             locationId: "",
@@ -251,12 +284,17 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
             image: "",
             purchasePrice: null,
             purchaseDate: null,
+            purchaseLocation: "Shopee",
+            purchaseUrl: "",
+            notes: "",
+            borrowerName: "",
+            borrowDate: new Date().toISOString().split('T')[0],
+            dueDate: null,
         } as any);
         setWarrantyMonths("");
         setImgPreview(null);
         setQuantity(1);
         setDisplayPrice("");
-        toast("Đã làm mới form", "info");
     }
 
     // Suggestions Arrays
@@ -267,13 +305,17 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
         const templateName = prompt("Nhập tên cho mẫu mới:", `${currentValues.name || 'Mẫu mới'}`);
         if (!templateName) return;
 
-        // Construct Config
+        // Construct Config - Save all relevant fields for a complete template
         const configObj = {
+            name: currentValues.name || '',
             type: currentValues.type,
+            category: currentValues.category,
             brand: currentValues.brand,
+            model: currentValues.model,
             specs: currentValues.specs,
-            image: currentValues.image, // Optional: save image too? maybe too large. Let's keep it simple.
-            color: currentValues.color
+            image: currentValues.image,
+            color: currentValues.color,
+            purchaseLocation: currentValues.purchaseLocation,
         };
         const configStr = JSON.stringify(configObj);
 
@@ -394,9 +436,11 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                         aria-expanded={openType}
                                         className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200"
                                     >
-                                        {watchedType
-                                            ? ITEM_TYPES.find((type) => type.value === watchedType)?.label
-                                            : "Chọn loại..."}
+                                        <span className="truncate">
+                                            {watchedType
+                                                ? availableItemTypes.find((type) => type.value === watchedType)?.label
+                                                : "Chọn loại..."}
+                                        </span>
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -406,7 +450,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                         <CommandList>
                                             <CommandEmpty>Không tìm thấy loại này.</CommandEmpty>
                                             <CommandGroup className="max-h-[300px] overflow-y-auto">
-                                                {ITEM_TYPES.map((type) => (
+                                                {availableItemTypes.map((type) => (
                                                     <CommandItem
                                                         key={type.value}
                                                         value={type.label}
@@ -480,15 +524,60 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
 
                     <div className="space-y-1.5">
                         <Label className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary-500" /> Vị trí lưu trữ</Label>
-                        <Select {...form.register("locationId")} className="bg-primary-50/30 focus:border-primary-500 h-10 font-medium text-gray-700">
-                            <option value="">-- Chưa xác định --</option>
-                            {locations?.map((loc) => (
-                                <option key={loc.id} value={loc.id}>
-                                    {loc.type === 'Container' ? '📦 ' : loc.type === 'Person' ? '👤 ' : '🏠 '}
-                                    {loc.name}
-                                </option>
-                            ))}
-                        </Select>
+                        <Popover open={openLocation} onOpenChange={setOpenLocation}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openLocation}
+                                    className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200"
+                                >
+                                    <span className="truncate">
+                                        {form.watch("locationId")
+                                            ? flatLocations.find((l) => l.id === form.watch("locationId"))?.name
+                                            : "-- Chưa xác định --"}
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Tìm vị trí..." />
+                                    <CommandList>
+                                        <CommandEmpty>Không tìm thấy vị trí.</CommandEmpty>
+                                        <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                            {flatLocations.map((loc) => (
+                                                <CommandItem
+                                                    key={loc.id}
+                                                    value={loc.name}
+                                                    onSelect={() => {
+                                                        form.setValue("locationId", loc.id);
+                                                        setOpenLocation(false);
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4 shrink-0",
+                                                            form.watch("locationId") === loc.id ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    <div style={{ marginLeft: loc.level * 16 }} className="flex items-center gap-2 truncate">
+                                                        {(() => {
+                                                            if (loc.icon) {
+                                                                const { icon: Icon, color } = LOCATION_ICONS[loc.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
+                                                                return <Icon size={14} className={color} />;
+                                                            }
+                                                            return <span>{loc.type === 'Container' ? '📦' : loc.type === 'Person' ? '👤' : '🏠'}</span>
+                                                        })()}
+                                                        {loc.name}
+                                                    </div>
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
                     </div>
 
                     {/* Dynamic Specs Section - Richer */}

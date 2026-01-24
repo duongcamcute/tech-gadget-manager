@@ -6,24 +6,25 @@ const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;
 };
 
-// Vercel /tmp strategy for SQLite
-// In production (Vercel), we MUST copy the DB to /tmp because the source task var is read-only.
-const dbName = "dev.db";
-
 const prismaClientSingleton = () => {
+    // CASE 1: DATABASE_URL is set (Docker / External DB)
+    // Use Prisma's default behavior which reads from env var
+    if (process.env.DATABASE_URL) {
+        console.log("[DB] Using DATABASE_URL from environment");
+        return new PrismaClient();
+    }
+
+    // CASE 2: Production without DATABASE_URL (Vercel /tmp strategy)
     if (process.env.NODE_ENV === "production") {
-        // PRODUCTION STRATEGY
         try {
+            const dbName = "dev.db";
             const dbPath = path.join(process.cwd(), "prisma", dbName);
             const tmpDbPath = path.join("/tmp", dbName);
 
-            // 1. Check if DB exists in source
             if (fs.existsSync(dbPath)) {
-                // 2. Copy to /tmp if not already there (or always overwrite to ensure fresh demo data on cold start)
-                // For a demo, resetting to fresh state on every cold start is actually a FEATURE.
                 try {
                     fs.copyFileSync(dbPath, tmpDbPath);
-
+                    console.log("[DB] Copied to /tmp for Vercel");
                 } catch (e: any) {
                     console.error(`[DB] Failed to copy db: ${e.message}`);
                 }
@@ -31,7 +32,6 @@ const prismaClientSingleton = () => {
                 console.error(`[DB] Source database not found at ${dbPath}`);
             }
 
-            // 3. Initialize Prisma with /tmp path
             return new PrismaClient({
                 datasources: {
                     db: {
@@ -43,12 +43,14 @@ const prismaClientSingleton = () => {
             console.error("[DB] Initialization error:", error);
             return new PrismaClient();
         }
-    } else {
-        // DEVELOPMENT STRATEGY
-        return new PrismaClient();
     }
+
+    // CASE 3: Development
+    console.log("[DB] Development mode");
+    return new PrismaClient();
 };
 
 export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+

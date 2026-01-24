@@ -9,7 +9,7 @@ import { ItemDetailDialog } from "./ItemDetailDialog";
 import { LocationDetailView } from "@/features/locations/LocationDetailView";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
-import { ITEM_ICONS, ITEM_STATUS, ITEM_TYPES } from "@/lib/constants/options";
+import { ITEM_ICONS, ITEM_STATUS, ITEM_TYPES, LOCATION_ICONS } from "@/lib/constants/options";
 import { getColorHex } from "@/lib/utils/colors";
 import { QrCard } from "@/components/printing/QrCard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -281,7 +281,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             </div>
 
             {/* Static Filters & View Toggle - NOT Sticky and NO specific white fix */}
-            <div className="space-y-3 bg-gray-50/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
+            <div className="space-y-2 md:space-y-3 bg-gray-50/50 dark:bg-gray-800/50 p-2 md:p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -391,7 +391,16 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 hidden sm:table-cell text-gray-500">
-                                                {item.location ? <span className="flex items-center gap-1"><Database className="h-3 w-3" /> {item.location.name}</span> : '--'}
+                                                {item.location ? (() => {
+                                                    const LocIcon = item.location.icon && LOCATION_ICONS[item.location.icon] ? LOCATION_ICONS[item.location.icon].icon : Database;
+                                                    const locColor = item.location.icon && LOCATION_ICONS[item.location.icon] ? LOCATION_ICONS[item.location.icon].color : "text-gray-400";
+                                                    return (
+                                                        <span className="flex items-center gap-1">
+                                                            <LocIcon className={`h-3 w-3 ${locColor}`} />
+                                                            {item.location.name}
+                                                        </span>
+                                                    );
+                                                })() : '--'}
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 <Link href={`/items/${item.id}/qr`} onClick={e => e.stopPropagation()} className="text-gray-400 hover:text-primary-600"><QrCode className="w-4 h-4 inline" /></Link>
@@ -404,7 +413,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                     </div>
                 </div>
             ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredItems.map(item => {
                         const { icon: Icon, color, bg } = getItemIconData(item);
                         const isSelected = selectedIds.has(item.id);
@@ -537,9 +546,13 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                                         )}
                                                     </div>
                                                 );
-                                            })() : item.location ? (
-                                                <><Database className="h-3 w-3 mr-1 shrink-0" /> <span className="truncate">{item.location.name}</span></>
-                                            ) : (
+                                            })() : item.location ? (() => {
+                                                const LocIcon = item.location.icon && LOCATION_ICONS[item.location.icon] ? LOCATION_ICONS[item.location.icon].icon : Database;
+                                                const locColor = item.location.icon && LOCATION_ICONS[item.location.icon] ? LOCATION_ICONS[item.location.icon].color : "text-gray-400";
+                                                return (
+                                                    <><LocIcon className={`h-3 w-3 mr-1 shrink-0 ${locColor}`} /> <span className="truncate">{item.location.name}</span></>
+                                                );
+                                            })() : (
                                                 <span className="italic text-gray-300">--</span>
                                             )}
                                         </div>

@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { Folder, Box, Plus, User, Trash2, ChevronRight, ChevronDown, MapPin, Package, RefreshCw, Pencil } from "lucide-react";
 import { createLocation, deleteLocation, getLocationItems, updateLocation } from "@/features/location/actions";
-import { ITEM_ICONS } from "@/lib/constants/options";
+import { ITEM_ICONS, LOCATION_ICONS, LOCATION_ICON_GROUPS } from "@/lib/constants/options";
+import { IconSelect } from "@/components/ui/IconSelect";
+import { cn } from "@/lib/utils";
 import { Button, Input, Select, Label, Card, CardHeader, CardTitle, CardContent } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
@@ -15,6 +17,7 @@ interface LocationNode {
     id: string;
     name: string;
     type: string;
+    icon?: string | null;
     parentId?: string | null;
     children: LocationNode[];
     _count?: { items: number };
@@ -54,6 +57,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
     const [isEditing, setIsEditing] = useState(false);
     const [newLocName, setNewLocName] = useState("");
     const [newLocType, setNewLocType] = useState("Fixed");
+    const [newLocIcon, setNewLocIcon] = useState("");
     const [newLocParentId, setNewLocParentId] = useState<string | null>(null);
     const { toast } = useToast();
     const router = useRouter();
@@ -92,12 +96,14 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
         const res = await createLocation({
             name: newLocName,
             type: newLocType,
+            icon: newLocIcon,
             parentId: newLocParentId || selectedLocationId // Use explicit parent or current selected
         });
 
         if (res.success) {
             toast("Đã tạo vị trí mới thành công", "success");
             setNewLocName("");
+            setNewLocIcon("");
             if (!selectedLocationId) setIsCreating(false);
             router.refresh();
         } else {
@@ -110,6 +116,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
         const res = await updateLocation(selectedLocationId, {
             name: newLocName,
             type: newLocType,
+            icon: newLocIcon,
             parentId: newLocParentId
         });
 
@@ -154,7 +161,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
     const flattenLocations = (nodes: LocationNode[]): any[] => {
         let list: any[] = [];
         for (const node of nodes) {
-            list.push({ id: node.id, name: node.name, type: node.type });
+            list.push({ id: node.id, name: node.name, type: node.type, icon: node.icon });
             if (node.children) list = list.concat(flattenLocations(node.children));
         }
         return list;
@@ -182,9 +189,15 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                         {hasChildren ? (isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />) : <span className="w-3.5" />}
                     </button>
 
-                    {node.type === 'Person' ? <User size={16} className="text-purple-500" /> :
-                        node.type === 'Container' ? <Box size={16} className="text-primary-500" /> :
-                            <Folder size={16} className="text-amber-500" />}
+                    {(() => {
+                        if (node.icon) {
+                            const { icon: Icon, color } = LOCATION_ICONS[node.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
+                            return <Icon size={16} className={color} />;
+                        }
+                        return node.type === 'Person' ? <User size={16} className="text-purple-500" /> :
+                            node.type === 'Container' ? <Box size={16} className="text-primary-500" /> :
+                                <Folder size={16} className="text-amber-500" />
+                    })()}
 
                     <span className="text-sm flex-1 truncate">{node.name}</span>
 
@@ -205,7 +218,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[700px]">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 h-auto md:h-[700px]">
             <ItemDetailDialog
                 item={detailItem}
                 isOpen={isDetailOpen}
@@ -231,7 +244,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             )}
 
             {/* Tree View */}
-            <Card className="md:col-span-1 border-primary-100 shadow-sm flex flex-col h-full bg-white">
+            <Card className="w-full md:col-span-4 border-primary-100 shadow-sm flex flex-col h-[350px] md:h-full bg-white">
                 <CardHeader className="pb-2 border-b border-primary-50 bg-primary-50/30">
                     <CardTitle className="text-base text-primary-700 flex justify-between items-center">
                         <span>Danh sách vị trí</span>
@@ -243,6 +256,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                 setIsEditing(false);
                                 setNewLocParentId(null);
                                 setNewLocName("");
+                                setNewLocIcon("");
                             }}>
                                 <Plus size={16} />
                             </Button>
@@ -256,14 +270,14 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             </Card>
 
             {/* Details & Actions Panel */}
-            <Card className="md:col-span-2 border-primary-100 shadow-sm overflow-hidden flex flex-col bg-white">
+            <Card className="w-full md:col-span-8 border-primary-100 shadow-sm overflow-hidden flex flex-col bg-white min-h-[400px] md:h-full">
                 {!selectedLocationId && !isCreating ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-gray-300">
                         <MapPin className="h-16 w-16 mb-4 opacity-20 text-primary-500" />
                         <p>Chọn vị trí để xem kho</p>
                     </div>
                 ) : (isCreating || isEditing) ? (
-                    <div className="p-8 max-w-lg mx-auto w-full">
+                    <div className="p-4 md:p-8 max-w-lg mx-auto w-full">
                         <h3 className="font-bold text-lg text-primary-800 mb-6 flex items-center gap-2">
                             {isEditing ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
                             {isEditing ? "Chỉnh sửa vị trí" : (selectedLocationId && !isEditing ? "Thêm vị trí con" : "Tạo vị trí gốc mới")}
@@ -275,7 +289,6 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <Label>Loại</Label>
                                     <Select value={newLocType} onChange={e => setNewLocType(e.target.value)} className="border-primary-200">
                                         <option value="Fixed">Cố định (Phòng/Nhà)</option>
                                         <option value="Container">Túi/Hộp (Di động)</option>
@@ -283,6 +296,16 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     </Select>
                                 </div>
                                 <div>
+                                    <Label>Icon (Tùy chọn)</Label>
+                                    <IconSelect
+                                        value={newLocIcon}
+                                        onValueChange={setNewLocIcon}
+                                        className="border-primary-200"
+                                        groups={LOCATION_ICON_GROUPS}
+                                        iconMap={LOCATION_ICONS}
+                                    />
+                                </div>
+                                <div className="col-span-2">
                                     <Label>Vị trí cha (Di chuyển)</Label>
                                     <Select
                                         value={newLocParentId || ""}
@@ -315,7 +338,13 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                         <div className="px-6 py-4 border-b border-primary-100 bg-primary-50/30 flex justify-between items-start">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                    {selectedLocation?.type === 'Person' ? <User className="text-purple-500" /> : selectedLocation?.type === 'Container' ? <Box className="text-primary-500" /> : <Folder className="text-amber-500" />}
+                                    {(() => {
+                                        if (selectedLocation?.icon) {
+                                            const { icon: Icon, color } = LOCATION_ICONS[selectedLocation.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
+                                            return <Icon className={cn("h-6 w-6", color)} />;
+                                        }
+                                        return selectedLocation?.type === 'Person' ? <User className="text-purple-500" /> : selectedLocation?.type === 'Container' ? <Box className="text-primary-500" /> : <Folder className="text-amber-500" />
+                                    })()}
                                     {selectedLocation?.name}
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
@@ -328,6 +357,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                 <Button size="sm" onClick={async () => {
                                     setNewLocName(selectedLocation?.name || "");
                                     setNewLocType(selectedLocation?.type || "Fixed");
+                                    setNewLocIcon(selectedLocation?.icon || "");
                                     setNewLocParentId(selectedLocation?.parentId || null);
                                     setIsEditing(true);
                                 }} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
@@ -348,6 +378,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                 <Button size="sm" onClick={() => {
                                     setIsCreating(true);
                                     setNewLocName("");
+                                    setNewLocIcon("");
                                     setNewLocParentId(selectedLocationId); // Set current as parent for new child
                                 }} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
                                     <Plus size={14} /> Thêm con

@@ -9,7 +9,14 @@ import {
     Wifi, Bluetooth, Cast, Bell, Lock, Thermometer,
     CassetteTape, Disc, Clapperboard, Film, Radio,
     Wallet, CreditCard, Gift, Map, Umbrella,
-    Cable, Headphones
+    Cable, Headphones,
+    // Location Icons
+    Home, Building, Warehouse, Store, MapPin,
+    Sofa, Bed, Bath, Utensils,
+    Library, BookOpen,
+    Container, Backpack, Luggage,
+    User, Users, UserCircle,
+    LayoutGrid, Grid3x3, Table, Layers
 } from "lucide-react";
 
 export const ITEM_TYPES = [
@@ -137,5 +144,82 @@ export const ITEM_ICONS: Record<string, any> = {
     'Key': { icon: Key, color: 'text-amber-500', bg: 'bg-amber-100' },
     'Shield': { icon: Shield, color: 'text-blue-600', bg: 'bg-blue-50' },
     'Box': { icon: Box, color: 'text-amber-800', bg: 'bg-amber-50' },
+    'Other': { icon: HelpCircle, color: 'text-gray-500', bg: 'bg-gray-50' },
     'default': { icon: Box, color: 'text-gray-400', bg: 'bg-gray-50' },
 };
+
+export const LOCATION_ICONS: Record<string, any> = {
+    // Rooms & Spaces
+    'Home': { icon: Home, color: 'text-blue-500', bg: 'bg-blue-50' },
+    'Room': { icon: Sofa, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    'Bedroom': { icon: Bed, color: 'text-purple-500', bg: 'bg-purple-50' },
+    'Kitchen': { icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-50' },
+    'Office': { icon: Building, color: 'text-slate-600', bg: 'bg-slate-50' },
+    'Store': { icon: Store, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    'Warehouse': { icon: Warehouse, color: 'text-slate-700', bg: 'bg-slate-100' },
+
+    // Furniture
+    'Table': { icon: Table, color: 'text-amber-700', bg: 'bg-amber-100' },
+    'Shelf': { icon: Library, color: 'text-amber-600', bg: 'bg-amber-50' },
+    'Cabinet': { icon: Archive, color: 'text-amber-800', bg: 'bg-amber-50' },
+    'Drawer': { icon: Layers, color: 'text-amber-500', bg: 'bg-amber-50' },
+
+    // Containers
+    'Box': { icon: Box, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    'Package': { icon: Package, color: 'text-yellow-700', bg: 'bg-yellow-100' },
+    'Bin': { icon: Container, color: 'text-gray-500', bg: 'bg-gray-100' },
+
+    // Mobile / Bags
+    'Bag': { icon: Briefcase, color: 'text-rose-600', bg: 'bg-rose-50' },
+    'Backpack': { icon: Backpack, color: 'text-rose-500', bg: 'bg-rose-50' },
+    'Luggage': { icon: Luggage, color: 'text-rose-700', bg: 'bg-rose-100' },
+
+    // People
+    'Person': { icon: User, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    'Family': { icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+
+    // Default
+    'default': { icon: MapPin, color: 'text-gray-400', bg: 'bg-gray-50' },
+};
+
+export const ITEM_ICON_GROUPS = [
+    {
+        label: "Thiết bị chính",
+        items: ["Phone", "Tablet", "Laptop", "Monitor", "Tv", "Camera", "Gaming", "VR", "Drone", "Watch", "Device"]
+    },
+    {
+        label: "Phụ kiện & Linh kiện",
+        items: ["Charger", "Cable", "PowerBank", "Battery", "Audio", "Headphones", "Speaker", "Mouse", "Keyboard", "Hub", "Storage", "HardDrive", "Server", "Network", "Printer", "Mic", "Cpu", "Circuit", "Ram", "Database"]
+    },
+    {
+        label: "Văn phòng & Công cụ",
+        items: ["Projector", "Scanner", "Calculator", "Briefcase", "File", "Folder", "Archive", "Tag", "Tools", "Box", "Gift", "Map"]
+    },
+    {
+        label: "Thông minh & Mạng",
+        items: ["Wifi", "Bluetooth", "Cast", "Bell", "Lock", "Thermo", "Fan", "Light", "Plug", "Shield", "Key"]
+    },
+    {
+        label: "Giải trí & Khác",
+        items: ["Cassette", "Disc", "Clapper", "Film", "Radio", "Wallet", "Card", "Umbrella", "Other"]
+    }
+];
+
+export const LOCATION_ICON_GROUPS = [
+    {
+        label: "Không gian & Phòng",
+        items: ["Home", "Room", "Bedroom", "Kitchen", "Office", "Store", "Warehouse"]
+    },
+    {
+        label: "Nội thất & Lưu trữ",
+        items: ["Table", "Shelf", "Cabinet", "Drawer", "Box", "Package", "Bin"]
+    },
+    {
+        label: "Di động & Túi",
+        items: ["Bag", "Backpack", "Luggage"]
+    },
+    {
+        label: "Con người",
+        items: ["Person", "Family"]
+    }
+];

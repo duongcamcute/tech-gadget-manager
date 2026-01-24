@@ -12,6 +12,7 @@ import { TrendingUp, Package, DollarSign, BarChart3 } from "lucide-react";
 export default function AnalyticsDashboard() {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState<'category' | 'price' | 'location'>('category');
 
     useEffect(() => {
         loadData();
@@ -41,9 +42,9 @@ export default function AnalyticsDashboard() {
     };
 
     return (
-        <div className="space-y-6 p-4">
+        <div className="space-y-4 md:space-y-6 pt-2 pb-20 md:pb-4">
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
                         <Package className="h-4 w-4" />
@@ -82,35 +83,81 @@ export default function AnalyticsDashboard() {
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Category Distribution - Pie Chart */}
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Phân bổ theo loại</h3>
-                    <div className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
-                            <PieChart>
-                                <Pie
-                                    data={data.categoryDistribution}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={80}
-                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                    labelLine={false}
-                                >
-                                    {data.categoryDistribution.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    formatter={(value) => [value ?? 0, 'Số lượng']}
-                                    contentStyle={{
-                                        backgroundColor: 'rgba(255,255,255,0.95)',
-                                        borderRadius: '8px',
-                                        border: '1px solid #e5e7eb'
-                                    }}
-                                />
-                            </PieChart>
+                {/* Main Distribution Chart - Tabs */}
+                <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm md:text-base">
+                            {viewMode === 'category' ? 'Phân bổ theo Loại' :
+                                viewMode === 'price' ? 'Phân bổ theo Giá' : 'Phân bổ theo Vị trí'}
+                        </h3>
+                        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1 self-start sm:self-auto overflow-x-auto max-w-full">
+                            <button
+                                onClick={() => setViewMode('category')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${viewMode === 'category' ? 'bg-white shadow text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Loại
+                            </button>
+                            <button
+                                onClick={() => setViewMode('price')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${viewMode === 'price' ? 'bg-white shadow text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Giá tiền
+                            </button>
+                            <button
+                                onClick={() => setViewMode('location')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${viewMode === 'location' ? 'bg-white shadow text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Vị trí
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="h-[250px]" style={{ minWidth: 0, minHeight: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            {viewMode === 'price' ? (
+                                <BarChart data={data.priceDistribution}>
+                                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                    <XAxis dataKey="name" fontSize={11} interval={0} />
+                                    <YAxis fontSize={11} />
+                                    <Tooltip
+                                        formatter={(value) => [value ?? 0, 'Số lượng']}
+                                        contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '8px' }}
+                                    />
+                                    <Bar dataKey="value" fill="#ea580c" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            ) : viewMode === 'location' ? (
+                                <BarChart data={data.locationDistribution} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
+                                    <XAxis type="number" fontSize={11} />
+                                    <YAxis dataKey="name" type="category" width={100} fontSize={11} />
+                                    <Tooltip
+                                        formatter={(value) => [value ?? 0, 'Số lượng']}
+                                        contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '8px' }}
+                                    />
+                                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                                </BarChart>
+                            ) : (
+                                <PieChart>
+                                    <Pie
+                                        data={data.categoryDistribution}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={80}
+                                        label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                        labelLine={false}
+                                    >
+                                        {data.categoryDistribution.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        formatter={(value) => [value ?? 0, 'Số lượng']}
+                                        contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '8px' }}
+                                    />
+                                </PieChart>
+                            )}
                         </ResponsiveContainer>
                     </div>
                 </div>
@@ -118,8 +165,8 @@ export default function AnalyticsDashboard() {
                 {/* Status Distribution - Pie Chart */}
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Trạng thái</h3>
-                    <div className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                    <div className="h-[250px]" style={{ minWidth: 0, minHeight: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={data.statusDistribution}
@@ -152,8 +199,8 @@ export default function AnalyticsDashboard() {
                 {/* Top Brands - Bar Chart */}
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Top thương hiệu</h3>
-                    <div className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                    <div className="h-[250px]" style={{ minWidth: 0, minHeight: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.topBrands} layout="vertical">
                                 <XAxis type="number" />
                                 <YAxis dataKey="name" type="category" width={80} fontSize={12} />
@@ -174,8 +221,8 @@ export default function AnalyticsDashboard() {
                 {/* Monthly Trend - Area Chart */}
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Xu hướng mua sắm (12 tháng)</h3>
-                    <div className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                    <div className="h-[250px]" style={{ minWidth: 0, minHeight: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={data.monthlyPurchaseTrend}>
                                 <defs>
                                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">

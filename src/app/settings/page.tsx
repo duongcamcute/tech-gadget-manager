@@ -3,13 +3,112 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
-import { updateUserProfile, saveThemeSettings, addBrandAction, getBrands, createTemplate, deleteTemplate, getTemplates, exportDatabase, importDatabase, generateApiKey, revokeApiKey, getApiKeys } from "@/app/actions";
+import { updateUserProfile, saveThemeSettings, addBrandAction, getBrands, createTemplate, deleteTemplate, getTemplates, exportDatabase, importDatabase, generateApiKey, revokeApiKey, getApiKeys, getItemTypes, createItemType, deleteItemType } from "@/app/actions";
 import { ITEM_TYPES } from "@/lib/constants/options";
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/primitives";
 import { Loader2, Save, Plus, ArrowLeft, Trash2, LayoutGrid, Palette, User, ShieldCheck, Home, Server, Key, Download, Upload, Copy, Database, History } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { AuditLogViewer } from "@/features/audit/AuditLogViewer";
+
+// --- Item Type Manager Component ---
+function ItemTypeManager() {
+    const { toast } = useToast();
+    const [itemTypes, setItemTypes] = useState<any[]>([]);
+    const [newValue, setNewValue] = useState("");
+    const [newLabel, setNewLabel] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        loadItemTypes();
+    }, []);
+
+    const loadItemTypes = async () => {
+        try {
+            const res = await getItemTypes();
+            setItemTypes(res);
+        } catch (e) { }
+    };
+
+    const handleAdd = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newValue || !newLabel) return;
+        setLoading(true);
+        const res = await createItemType(newValue, newLabel);
+        if (res.success) {
+            toast(`Đã thêm loại "${newLabel}"`, "success");
+            setNewValue("");
+            setNewLabel("");
+            loadItemTypes();
+        } else {
+            toast(res.error || "Lỗi", "error");
+        }
+        setLoading(false);
+    };
+
+    const handleDelete = async (id: string, label: string) => {
+        if (!confirm(`Xác nhận xóa loại "${label}"?`)) return;
+        setLoading(true);
+        const res = await deleteItemType(id);
+        if (res.success) {
+            toast("Đã xóa", "success");
+            loadItemTypes();
+        } else {
+            toast(res.error || "Lỗi xóa", "error");
+        }
+        setLoading(false);
+    };
+
+    return (
+        <div className="space-y-4 mt-3">
+            <form onSubmit={handleAdd} className="flex gap-2 items-end">
+                <div className="flex-1 space-y-1">
+                    <Label className="text-xs font-bold text-gray-700">Mã loại (value)</Label>
+                    <Input
+                        placeholder="VD: Drone, SmartTV..."
+                        value={newValue}
+                        onChange={e => setNewValue(e.target.value)}
+                        className="h-9 bg-white"
+                    />
+                </div>
+                <div className="flex-1 space-y-1">
+                    <Label className="text-xs font-bold text-gray-700">Tên hiển thị (label)</Label>
+                    <Input
+                        placeholder="VD: Drone / Flycam..."
+                        value={newLabel}
+                        onChange={e => setNewLabel(e.target.value)}
+                        className="h-9 bg-white"
+                    />
+                </div>
+                <Button type="submit" disabled={!newValue || !newLabel || loading} className="shrink-0 h-9">
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Thêm
+                </Button>
+            </form>
+
+            <div className="pt-3 border-t border-gray-200">
+                <Label className="text-xs uppercase font-bold text-gray-500 mb-2 block">Loại tùy chỉnh của bạn</Label>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
+                    {itemTypes.map((t: any) => (
+                        <div key={t.id} className="group flex items-center gap-1 bg-white border border-gray-200 px-2 py-1 rounded-md text-sm shadow-sm hover:border-green-300 transition-colors">
+                            <span className="font-medium">{t.label}</span>
+                            <span className="text-[10px] text-gray-400 font-mono">({t.value})</span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(t.id, t.label)}
+                                className="h-5 w-5 p-0 ml-1 text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Trash2 className="h-3 w-3" />
+                            </Button>
+                        </div>
+                    ))}
+                    {itemTypes.length === 0 && <span className="text-sm text-gray-400 italic">Chưa có loại tùy chỉnh nào. Thêm mới ở trên!</span>}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-2">💡 Tip: Các loại mặc định (Cable, Charger, Laptop...) vẫn được giữ nguyên. Loại tùy chỉnh sẽ bổ sung thêm vào danh sách.</p>
+            </div>
+        </div>
+    );
+}
 
 export default function SettingsPage() {
     const { user, updateUser } = useAuthStore();
@@ -589,9 +688,14 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Future expansion for Categories, Locations management */}
-                                    <div className="text-center p-8 text-muted-foreground text-sm">
-                                        Tính năng quản lý Danh mục & Vị trí nâng cao đang được phát triển.
+                                    {/* Item Types Management */}
+                                    <div className="space-y-4 p-5 border border-dashed border-gray-300 rounded-xl bg-gray-50/50">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold text-gray-900">Quản lý Loại thiết bị</h4>
+                                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Tùy chỉnh</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Thêm các loại thiết bị mới để phân loại khi nhập kho. Những loại tùy chỉnh sẽ xuất hiện trong dropdown "Loại" khi thêm thiết bị.</p>
+                                        <ItemTypeManager />
                                     </div>
                                 </CardContent>
                             </Card>

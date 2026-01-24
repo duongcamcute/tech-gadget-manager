@@ -798,3 +798,73 @@ export async function revokeApiKey(id: string) {
 export async function getApiKeys() {
     return await prisma.apiKey.findMany({ orderBy: { createdAt: 'desc' } });
 }
+
+// --- Item History Management ---
+
+export async function deleteItemHistory(historyId: string) {
+    await requireAuth();
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Xóa lịch sử bị khóa." };
+    }
+    // -----------------------
+    try {
+        await prisma.itemHistory.delete({ where: { id: historyId } });
+        revalidatePath("/");
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: "Lỗi xóa lịch sử: " + e.message };
+    }
+}
+
+// --- Item Type Management ---
+
+export async function getItemTypes() {
+    return await prisma.itemType.findMany({ orderBy: { order: 'asc' } });
+}
+
+export async function createItemType(value: string, label: string) {
+    await requireAuth();
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Thêm loại thiết bị bị khóa." };
+    }
+    // -----------------------
+    try {
+        // Simple approach: count existing items for order
+        const existingCount = await prisma.itemType.count();
+        const newOrder = existingCount + 1;
+
+        await prisma.itemType.create({
+            data: { value, label, order: newOrder }
+        });
+        revalidatePath("/settings");
+        return { success: true };
+    } catch (e: any) {
+        console.error("CREATE ITEM TYPE ERROR:", e);
+        if (e.code === 'P2002') {
+            return { success: false, error: "Mã loại này đã tồn tại" };
+        }
+        // Check if it's a Prisma model not found error
+        if (e.message?.includes('itemType') || e.message?.includes('undefined')) {
+            return { success: false, error: "Vui lòng restart server: npx prisma generate && npm run dev" };
+        }
+        return { success: false, error: "Lỗi tạo loại thiết bị: " + e.message };
+    }
+}
+
+export async function deleteItemType(id: string) {
+    await requireAuth();
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Xóa loại thiết bị bị khóa." };
+    }
+    // -----------------------
+    try {
+        await prisma.itemType.delete({ where: { id } });
+        revalidatePath("/settings");
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: "Lỗi xóa loại thiết bị: " + e.message };
+    }
+}

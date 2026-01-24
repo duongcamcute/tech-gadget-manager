@@ -18,7 +18,7 @@ export default async function Home() {
     <main className="min-h-screen bg-primary-50/30 dark:bg-gray-900 pb-20">
       {/* Header - Full Width but centered content */}
       <div className="bg-white/80 dark:bg-gray-900/80 sticky top-0 z-40 backdrop-blur-md border-b border-primary-100 dark:border-gray-700 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4 max-w-5xl">
+        <div className="container mx-auto px-3 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3 max-w-5xl">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
               <Box className="h-6 w-6" />
@@ -29,30 +29,30 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <QrScannerButton />
             <UserMenu />
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <Tabs defaultValue="inventory" className="space-y-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-5xl">
+        <Tabs defaultValue="inventory" className="space-y-4 sm:space-y-8">
           {/* Centered Tabs List */}
           {/* Centered Tabs List - Sticky Floating Pill */}
-          <div className="flex justify-center sticky top-20 z-50 py-2">
-            <TabsList className="grid w-full max-w-[600px] grid-cols-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg border border-primary-100 dark:border-gray-700 p-1.5 h-auto rounded-full ring-1 ring-black/5">
-              <TabsTrigger value="inventory" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium text-sm">
-                <LayoutGrid className="h-4 w-4 mr-1.5" /> Kho Đồ
+          <div className="flex justify-center sticky top-[70px] z-[35] py-2 bg-primary-50/10 backdrop-blur-[1px]">
+            <TabsList className="grid w-full max-w-[600px] grid-cols-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-lg border border-primary-100 dark:border-gray-700 p-1 h-auto rounded-full ring-1 ring-black/5">
+              <TabsTrigger value="inventory" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2 sm:py-2.5 rounded-full transition-all duration-300 font-medium text-[10px] sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
+                <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Kho Đồ</span><span className="sm:hidden">Kho</span>
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium text-sm">
-                <BarChart3 className="h-4 w-4 mr-1.5" /> Thống kê
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2 sm:py-2.5 rounded-full transition-all duration-300 font-medium text-[10px] sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Thống kê</span><span className="sm:hidden">TK</span>
               </TabsTrigger>
-              <TabsTrigger value="locations" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium text-sm">
-                <Map className="h-4 w-4 mr-1.5" /> Vị trí
+              <TabsTrigger value="locations" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2 sm:py-2.5 rounded-full transition-all duration-300 font-medium text-[10px] sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
+                <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Vị trí</span><span className="sm:hidden">VT</span>
               </TabsTrigger>
-              <TabsTrigger value="add" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2.5 rounded-full transition-all duration-300 font-medium text-sm">
-                <PlusCircle className="h-4 w-4 mr-1.5" /> Thêm
+              <TabsTrigger value="add" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white data-[state=active]:shadow-md py-2 sm:py-2.5 rounded-full transition-all duration-300 font-medium text-[10px] sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
+                <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Thêm</span><span className="sm:hidden">+</span>
               </TabsTrigger>
             </TabsList>
           </div>

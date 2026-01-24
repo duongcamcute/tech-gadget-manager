@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, Input } from "@/components/ui/primitives";
 import {
@@ -56,16 +56,33 @@ export function AutoCompleteInput({ suggestions, value, onValueChange, className
                 {...props}
                 value={inputValue}
                 onChange={handleInputChange}
-                onFocus={() => setOpen(true)}
+                onFocus={(e) => {
+                    setOpen(true);
+                    e.target.select();
+                }}
                 onBlur={() => setTimeout(() => setOpen(false), 200)} // Delay to allow click
-                className={cn("w-full transition-all", className)}
+                className={cn("w-full transition-all pr-8", className)} // Added pr-8 for clear button
                 placeholder={placeholder}
                 autoComplete="off"
             />
 
+            {/* Clear Button */}
+            {inputValue && (
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelect("");
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            )}
+
             {/* Dropdown Menu - Custom built for absolute control */}
             {open && uniqueSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-[200px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] max-h-[200px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
                     {uniqueSuggestions.filter(s => s.toLowerCase().includes(inputValue.toLowerCase())).map((suggestion) => (
                         <div
                             key={suggestion}

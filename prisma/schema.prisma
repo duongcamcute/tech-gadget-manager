@@ -64,6 +64,7 @@ model Location {
   id        String     @id @default(uuid())
   name      String
   type      String     
+  icon      String?
   parentId  String?
   parent    Location?  @relation("LocationHierarchy", fields: [parentId], references: [id])
   children  Location[] @relation("LocationHierarchy")
@@ -142,5 +143,13 @@ model WebhookConfig {
   active    Boolean  @default(true)
   lastError String?
   lastRun   DateTime?
+  createdAt DateTime @default(now())
+}
+
+model ItemType {
+  id        String   @id @default(uuid())
+  value     String   @unique
+  label     String
+  order     Int      @default(0)
   createdAt DateTime @default(now())
 }

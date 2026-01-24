@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Calendar, MapPin, History, Edit3, Trash2, Save, User, Clock, Package, ArrowRight, ArrowLeft, Copy, Plus } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { X, Calendar, MapPin, History, Edit3, Trash2, Save, User, Clock, Package, ArrowRight, ArrowLeft, Copy, Plus, ChevronsUpDown, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn, buildLocationTree } from "@/lib/utils";
 import { Button, Input, Select, Label } from "@/components/ui/primitives";
 import { updateItem, deleteItem } from "@/app/actions";
 import { useRouter } from "next/navigation";
@@ -16,7 +19,8 @@ import { AutoCompleteInput } from "@/components/ui/AutoCompleteInput";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import { IconSelect } from "@/components/ui/IconSelect";
 import { getColorHex } from "@/lib/utils/colors";
-import { ITEM_TYPES } from "@/lib/constants/options";
+import { ITEM_TYPES, LOCATION_ICONS, ITEM_ICONS } from "@/lib/constants/options";
+import { TECH_SUGGESTIONS } from "@/lib/constants";
 
 const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "---";
@@ -96,6 +100,28 @@ export function ItemDetailDialog({ item, isOpen, onClose, locations }: { item: a
 
 function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT") => void, onDelete: () => void }) {
     const { toast } = useToast();
+    const router = useRouter();
+    const [localHistory, setLocalHistory] = useState<any[]>(
+        item.history ? [...item.history].sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) : []
+    );
+
+    const handleDeleteHistory = async (historyId: string) => {
+        if (!confirm("Xác nhận xóa mục lịch sử này?")) return;
+        try {
+            const { deleteItemHistory } = await import("@/app/actions");
+            const res = await deleteItemHistory(historyId);
+            if (res.success) {
+                setLocalHistory(prev => prev.filter(h => h.id !== historyId));
+                toast("Đã xóa lịch sử", "success");
+                router.refresh();
+            } else {
+                toast("Lỗi: " + res.error, "error");
+            }
+        } catch (e) {
+            toast("Lỗi hệ thống", "error");
+        }
+    };
+
     const styles = {
         'Available': "bg-emerald-100 text-emerald-800 border-emerald-200",
         'InUse': "bg-blue-100 text-blue-800 border-blue-200",
@@ -103,8 +129,8 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
         'Lost': "bg-red-100 text-red-800 border-red-200",
     } as any;
 
-    // Sort history: newest first
-    const history = item.history ? [...item.history].sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) : [];
+    // Use local state for history
+    const history = localHistory;
 
     return (
         <div className="grid md:grid-cols-12 min-h-full">
@@ -191,12 +217,23 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                     <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200 dark:bg-slate-700" />
 
                     {history.map((h: any, idx: number) => (
-                        <div key={h.id || idx} className="relative pl-6">
+                        <div key={h.id || idx} className="relative pl-6 group">
                             <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-800 bg-primary-400 shadow-sm z-10" />
-                            <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{h.action === 'CREATED' ? 'Nhập kho' : h.action === 'MOVED' ? 'Di chuyển' : h.action === 'LENT' ? 'Cho mượn' : h.action === 'RETURNED' ? 'Đã trả lại' : 'Cập nhật'}</span>
-                                <span className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{h.details}</span>
-                                <span className="text-[10px] text-gray-400 font-mono mt-1">{formatDateTimeVN(h.timestamp)}</span>
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{h.action === 'CREATED' ? 'Nhập kho' : h.action === 'MOVED' ? 'Di chuyển' : h.action === 'LENT' ? 'Cho mượn' : h.action === 'RETURNED' ? 'Đã trả lại' : 'Cập nhật'}</span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 break-words">{h.details}</span>
+                                    <span className="text-[10px] text-gray-400 font-mono mt-1">{formatDateTimeVN(h.timestamp)}</span>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteHistory(h.id)}
+                                    className="h-6 w-6 p-0 text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                    title="Xóa mục lịch sử này"
+                                >
+                                    <Trash2 className="h-3 w-3" />
+                                </Button>
                             </div>
                         </div>
                     ))}
@@ -218,6 +255,30 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
     const router = useRouter();
     const [serverBrands, setServerBrands] = useState<any[]>([]);
     const [serverContacts, setServerContacts] = useState<any[]>([]);
+    const [availableItemTypes, setAvailableItemTypes] = useState<any[]>([...ITEM_TYPES]);
+    const [openType, setOpenType] = useState(false);
+    const [openLocation, setOpenLocation] = useState(false);
+    const flatLocations = useMemo(() => buildLocationTree(locations || []), [locations]);
+
+
+    useEffect(() => {
+        const loadTypes = async () => {
+            try {
+                const { getItemTypes } = await import("@/app/actions");
+                const dynamicTypes = await getItemTypes();
+                if (dynamicTypes && dynamicTypes.length > 0) {
+                    setAvailableItemTypes(prev => {
+                        const combined = [...ITEM_TYPES, ...dynamicTypes];
+                        return Array.from(new Map(combined.map(item => [item.value, item])).values());
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to load dynamic types", e);
+            }
+        };
+        loadTypes();
+    }, []);
+
     const [imgPreview, setImgPreview] = useState<string | null>(item.image || null);
     const [warrantyMonths, setWarrantyMonths] = useState<string>("");
 
@@ -328,12 +389,51 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                     </div>
                     <div className="col-span-1">
                         <Label>Loại thiết bị</Label>
-                        <Select {...form.register("type")} className="bg-white dark:bg-gray-800 dark:text-gray-100">
-                            <option value="Other">Khác</option>
-                            {ITEM_TYPES.map(t => (
-                                <option key={t.value} value={t.value}>{t.label}</option>
-                            ))}
-                        </Select>
+                        <Popover open={openType} onOpenChange={setOpenType} modal={true}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openType}
+                                    className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                                >
+                                    <span className="truncate">
+                                        {form.watch("type")
+                                            ? availableItemTypes.find((type) => type.value === form.watch("type"))?.label
+                                            : "Chọn loại..."}
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[280px] p-0 z-[9999]" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Tìm loại thiết bị..." />
+                                    <CommandList>
+                                        <CommandEmpty>Không tìm thấy loại này.</CommandEmpty>
+                                        <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                            {availableItemTypes.map((type) => (
+                                                <CommandItem
+                                                    key={type.value}
+                                                    value={type.label}
+                                                    onSelect={() => {
+                                                        form.setValue("type", type.value, { shouldDirty: true, shouldTouch: true });
+                                                        setOpenType(false);
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            form.watch("type") === type.value ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    {type.label}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <div className="col-span-1">
                         <Label>Icon</Label>
@@ -345,7 +445,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                     <div>
                         <Label>Hãng</Label>
                         <AutoCompleteInput
-                            suggestions={serverBrands.map(b => b.name)}
+                            suggestions={Array.from(new Set([...serverBrands.map(b => b.name), ...TECH_SUGGESTIONS.brands]))}
                             value={form.watch("brand") || ""}
                             onValueChange={(v) => form.setValue("brand", v)}
                             className="bg-white dark:bg-gray-800 dark:text-gray-100"
@@ -499,10 +599,60 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                         </div>
                         <div>
                             <Label>Vị trí</Label>
-                            <Select {...form.register("locationId")} className="bg-white dark:bg-gray-800 dark:text-gray-100">
-                                <option value="">-- Chưa xác định --</option>
-                                {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                            </Select>
+                            <Popover open={openLocation} onOpenChange={setOpenLocation} modal={true}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={openLocation}
+                                        className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                                    >
+                                        <span className="truncate">
+                                            {form.watch("locationId")
+                                                ? flatLocations.find((l: any) => l.id === form.watch("locationId"))?.name
+                                                : "-- Chưa xác định --"}
+                                        </span>
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[300px] p-0 z-[9999]" align="start">
+                                    <Command>
+                                        <CommandInput placeholder="Tìm vị trí..." />
+                                        <CommandList>
+                                            <CommandEmpty>Không tìm thấy vị trí.</CommandEmpty>
+                                            <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                                {flatLocations.map((loc: any) => (
+                                                    <CommandItem
+                                                        key={loc.id}
+                                                        value={loc.name}
+                                                        onSelect={() => {
+                                                            form.setValue("locationId", loc.id, { shouldDirty: true, shouldTouch: true });
+                                                            setOpenLocation(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4 shrink-0",
+                                                                form.watch("locationId") === loc.id ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        <div style={{ marginLeft: loc.level * 16 }} className="flex items-center gap-2 truncate">
+                                                            {(() => {
+                                                                if (loc.icon) {
+                                                                    const { icon: Icon, color } = LOCATION_ICONS[loc.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
+                                                                    return <Icon size={14} className={color} />;
+                                                                }
+                                                                return <span>{loc.type === 'Container' ? '📦' : loc.type === 'Person' ? '👤' : '🏠'}</span>
+                                                            })()}
+                                                            {loc.name}
+                                                        </div>
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
 
