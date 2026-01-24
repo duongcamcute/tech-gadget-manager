@@ -296,7 +296,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
     };
 
     return (
-        <Card className="shadow-lg border-0 ring-1 ring-primary-100 bg-white/90 backdrop-blur-sm">
+        <Card className="shadow-lg border-0 ring-1 ring-primary-100 dark:ring-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
             <CardHeader className="pb-3 flex flex-row items-center justify-between border-b border-primary-50">
                 <CardTitle className="flex items-center gap-2 text-primary-600">
                     <Wand2 className="h-5 w-5" />

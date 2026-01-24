@@ -1,0 +1,23 @@
+services:
+  app:
+    # Ví dụ: ghcr.io/duongcamcute/tech-gadget-manager:latest
+    image: ghcr.io/duongcamcute/tech-gadget-manager:latest
+    container_name: tech-gadget-manager
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database Connection (SQLite file in volume)
+      - DATABASE_URL=file:/app/db/prod.db
+      # Production Mode
+      - NODE_ENV=production
+      # Security Keys (Thay đổi thành chuỗi ngẫu nhiên dài)
+      - JWT_SECRET=change_this_to_a_super_secret_random_string_in_production_12345
+      # Disable Demo Mode
+      - NEXT_PUBLIC_DEMO_MODE=false
+    volumes:
+      # Persistent Data (Database, Uploads)
+      # Map thư mục ./db trên máy host vào /app/db trong container
+      - ./db:/app/db
+      # Map thư mục ./public/uploads nếu có tính năng upload ảnh local
+      - ./uploads:/app/public/uploads

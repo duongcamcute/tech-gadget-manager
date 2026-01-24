@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { QrCode, Package, Database, Search, LayoutDashboard, Tag, Wallet, Check, X, ArrowRightLeft, List, LayoutGrid, HelpCircle, Trash2 } from "lucide-react";
+import { QrCode, Package, Database, Search, LayoutDashboard, Tag, Wallet, Check, X, ArrowRightLeft, List, LayoutGrid, HelpCircle, Trash2, AlertTriangle, Shield, Clock } from "lucide-react";
 import { Card, Button, Input, Select } from "@/components/ui/primitives";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ItemDetailDialog } from "./ItemDetailDialog";
@@ -14,7 +14,9 @@ import { getColorHex } from "@/lib/utils/colors";
 import { QrCard } from "@/components/printing/QrCard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { bulkMoveItems, bulkDeleteItems } from "@/app/actions";
-import { bulkLendItems, returnItem } from "@/features/lending/actions";
+import { bulkLendItems, lendItem, returnItem } from "@/features/lending/actions";
+import { checkOverdue, getUrgencyLevel, formatOverdueStatus } from "@/lib/utils/overdueChecker";
+import { checkWarranty, getWarrantyUrgency, formatWarrantyStatus } from "@/lib/utils/warrantyChecker";
 
 function getItemIconData(item: any) {
     const type = item.category || item.type || 'Other';
@@ -97,7 +99,14 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             const matchesCategory = activeFilters.category === 'all' || itemCategory === activeFilters.category || (ITEM_TYPES.find(t => t.value === activeFilters.category)?.label === itemCategory);
 
             const matchesBrand = activeFilters.brand === 'all' || item.brand === activeFilters.brand;
-            const matchesStatus = activeFilters.status === 'all' || item.status === activeFilters.status;
+
+            let matchesStatus = true;
+            if (activeFilters.status === 'unsorted') {
+                matchesStatus = !item.locationId;
+            } else if (activeFilters.status !== 'all') {
+                matchesStatus = item.status === activeFilters.status;
+            }
+
             const matchesColor = activeFilters.color === 'all' || item.color === activeFilters.color;
 
             // Spec checking
@@ -115,11 +124,29 @@ export default function InventoryManager({ initialItems, locations }: { initialI
 
     // Dashboard Stats
     const stats = useMemo(() => {
+        const lentItems = initialItems.filter(i => i.status === 'Lent');
+        const overdueItems = lentItems.filter(i => {
+            if (i.activeLending?.dueDate) {
+                return checkOverdue(i.activeLending.dueDate).isOverdue;
+            }
+            return false;
+        });
+        // Warranty stats - items expiring within 30 days
+        const warrantyExpiringItems = initialItems.filter(i => {
+            if (i.warrantyEnd) {
+                const info = checkWarranty(i.warrantyEnd);
+                return info.isExpiringSoon || info.isExpired;
+            }
+            return false;
+        });
         return {
             total: initialItems.length,
             value: initialItems.reduce((acc, item) => acc + (item.purchasePrice || 0), 0),
-            lending: initialItems.filter(i => i.status === 'Lent').length,
-            available: initialItems.filter(i => i.status === 'Available').length
+            lending: lentItems.length,
+            available: initialItems.filter(i => i.status === 'Available').length,
+            unsorted: initialItems.filter(i => !i.location || !i.locationId).length,
+            overdue: overdueItems.length,
+            warrantyExpiring: warrantyExpiringItems.length
         };
     }, [initialItems]);
 
@@ -195,12 +222,12 @@ export default function InventoryManager({ initialItems, locations }: { initialI
 
             {/* Header Title Only */}
             <div className="flex flex-col gap-2 p-2">
-                <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Kho thiết bị</h1>
-                <p className="text-gray-500">Quản lý toàn bộ {initialItems.length} thiết bị trong kho của bạn</p>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Kho thiết bị</h1>
+                <p className="text-gray-500 dark:text-gray-400">Quản lý toàn bộ {initialItems.length} thiết bị trong kho của bạn</p>
             </div>
 
             {/* Dashboard Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 select-none">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 select-none">
                 <div onClick={() => setActiveFilters(prev => ({ ...prev, status: 'all' }))} className={`cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 p-5 rounded-2xl text-white shadow-lg shadow-primary-500/20 transition-all active:scale-95 ${activeFilters.status === 'all' ? 'ring-2 ring-offset-2 ring-primary-500' : 'opacity-90 hover:opacity-100'}`}>
                     <div className="flex items-center gap-2 opacity-80 mb-1 whitespace-nowrap"><LayoutDashboard className="h-4 w-4" /> Tổng giá trị</div>
                     <div className="text-3xl font-bold tracking-tight">
@@ -214,21 +241,47 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                     <div className="text-[10px] opacity-70 mt-1 font-medium whitespace-nowrap">{stats.total} thiết bị</div>
                 </div>
 
-                <div onClick={() => setActiveFilters(prev => ({ ...prev, status: 'Available' }))} className={`cursor-pointer bg-white p-5 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95 ${activeFilters.status === 'Available' ? 'ring-2 ring-offset-2 ring-blue-500 bg-blue-50' : 'hover:border-blue-300'}`}>
-                    <div className="flex items-center gap-2 text-blue-600 mb-1 font-medium whitespace-nowrap"><Check className="h-4 w-4" /> Sẵn sàng</div>
-                    <div className="text-2xl font-bold text-gray-800">{stats.available}</div>
+                <div onClick={() => setActiveFilters(prev => ({ ...prev, status: 'Available' }))} className={`cursor-pointer bg-white dark:bg-gray-800 p-5 rounded-2xl border border-blue-100 dark:border-blue-900 shadow-sm transition-all active:scale-95 ${activeFilters.status === 'Available' ? 'ring-2 ring-offset-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'hover:border-blue-300 dark:hover:border-blue-700'}`}>
+                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1 font-medium whitespace-nowrap"><Check className="h-4 w-4" /> Sẵn sàng</div>
+                    <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.available}</div>
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">Có thể sử dụng ngay</div>
                 </div>
 
-                <div onClick={() => setActiveFilters(prev => ({ ...prev, status: 'Lent' }))} className={`cursor-pointer bg-white p-5 rounded-2xl border border-purple-100 shadow-sm transition-all active:scale-95 ${activeFilters.status === 'Lent' ? 'ring-2 ring-offset-2 ring-purple-500 bg-purple-50' : 'hover:border-purple-300'}`}>
-                    <div className="flex items-center gap-2 text-purple-600 mb-1 font-medium whitespace-nowrap"><ArrowRightLeft className="h-4 w-4" /> Đang cho mượn</div>
-                    <div className="text-2xl font-bold text-gray-800">{stats.lending}</div>
+                <div onClick={() => setActiveFilters(prev => ({ ...prev, status: 'Lent' }))} className={`cursor-pointer bg-white dark:bg-gray-800 p-5 rounded-2xl border border-purple-100 dark:border-purple-900 shadow-sm transition-all active:scale-95 ${activeFilters.status === 'Lent' ? 'ring-2 ring-offset-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'hover:border-purple-300 dark:hover:border-purple-700'}`}>
+                    <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 mb-1 font-medium whitespace-nowrap"><ArrowRightLeft className="h-4 w-4" /> Đang cho mượn</div>
+                    <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.lending}</div>
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">Đang được sử dụng</div>
                 </div>
 
+                {/* Unsorted Items Card */}
+                <div onClick={() => setActiveFilters(prev => ({ ...prev, status: 'unsorted' }))} className={`cursor-pointer bg-white dark:bg-gray-800 p-5 rounded-2xl border border-amber-100 dark:border-amber-900 shadow-sm transition-all active:scale-95 ${activeFilters.status === 'unsorted' ? 'ring-2 ring-offset-2 ring-amber-500 bg-amber-50 dark:bg-amber-900/30' : 'hover:border-amber-300 dark:hover:border-amber-700'}`}>
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-1 font-medium whitespace-nowrap"><HelpCircle className="h-4 w-4" /> Chưa phân loại</div>
+                    <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.unsorted}</div>
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">Cần sắp xếp vị trí</div>
+                </div>
+
+                {/* Overdue Alert Card */}
+                {stats.overdue > 0 && (
+                    <div className="cursor-pointer bg-gradient-to-br from-red-500 to-red-600 p-5 rounded-2xl text-white shadow-lg shadow-red-500/20 transition-all active:scale-95 animate-pulse">
+                        <div className="flex items-center gap-2 opacity-90 mb-1 font-medium whitespace-nowrap"><AlertTriangle className="h-4 w-4" /> Quá hạn!</div>
+                        <div className="text-2xl font-bold">{stats.overdue}</div>
+                        <div className="text-[10px] opacity-80 mt-1 font-medium">Cần thu hồi gấp</div>
+                    </div>
+                )}
+
+                {/* Warranty Expiring Card */}
+                {stats.warrantyExpiring > 0 && (
+                    <div className="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-500 p-5 rounded-2xl text-white shadow-lg shadow-amber-500/20 transition-all active:scale-95">
+                        <div className="flex items-center gap-2 opacity-90 mb-1 font-medium whitespace-nowrap"><Shield className="h-4 w-4" /> Bảo hành</div>
+                        <div className="text-2xl font-bold">{stats.warrantyExpiring}</div>
+                        <div className="text-[10px] opacity-80 mt-1 font-medium">Sắp hết hạn (30 ngày)</div>
+                    </div>
+                )}
 
             </div>
 
             {/* Static Filters & View Toggle - NOT Sticky and NO specific white fix */}
-            <div className="space-y-3 bg-gray-50/50 p-3 rounded-2xl border border-gray-200 shadow-sm transition-all">
+            <div className="space-y-3 bg-gray-50/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -236,13 +289,13 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                             placeholder="Tìm kiếm thiết bị, mã, hãng..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 bg-white border-gray-200 rounded-xl"
+                            className="pl-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 dark:text-gray-100 rounded-xl"
                         />
                     </div>
                     <Button
                         variant="outline"
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className={`rounded-xl border-gray-200 ${isFilterOpen ? 'bg-primary-50 text-primary-600 border-primary-200' : 'bg-white text-gray-600'}`}
+                        className={`rounded-xl border-gray-200 dark:border-gray-600 ${isFilterOpen ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-700' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}
                     >
                         <List className="h-4 w-4 mr-2" /> Bộ lọc
                     </Button>
@@ -251,15 +304,15 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                 {/* Collapsible Filters */}
                 {isFilterOpen && (
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 animate-in slide-in-from-top-2 fade-in duration-200">
-                        <Select value={activeFilters.category} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, category: e.target.value }))} className="w-full bg-white rounded-xl text-xs h-9">
+                        <Select value={activeFilters.category} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, category: e.target.value }))} className="w-full bg-white dark:bg-gray-800 dark:text-gray-100 rounded-xl text-xs h-9">
                             <option value="all">Tất cả loại</option>
                             {ITEM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </Select>
-                        <Select value={activeFilters.brand} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, brand: e.target.value }))} className="w-full bg-white rounded-xl text-xs h-9">
+                        <Select value={activeFilters.brand} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, brand: e.target.value }))} className="w-full bg-white dark:bg-gray-800 dark:text-gray-100 rounded-xl text-xs h-9">
                             <option value="all">Tất cả hãng</option>
                             {filterOptions.brands.map(b => <option key={b} value={b}>{b}</option>)}
                         </Select>
-                        <Select value={activeFilters.color} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, color: e.target.value }))} className="w-full bg-white rounded-xl text-xs h-9">
+                        <Select value={activeFilters.color} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, color: e.target.value }))} className="w-full bg-white dark:bg-gray-800 dark:text-gray-100 rounded-xl text-xs h-9">
                             <option value="all">Tất cả màu</option>
                             {filterOptions.colors.map(c => <option key={c} value={c}>{c}</option>)}
                         </Select>
@@ -279,14 +332,14 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             {/* View Toggle & Count */}
             <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-bold text-gray-900 border-l-4 border-primary-500 pl-3">Danh sách thiết bị</h2>
-                    <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
-                        <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}><LayoutGrid className="w-4 h-4" /></button>
-                        <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}><List className="w-4 h-4" /></button>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 border-l-4 border-primary-500 pl-3">Danh sách thiết bị</h2>
+                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}><LayoutGrid className="w-4 h-4" /></button>
+                        <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}><List className="w-4 h-4" /></button>
                     </div>
                 </div>
                 <div className="flex gap-2 items-center">
-                    <Select className="h-8 text-xs w-40 bg-white" onChange={(e) => { if (e.target.value) setViewLocation(locations.find(l => l.id === e.target.value)); }}>
+                    <Select className="h-8 text-xs w-40 bg-white dark:bg-gray-800 dark:text-gray-100" onChange={(e) => { if (e.target.value) setViewLocation(locations.find(l => l.id === e.target.value)); }}>
                         <option value="">Quản lý túi đồ...</option>
                         {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </Select>
@@ -296,10 +349,10 @@ export default function InventoryManager({ initialItems, locations }: { initialI
 
             {/* Main Content Area */}
             {viewMode === 'list' ? (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                            <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700">
                                 <tr>
                                     <th className="px-4 py-3 w-10"><Checkbox checked={selectedIds.size === filteredItems.length && filteredItems.length > 0} onCheckedChange={toggleAll} /></th>
                                     <th className="px-4 py-3">Thiết bị</th>
@@ -308,14 +361,14 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                     <th className="px-4 py-3 text-right">QR</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                 {filteredItems.map(item => {
                                     const { icon: Icon, color, bg } = getItemIconData(item);
                                     const specs = typeof item.specs === 'string' ? JSON.parse(item.specs) : item.specs || {};
                                     const isSelected = selectedIds.has(item.id);
 
                                     return (
-                                        <tr key={item.id} className={`group hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-primary-50/50' : ''}`} onClick={() => setSelectedItem(item)}>
+                                        <tr key={item.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${isSelected ? 'bg-primary-50/50 dark:bg-primary-900/30' : ''}`} onClick={() => setSelectedItem(item)}>
                                             <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => toggleSelection(item.id)} /></td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
@@ -323,7 +376,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                                         <Icon className="w-5 h-5" />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-gray-900">{item.name}</div>
+                                                        <div className="font-bold text-gray-900 dark:text-gray-100">{item.name}</div>
                                                         <div className="flex gap-2 text-xs text-gray-500">
                                                             <span className={`${getStatusColorClasses(item.status)} px-1.5 rounded-full text-[10px] uppercase font-bold`}>{getItemStatusLabel(item.status)}</span>
                                                             {item.brand}
@@ -359,7 +412,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                         const isWhite = item.color && getColorHex(item.color) === '#ffffff';
 
                         return (
-                            <Card key={item.id} className={`group relative flex h-full min-h-[140px] bg-white border-primary-100/60 shadow-sm hover:shadow-xl hover:shadow-primary-100/50 hover:border-primary-300 transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden ${isSelected ? 'ring-2 ring-primary-500 ring-offset-2 border-primary-500' : ''}`}>
+                            <Card key={item.id} className={`group relative flex h-full min-h-[140px] bg-white dark:bg-gray-800 border-primary-100/60 dark:border-gray-700 shadow-sm hover:shadow-xl hover:shadow-primary-100/50 dark:hover:shadow-gray-900/50 hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden ${isSelected ? 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-900 border-primary-500' : ''}`}>
                                 <div className="flex flex-row w-full">
                                     {/* Selection */}
                                     <div className={`absolute top-2 left-2 z-20 ${selectedIds.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-200'}`}>
@@ -403,6 +456,36 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                                         </Button>
                                                     </PopoverContent>
                                                 </Popover>
+                                            ) : item.status === 'Available' ? (
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <div className={`cursor-pointer hover:scale-105 transition-transform text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm border bg-white/95 backdrop-blur-md whitespace-nowrap ${getStatusColorClasses(item.status)}`}>
+                                                            {getItemStatusLabel(item.status)}
+                                                        </div>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-72 p-3 bg-white" side="top">
+                                                        <form onSubmit={async (e) => {
+                                                            e.preventDefault();
+                                                            const fd = new FormData(e.currentTarget);
+                                                            const borrowerName = fd.get('borrower') as string;
+                                                            const dueDateStr = fd.get('dueDate') as string;
+                                                            const dueDate = dueDateStr ? new Date(dueDateStr) : undefined;
+                                                            if (borrowerName) {
+                                                                await lendItem(item.id, borrowerName, dueDate);
+                                                                toast("Đã cho mượn!", "success");
+                                                                router.refresh();
+                                                            }
+                                                        }} className="space-y-2">
+                                                            <h4 className="font-bold text-xs flex items-center gap-1"><Wallet className="h-3 w-3" /> Cho mượn thiết bị</h4>
+                                                            <Input name="borrower" placeholder="Tên người mượn..." required className="h-8 text-xs" />
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] text-gray-500">Ngày dự kiến trả</label>
+                                                                <Input name="dueDate" type="date" className="h-8 text-xs" />
+                                                            </div>
+                                                            <Button type="submit" size="sm" className="w-full h-7 text-xs bg-primary-600 text-white">Xác nhận</Button>
+                                                        </form>
+                                                    </PopoverContent>
+                                                </Popover>
                                             ) : (
                                                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm border bg-white/95 backdrop-blur-md whitespace-nowrap ${getStatusColorClasses(item.status)}`}>
                                                     {getItemStatusLabel(item.status)}
@@ -418,7 +501,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold max-w-full truncate">{item.type || 'Thiết bị'}</span>
                                                 {item.brand && <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold max-w-full truncate">{item.brand}</span>}
                                             </div>
-                                            <h3 className="font-bold text-sm text-gray-900 line-clamp-2 leading-tight mb-2" title={item.name}>{item.name}</h3>
+                                            <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 line-clamp-2 leading-tight mb-2" title={item.name}>{item.name}</h3>
 
                                             <div className="flex flex-wrap gap-1">
                                                 {specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] text-orange-700 border border-orange-100 font-medium whitespace-nowrap" title="Công suất">⚡ {specs.power}</span>}
@@ -427,8 +510,38 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center text-xs text-gray-500 mt-2 pt-2 border-t border-gray-50">
-                                            {item.location ? <><Database className="h-3 w-3 mr-1 shrink-0" /> <span className="truncate">{item.location.name}</span></> : <span className="italic text-gray-300">--</span>}
+                                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-2 pt-2 border-t border-gray-50 dark:border-gray-700">
+                                            {item.status === 'Lent' && item.activeLending ? (() => {
+                                                const urgency = item.activeLending.dueDate ? getUrgencyLevel(item.activeLending.dueDate) : 'none';
+                                                const overdueStatus = item.activeLending.dueDate ? formatOverdueStatus(item.activeLending.dueDate) : '';
+                                                return (
+                                                    <div className="flex flex-col gap-0.5 w-full">
+                                                        <div className="flex items-center gap-1 justify-between">
+                                                            <span className="text-purple-600 dark:text-purple-400 font-medium">👤 {item.activeLending.borrowerName}</span>
+                                                            {urgency === 'overdue' && (
+                                                                <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[9px] font-bold animate-pulse">
+                                                                    QUÁ HẠN
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {item.activeLending.dueDate && (
+                                                            <div className="flex items-center gap-1 text-[10px]">
+                                                                <span className={`font-medium ${urgency === 'overdue' ? 'text-red-600 dark:text-red-400' :
+                                                                    urgency === 'urgent' ? 'text-orange-600 dark:text-orange-400' :
+                                                                        urgency === 'warning' ? 'text-amber-600 dark:text-amber-400' :
+                                                                            'text-gray-500 dark:text-gray-400'
+                                                                    }`}>
+                                                                    📅 {overdueStatus}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })() : item.location ? (
+                                                <><Database className="h-3 w-3 mr-1 shrink-0" /> <span className="truncate">{item.location.name}</span></>
+                                            ) : (
+                                                <span className="italic text-gray-300">--</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -440,21 +553,22 @@ export default function InventoryManager({ initialItems, locations }: { initialI
 
             {/* Bulk Actions Floating Bar */}
             {selectedIds.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-md border border-primary-200 shadow-2xl rounded-full px-4 py-3 z-50 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-300 ring-4 ring-primary-50/50 max-w-[95vw] overflow-x-auto">
-                    <span className="font-bold text-gray-700 text-sm whitespace-nowrap mr-2 pl-1">{selectedIds.size} đã chọn</span>
-                    <div className="h-6 w-px bg-gray-200 mx-1"></div>
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-primary-200 dark:border-gray-600 shadow-2xl rounded-full px-4 py-3 z-50 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-300 ring-4 ring-primary-50/50 dark:ring-gray-700/50 max-w-[95vw] overflow-x-auto">
+                    <span className="font-bold text-gray-700 dark:text-gray-200 text-sm whitespace-nowrap mr-2 pl-1">{selectedIds.size} đã chọn</span>
+                    <div className="h-6 w-px bg-gray-200 dark:bg-gray-600 mx-1"></div>
 
                     <Popover>
                         <PopoverTrigger asChild><Button size="sm" variant="ghost"><Wallet className="h-4 w-4 mr-2" /> Cho mượn</Button></PopoverTrigger>
-                        <PopoverContent className="w-72 p-4 bg-white" side="top">
+                        <PopoverContent className="w-80 p-4 bg-white dark:bg-gray-800" side="top">
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
-                                const fd = new FormData(e.currentTarget); // Simplification, assuming handling logic similar to original or will add back if broken.
-                                // Simplified to just text for now to restore functionality logic if needed or assume separate handler
+                                const fd = new FormData(e.currentTarget);
                                 const name = fd.get('borrower') as string;
+                                const dueDateStr = fd.get('dueDate') as string;
+                                const dueDate = dueDateStr ? new Date(dueDateStr) : undefined;
                                 if (name) {
                                     setIsLending(true);
-                                    await bulkLendItems(Array.from(selectedIds), name);
+                                    await bulkLendItems(Array.from(selectedIds), name, dueDate);
                                     setIsLending(false);
                                     toast("Đã cho mượn!", "success");
                                     setSelectedIds(new Set());
@@ -462,18 +576,26 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                 }
                             }} className="space-y-3">
                                 <h4 className="font-bold text-sm">Cho mượn thiết bị</h4>
-                                <Input name="borrower" placeholder="Tên người mượn..." required className="h-8" />
-                                <Button type="submit" size="sm" className="w-full bg-primary-600 text-white">Xác nhận</Button>
+                                <div className="space-y-2">
+                                    <Input name="borrower" placeholder="Tên người mượn..." required className="h-9" />
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-500">Ngày dự kiến trả (tùy chọn)</label>
+                                        <Input name="dueDate" type="date" className="h-9" />
+                                    </div>
+                                </div>
+                                <Button type="submit" size="sm" className="w-full bg-primary-600 text-white" disabled={isLending}>
+                                    {isLending ? "Đang xử lý..." : "Xác nhận cho mượn"}
+                                </Button>
                             </form>
                         </PopoverContent>
                     </Popover>
 
                     <Popover>
                         <PopoverTrigger asChild><Button size="sm" variant="ghost"><ArrowRightLeft className="h-4 w-4 mr-2" /> Chuyển kho</Button></PopoverTrigger>
-                        <PopoverContent className="w-64 p-2 bg-white" side="top">
+                        <PopoverContent className="w-64 p-2 bg-white dark:bg-gray-800" side="top">
                             <div className="max-h-60 overflow-y-auto space-y-1">
                                 {locations.map(loc => (
-                                    <div key={loc.id} className="px-3 py-2 rounded hover:bg-gray-100 cursor-pointer text-sm" onClick={() => handleBulkMove(loc.id)}>
+                                    <div key={loc.id} className="px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm dark:text-gray-200" onClick={() => handleBulkMove(loc.id)}>
                                         {loc.name}
                                     </div>
                                 ))}
@@ -481,7 +603,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                         </PopoverContent>
                     </Popover>
 
-                    <div className="h-6 w-px bg-gray-200 mx-1"></div>
+                    <div className="h-6 w-px bg-gray-200 dark:bg-gray-600 mx-1"></div>
                     <Button size="sm" variant="ghost" onClick={handleBulkDelete} className="text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4 mr-2" /> Xóa</Button>
                     <Button variant="ghost" size="icon" onClick={() => setSelectedIds(new Set())}><X className="h-4 w-4" /></Button>
                 </div>
@@ -495,13 +617,13 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             {/* QR Export Preview (Simplified structure) */}
             {isQrPreviewOpen && (
                 <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col p-6">
                         <div className="flex justify-between mb-4">
-                            <h3 className="font-bold text-xl">Xuất QR Code</h3>
+                            <h3 className="font-bold text-xl dark:text-gray-100">Xuất QR Code</h3>
                             <Button variant="ghost" onClick={() => setIsQrPreviewOpen(false)}><X /></Button>
                         </div>
-                        <div className="flex-1 overflow-auto bg-gray-100 p-8 flex flex-wrap gap-4 justify-center content-start">
-                            <div id="qr-export-container" className="grid grid-cols-3 gap-8 bg-white p-8">
+                        <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 p-8 flex flex-wrap gap-4 justify-center content-start">
+                            <div id="qr-export-container" className="grid grid-cols-3 gap-8 bg-white dark:bg-gray-800 p-8">
                                 {initialItems.filter(i => selectedIds.has(i.id)).map(item => (
                                     <div key={item.id} style={{ transform: 'scale(1)', width: '300px', height: '350px' }}>
                                         <QrCard item={item} simpleMode={true} />

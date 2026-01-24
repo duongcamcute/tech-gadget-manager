@@ -9,7 +9,12 @@ export async function InventoryList() {
             take: 200,
             include: {
                 location: true,
-                history: { orderBy: { timestamp: 'desc' }, take: 5 } // Fetch history for detail preview
+                history: { orderBy: { timestamp: 'desc' }, take: 5 },
+                lendingRecords: {
+                    where: { returnDate: null }, // Chỉ lấy records đang active (chưa trả)
+                    orderBy: { borrowDate: 'desc' },
+                    take: 1
+                }
             }
         }),
         getLocations()
@@ -22,7 +27,13 @@ export async function InventoryList() {
         purchaseDate: item.purchaseDate ? item.purchaseDate.toISOString() : null,
         warrantyEnd: item.warrantyEnd ? item.warrantyEnd.toISOString() : null,
         location: item.location ? { ...item.location } : null,
-        history: item.history.map(h => ({ ...h, timestamp: h.timestamp.toISOString() }))
+        history: item.history.map(h => ({ ...h, timestamp: h.timestamp.toISOString() })),
+        // Thêm thông tin lending cho UI
+        activeLending: item.lendingRecords[0] ? {
+            borrowerName: item.lendingRecords[0].borrowerName,
+            borrowDate: item.lendingRecords[0].borrowDate.toISOString(),
+            dueDate: item.lendingRecords[0].dueDate ? item.lendingRecords[0].dueDate.toISOString() : null
+        } : null
     }));
 
     return <InventoryManager initialItems={items} locations={locations} />;

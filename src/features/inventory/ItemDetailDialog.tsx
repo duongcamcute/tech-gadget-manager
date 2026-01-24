@@ -57,24 +57,24 @@ export function ItemDetailDialog({ item, isOpen, onClose, locations }: { item: a
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/50">
                     <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-center bg-white">
+                        <div className="h-12 w-12 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-600 flex items-center justify-center bg-white dark:bg-gray-700">
                             <div className="w-8 h-8 rounded-full shadow-inner border border-gray-100" style={{ backgroundColor: getColorHex(item.color) }} title={item.color || "No color"} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 line-clamp-1">{mode === 'EDIT' ? 'Chỉnh sửa thông tin' : item.name}</h2>
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <span className="font-mono bg-gray-100 px-1.5 rounded text-xs">#{item.id.slice(0, 6)}</span>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{mode === 'EDIT' ? 'Chỉnh sửa thông tin' : item.name}</h2>
+                            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 rounded text-xs">#{item.id.slice(0, 6)}</span>
                                 <span>•</span>
-                                <span className="font-medium text-primary-600">{item.brand || "Chưa rõ hãng"}</span>
+                                <span className="font-medium text-primary-600 dark:text-primary-400">{item.brand || "Chưa rõ hãng"}</span>
                             </div>
                         </div>
                     </div>
-                    <Button variant="ghost" onClick={onClose} className="rounded-full h-8 w-8 p-0 hover:bg-gray-200"><X className="h-5 w-5 text-gray-500" /></Button>
+                    <Button variant="ghost" onClick={onClose} className="rounded-full h-8 w-8 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"><X className="h-5 w-5 text-gray-500 dark:text-gray-400" /></Button>
                 </div>
 
                 {/* Body */}
@@ -111,7 +111,7 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
 
                 {/* Image if exists */}
                 {item.image && (
-                    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 flex items-center justify-center">
+                    <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                         <img src={item.image} alt={item.name} className="w-full max-h-[350px] object-contain hover:scale-105 transition-transform duration-500" />
                     </div>
                 )}
@@ -124,29 +124,29 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                         {item.status === 'Lent' && "Đang cho mượn"}
                         {item.status === 'Lost' && "Thất lạc"}
                     </span>
-                    <div className="flex items-center text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                        <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">
+                        <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500 dark:text-gray-400" />
                         <span className="font-medium">{item.location?.name || "Chưa có vị trí"}</span>
                     </div>
                 </div>
 
                 {/* Specs Grid */}
                 <div>
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Chi tiết kỹ thuật</h3>
-                    <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        {item.brand && <div><p className="text-[10px] text-gray-500 uppercase">Hãng sản xuất</p><p className="font-medium text-gray-900">{item.brand}</p></div>}
-                        {item.model && <div><p className="text-[10px] text-gray-500 uppercase">Model</p><p className="font-mono font-medium text-gray-900">{item.model}</p></div>}
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3">Chi tiết kỹ thuật</h3>
+                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-gray-900/50 p-4 rounded-xl border border-slate-100 dark:border-gray-700">
+                        {item.brand && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Hãng sản xuất</p><p className="font-medium text-gray-900 dark:text-gray-100">{item.brand}</p></div>}
+                        {item.model && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Model</p><p className="font-mono font-medium text-gray-900 dark:text-gray-100">{item.model}</p></div>}
                         {/* Removed duplicate Model */}
-                        {item.color && <div><p className="text-[10px] text-gray-500 uppercase">Màu sắc</p><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: getColorHex(item.color) }}></div><p className="font-medium text-gray-900">{item.color}</p></div></div>}
-                        {item.purchaseDate && <div><p className="text-[10px] text-gray-500 uppercase">Ngày mua</p><p className="font-medium text-gray-900">{formatDateVN(item.purchaseDate)}</p></div>}
-                        {item.purchasePrice && <div><p className="text-[10px] text-gray-500 uppercase">Giá mua</p><p className="font-medium text-gray-900">{formatCurrency(item.purchasePrice)}</p></div>}
-                        {item.warrantyEnd && <div><p className="text-[10px] text-gray-500 uppercase">Bảo hành đến</p><p className="font-medium text-green-700">{formatDateVN(item.warrantyEnd)}</p></div>}
+                        {item.color && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Màu sắc</p><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: getColorHex(item.color) }}></div><p className="font-medium text-gray-900 dark:text-gray-100">{item.color}</p></div></div>}
+                        {item.purchaseDate && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Ngày mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatDateVN(item.purchaseDate)}</p></div>}
+                        {item.purchasePrice && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Giá mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(item.purchasePrice)}</p></div>}
+                        {item.warrantyEnd && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Bảo hành đến</p><p className="font-medium text-green-700 dark:text-green-400">{formatDateVN(item.warrantyEnd)}</p></div>}
 
                         {/* Dynamic Specs */}
                         {Object.entries(item.specs ? JSON.parse(item.specs as string) : {}).map(([k, v]: any) => (
                             <div key={k} className="col-span-1">
-                                <p className="text-[10px] text-gray-500 uppercase">{k}</p>
-                                <p className="font-medium text-gray-900 truncate" title={v}>{v}</p>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{k}</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 truncate" title={v}>{v}</p>
                             </div>
                         ))}
                     </div>
@@ -172,20 +172,20 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
             </div>
 
             {/* Right Column: History */}
-            <div className="md:col-span-5 bg-gray-50/50 border-l border-gray-100 p-6 overflow-y-auto max-h-[500px]">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="md:col-span-5 bg-gray-50/50 dark:bg-gray-800/50 border-l border-gray-100 dark:border-gray-700 p-6 overflow-y-auto max-h-[500px]">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <History className="h-4 w-4" /> Lịch sử thiết bị
                 </h3>
                 <div className="relative space-y-6 pl-2">
                     {/* Line */}
-                    <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200" />
+                    <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200 dark:bg-slate-700" />
 
                     {history.map((h: any, idx: number) => (
                         <div key={h.id || idx} className="relative pl-6">
-                            <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-primary-400 shadow-sm z-10" />
+                            <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-800 bg-primary-400 shadow-sm z-10" />
                             <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-gray-800">{h.action === 'CREATED' ? 'Nhập kho' : h.action === 'MOVED' ? 'Di chuyển' : h.action === 'LENT' ? 'Cho mượn' : h.action === 'RETURNED' ? 'Đã trả lại' : 'Cập nhật'}</span>
-                                <span className="text-xs text-gray-600 mt-0.5">{h.details}</span>
+                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{h.action === 'CREATED' ? 'Nhập kho' : h.action === 'MOVED' ? 'Di chuyển' : h.action === 'LENT' ? 'Cho mượn' : h.action === 'RETURNED' ? 'Đã trả lại' : 'Cập nhật'}</span>
+                                <span className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{h.details}</span>
                                 <span className="text-[10px] text-gray-400 font-mono mt-1">{formatDateTimeVN(h.timestamp)}</span>
                             </div>
                         </div>
@@ -269,9 +269,9 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
 
             <div className="space-y-4">
                 {/* Image Edit */}
-                <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                    <div className={`h-16 w-16 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden bg-gray-50 ${imgPreview ? 'border-primary-500' : 'border-gray-200'}`}>
-                        {imgPreview ? <img src={imgPreview} alt="Preview" className="h-full w-full object-cover" /> : <Package className="h-6 w-6 text-gray-300" />}
+                <div className="flex items-center gap-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                    <div className={`h-16 w-16 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-900 ${imgPreview ? 'border-primary-500' : 'border-gray-200 dark:border-gray-700'}`}>
+                        {imgPreview ? <img src={imgPreview} alt="Preview" className="h-full w-full object-cover" /> : <Package className="h-6 w-6 text-gray-300 dark:text-gray-600" />}
                     </div>
                     <div className="flex-1">
                         <Label>Ảnh thiết bị</Label>
@@ -302,7 +302,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                     </div>
                     <div className="col-span-1">
                         <Label>Loại thiết bị</Label>
-                        <Select {...form.register("type")} className="bg-white">
+                        <Select {...form.register("type")} className="bg-white dark:bg-gray-800 dark:text-gray-100">
                             <option value="Other">Khác</option>
                             {ITEM_TYPES.map(t => (
                                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -322,7 +322,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                             suggestions={serverBrands.map(b => b.name)}
                             value={form.watch("brand") || ""}
                             onValueChange={(v) => form.setValue("brand", v)}
-                            className="bg-white"
+                            className="bg-white dark:bg-gray-800 dark:text-gray-100"
                         />
                     </div>
                     <div>
@@ -330,7 +330,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                         <ColorPicker
                             value={watchedColor || ""}
                             onChange={(v) => form.setValue("color", v, { shouldDirty: true, shouldTouch: true })}
-                            className="w-full bg-white"
+                            className="w-full bg-white dark:bg-gray-800"
                         />
                     </div>
                 </div>
@@ -440,7 +440,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label>Trạng thái hiện tại</Label>
-                            <Select {...form.register("status")} className="bg-white">
+                            <Select {...form.register("status")} className="bg-white dark:bg-gray-800 dark:text-gray-100">
                                 <option value="Available">Sẵn sàng (Available)</option>
                                 <option value="InUse">Đang dùng (In Use)</option>
                                 <option value="Lent">Cho mượn (Lent)</option>
@@ -449,7 +449,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                         </div>
                         <div>
                             <Label>Vị trí</Label>
-                            <Select {...form.register("locationId")} className="bg-white">
+                            <Select {...form.register("locationId")} className="bg-white dark:bg-gray-800 dark:text-gray-100">
                                 <option value="">-- Chưa xác định --</option>
                                 {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                             </Select>

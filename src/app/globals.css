@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
 
 @theme {
   --font-sans: var(--font-inter);
@@ -26,6 +28,13 @@
   --background: #ffffff;
   --foreground: #0f172a;
 
+  /* Card & Surface colors */
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --surface-bg: #f9fafb;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
+
   /* Dynamic Theme Variables - Default to Orange 600 HEX */
   --primary-dynamic: #ea580c;
 
@@ -43,14 +52,77 @@
   --primary-950: color-mix(in srgb, var(--primary-dynamic), black 50%);
 }
 
+/* Dark Mode - Class-based */
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --surface-bg: #1e293b;
+  --muted: #94a3b8;
+  --muted-foreground: #64748b;
+
+  /* Dark mode primary palette */
+  --primary-50: color-mix(in srgb, var(--primary-dynamic), #0f172a 90%);
+  --primary-100: color-mix(in srgb, var(--primary-dynamic), #0f172a 80%);
+  --primary-200: color-mix(in srgb, var(--primary-dynamic), #0f172a 60%);
+  --primary-300: color-mix(in srgb, var(--primary-dynamic), #0f172a 40%);
+  --primary-400: color-mix(in srgb, var(--primary-dynamic), #0f172a 20%);
+  --primary-500: var(--primary-dynamic);
+  --primary-600: color-mix(in srgb, var(--primary-dynamic), white 10%);
+  --primary-700: color-mix(in srgb, var(--primary-dynamic), white 20%);
+  --primary-800: color-mix(in srgb, var(--primary-dynamic), white 30%);
+  --primary-900: color-mix(in srgb, var(--primary-dynamic), white 40%);
+  --primary-950: color-mix(in srgb, var(--primary-dynamic), white 50%);
+}
+
+/* Auto dark mode based on system preference - only when no explicit class */
+@media (prefers-color-scheme: dark) {
+  html:not(.light):not(.dark) {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+
+    --card-bg: #1e293b;
+    --card-border: #334155;
+    --surface-bg: #1e293b;
+    --muted: #94a3b8;
+    --muted-foreground: #64748b;
+
+    --primary-50: color-mix(in srgb, var(--primary-dynamic), #0f172a 90%);
+    --primary-100: color-mix(in srgb, var(--primary-dynamic), #0f172a 80%);
+    --primary-200: color-mix(in srgb, var(--primary-dynamic), #0f172a 60%);
+    --primary-300: color-mix(in srgb, var(--primary-dynamic), #0f172a 40%);
+    --primary-400: color-mix(in srgb, var(--primary-dynamic), #0f172a 20%);
+    --primary-500: var(--primary-dynamic);
+    --primary-600: color-mix(in srgb, var(--primary-dynamic), white 10%);
+    --primary-700: color-mix(in srgb, var(--primary-dynamic), white 20%);
+    --primary-800: color-mix(in srgb, var(--primary-dynamic), white 30%);
+    --primary-900: color-mix(in srgb, var(--primary-dynamic), white 40%);
+    --primary-950: color-mix(in srgb, var(--primary-dynamic), white 50%);
+  }
+}
+
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
   color: var(--foreground);
+  background-color: var(--background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode specific body background */
+:root:not(.dark) body {
   /* Premium Tech Grid Background */
   background-color: color-mix(in srgb, var(--primary-dynamic), white 97%);
-
   /* Very subtle tint dot pattern */
   background-image: radial-gradient(var(--primary-200) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Dark mode body background */
+.dark body {
+  background-color: var(--background);
+  background-image: radial-gradient(var(--primary-950) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 

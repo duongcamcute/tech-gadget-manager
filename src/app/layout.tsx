@@ -10,6 +10,7 @@ const inter = Inter({
 
 import Footer from "@/components/Footer";
 import AuthWrapper from "@/components/auth/AuthWrapper";
+import { ThemeInitializer } from "@/components/ThemeInitializer";
 
 // ... existing imports
 
@@ -38,8 +39,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased text-foreground bg-background`} suppressHydrationWarning>
+        <ThemeInitializer />
         <AuthWrapper>
           <ToastProvider>
             {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (

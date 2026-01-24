@@ -61,16 +61,16 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
-            <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl flex flex-col h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-5xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-primary-50/50">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-primary-50/50 dark:bg-gray-900/50">
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
                             <MapPin className="h-5 w-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-900">Quản lý túi đồ: {location.name}</h2>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Quản lý túi đồ: {location.name}</h2>
                             <p className="text-xs text-gray-500">{optimisticRight.length} thiết bị bên trong</p>
                         </div>
                     </div>
@@ -78,15 +78,15 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                 </div>
 
                 {/* Dual List Body */}
-                <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+                <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200 dark:divide-gray-700">
 
                     {/* LEFT: Outside / Available */}
-                    <div className="flex flex-col h-full bg-gray-50/50">
-                        <div className="p-3 border-b border-gray-200 bg-white">
+                    <div className="flex flex-col h-full bg-gray-50/50 dark:bg-gray-900/50">
+                        <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                             <div className="relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                                 <Input
-                                    className="pl-9 bg-gray-50 border-gray-200"
+                                    className="pl-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
                                     placeholder="Tìm thiết bị bên ngoài..."
                                     value={searchLeft}
                                     onChange={(e) => setSearchLeft(e.target.value)}
@@ -100,15 +100,15 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                             {optimisticLeft.map(item => {
                                 const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
                                 return (
-                                    <div key={item.id} className="group bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:border-primary-300 hover:shadow-sm transition-all shadow-sm">
+                                    <div key={item.id} className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3 hover:border-primary-300 dark:hover:border-primary-500 hover:shadow-sm transition-all shadow-sm">
                                         <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
                                             {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
                                             <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
                                                 <span className="truncate max-w-[80px]">{item.type}</span>
-                                                {item.location && <span className="bg-gray-100 px-1 rounded text-gray-600 truncate max-w-[100px]">{item.location.name}</span>}
+                                                {item.location && <span className="bg-gray-100 dark:bg-gray-700 px-1 rounded text-gray-600 dark:text-gray-300 truncate max-w-[100px]">{item.location.name}</span>}
                                             </div>
                                         </div>
                                         <Button
@@ -128,12 +128,12 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                     </div>
 
                     {/* RIGHT: Inside this Location */}
-                    <div className="flex flex-col h-full bg-white">
-                        <div className="p-3 border-b border-gray-200 bg-primary-50/30">
+                    <div className="flex flex-col h-full bg-white dark:bg-gray-800">
+                        <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/20">
                             <div className="relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-primary-400" />
                                 <Input
-                                    className="pl-9 bg-white border-primary-100 focus:border-primary-300"
+                                    className="pl-9 bg-white dark:bg-gray-800 border-primary-100 dark:border-gray-600 focus:border-primary-300"
                                     placeholder="Tìm trong túi..."
                                     value={searchRight}
                                     onChange={(e) => setSearchRight(e.target.value)}
@@ -147,7 +147,7 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                             {optimisticRight.map(item => {
                                 const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
                                 return (
-                                    <div key={item.id} className="group bg-white border border-primary-100 rounded-xl p-3 flex items-center gap-3 hover:border-red-200 transition-colors shadow-sm">
+                                    <div key={item.id} className="group bg-white dark:bg-gray-800 border border-primary-100 dark:border-gray-600 rounded-xl p-3 flex items-center gap-3 hover:border-red-200 dark:hover:border-red-800 transition-colors shadow-sm">
                                         <Button
                                             size="sm"
                                             variant="ghost"
@@ -162,7 +162,7 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                                             {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
                                             <p className="text-[10px] text-gray-500">{item.type}</p>
                                         </div>
                                     </div>

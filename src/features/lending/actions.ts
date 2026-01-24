@@ -3,8 +3,15 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { formatDateVN } from "@/lib/utils/date";
+import { logActivity } from "@/lib/audit";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export async function lendItem(itemId: string, borrowerName: string, dueDate?: Date) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Cho mượn bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.$transaction(async (tx) => {
             if (!borrowerName || borrowerName.trim() === '') {
@@ -42,6 +49,18 @@ export async function lendItem(itemId: string, borrowerName: string, dueDate?: D
             });
         });
 
+        // --- SIDE EFFECTS ---
+        const item = await prisma.item.findUnique({ where: { id: itemId }, select: { name: true } });
+        await logActivity({
+            action: "LEND",
+            entityType: "ITEM",
+            entityId: itemId,
+            entityName: item?.name,
+            details: `Cho ${borrowerName} mượn`
+        });
+        await triggerWebhooks("item.lent", { itemId, borrowerName, dueDate });
+        // --------------------
+
         revalidatePath("/");
         return { success: true };
     } catch (error) {
@@ -51,8 +70,13 @@ export async function lendItem(itemId: string, borrowerName: string, dueDate?: D
 }
 
 export async function bulkLendItems(itemIds: string[], borrowerName: string, dueDate?: Date) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Cho mượn hàng loạt bị khóa." };
+    }
+    // -----------------------
     try {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             if (!borrowerName || borrowerName.trim() === '') {
                 throw new Error("Tên người mượn không được để trống");
             }
@@ -90,6 +114,19 @@ export async function bulkLendItems(itemIds: string[], borrowerName: string, due
             }
         });
 
+        // --- SIDE EFFECTS ---
+        await logActivity({
+            action: "LEND",
+            entityType: "ITEM",
+            entityId: null,
+            entityName: `Batch ${itemIds.length} items`,
+            details: `Cho ${borrowerName} mượn ${itemIds.length} thiết bị`
+        });
+        itemIds.forEach(id => {
+            triggerWebhooks("item.lent", { itemId: id, borrowerName, dueDate });
+        });
+        // --------------------
+
         revalidatePath("/");
         return { success: true };
     } catch (error: any) {
@@ -100,6 +137,11 @@ export async function bulkLendItems(itemIds: string[], borrowerName: string, due
 
 
 export async function returnItem(itemId: string) {
+    // --- DEMO MODE CHECK ---
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Trả đồ bị khóa." };
+    }
+    // -----------------------
     try {
         await prisma.$transaction(async (tx: any) => {
             const now = new Date();
@@ -131,6 +173,18 @@ export async function returnItem(itemId: string) {
                 }
             });
         });
+
+        // --- SIDE EFFECTS ---
+        const item = await prisma.item.findUnique({ where: { id: itemId }, select: { name: true } });
+        await logActivity({
+            action: "RETURN",
+            entityType: "ITEM",
+            entityId: itemId,
+            entityName: item?.name,
+            details: `Đã trả lại thiết bị`
+        });
+        await triggerWebhooks("item.returned", { itemId });
+        // --------------------
 
         revalidatePath("/");
         return { success: true };

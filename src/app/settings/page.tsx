@@ -6,9 +6,10 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { updateUserProfile, saveThemeSettings, addBrandAction, getBrands, createTemplate, deleteTemplate, getTemplates, exportDatabase, importDatabase, generateApiKey, revokeApiKey, getApiKeys } from "@/app/actions";
 import { ITEM_TYPES } from "@/lib/constants/options";
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/primitives";
-import { Loader2, Save, Plus, ArrowLeft, Trash2, LayoutGrid, Palette, User, ShieldCheck, Home, Server, Key, Download, Upload, Copy, Database } from "lucide-react";
+import { Loader2, Save, Plus, ArrowLeft, Trash2, LayoutGrid, Palette, User, ShieldCheck, Home, Server, Key, Download, Upload, Copy, Database, History } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
+import { AuditLogViewer } from "@/features/audit/AuditLogViewer";
 
 export default function SettingsPage() {
     const { user, updateUser } = useAuthStore();
@@ -371,14 +372,14 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-20">
+        <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 pb-20">
             {/* Header */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-20">
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-20">
                 <div className="container mx-auto px-4 h-16 flex items-center gap-4 max-w-4xl">
                     <Button variant="ghost" size="icon" onClick={() => router.push("/")} className="rounded-full hover:bg-gray-100 -ml-2">
                         <ArrowLeft className="w-5 h-5 text-gray-600" />
                     </Button>
-                    <h1 className="text-lg font-bold text-gray-900">Cài đặt hệ thống</h1>
+                    <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Cài đặt hệ thống</h1>
                     <div className="ml-auto">
                         <Button variant="outline" size="sm" onClick={() => router.push("/")} className="hidden sm:flex items-center gap-2">
                             <Home className="w-4 h-4" /> Về trang chủ
@@ -391,7 +392,7 @@ export default function SettingsPage() {
                 <Tabs defaultValue="account" className="w-full flex flex-col md:flex-row gap-8 items-start">
 
                     {/* Sidebar Navigation */}
-                    <TabsList className="flex flex-col w-full md:w-64 h-auto bg-white p-2 rounded-2xl shadow-sm border border-gray-100 gap-1 md:sticky md:top-24">
+                    <TabsList className="flex flex-col w-full md:w-64 h-auto bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 gap-1 md:sticky md:top-24">
                         <TabsTrigger value="account" className="w-full justify-start gap-3 py-3 px-4 rounded-xl data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 transition-all">
                             <User className="w-4 h-4" /> Tài khoản
                         </TabsTrigger>
@@ -404,6 +405,9 @@ export default function SettingsPage() {
                         <TabsTrigger value="system" className="w-full justify-start gap-3 py-3 px-4 rounded-xl data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 transition-all">
                             <Server className="w-4 h-4" /> Hệ thống & API
                         </TabsTrigger>
+                        <TabsTrigger value="audit" className="w-full justify-start gap-3 py-3 px-4 rounded-xl data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 transition-all">
+                            <History className="w-4 h-4" /> Nhật ký hoạt động
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* Main Content Area */}
@@ -412,7 +416,7 @@ export default function SettingsPage() {
                         {/* ACCOUNT SETTINGS */}
                         <TabsContent value="account" className="mt-0">
                             {/* ... kept existing ... */}
-                            <Card className="border-none shadow-lg shadow-gray-200/50 rounded-2xl overflow-hidden">
+                            <Card className="border-none shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 rounded-2xl overflow-hidden">
                                 <div className="h-32 bg-gradient-to-r from-orange-400 to-red-500 relative">
                                     <div className="absolute -bottom-10 left-8 h-24 w-24 bg-white rounded-full p-1 shadow-lg">
                                         <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center text-3xl font-bold text-gray-400">
@@ -481,7 +485,7 @@ export default function SettingsPage() {
                         {/* APPEARANCE SETTINGS */}
                         <TabsContent value="appearance" className="mt-0">
                             {/* ... kept existing ... */}
-                            <Card className="border-none shadow-lg shadow-gray-200/50 rounded-2xl">
+                            <Card className="border-none shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 rounded-2xl">
                                 <CardHeader className="px-8 pt-8">
                                     <CardTitle>Tùy chỉnh giao diện</CardTitle>
                                     <p className="text-sm text-muted-foreground">Cá nhân hóa trải nghiệm sử dụng của bạn</p>
@@ -547,7 +551,7 @@ export default function SettingsPage() {
 
                         {/* APP CONFIG SETTINGS */}
                         <TabsContent value="app" className="mt-0">
-                            <Card className="border-none shadow-lg shadow-gray-200/50 rounded-2xl">
+                            <Card className="border-none shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 rounded-2xl">
                                 <CardHeader className="px-8 pt-8">
                                     <CardTitle>Cấu hình dữ liệu</CardTitle>
                                     <p className="text-sm text-muted-foreground">Quản lý các danh mục và gợi ý nhập liệu</p>
@@ -595,7 +599,7 @@ export default function SettingsPage() {
 
                         {/* SYSTEM SETTINGS - NEW */}
                         <TabsContent value="system" className="mt-0">
-                            <Card className="border-none shadow-lg shadow-gray-200/50 rounded-2xl">
+                            <Card className="border-none shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 rounded-2xl">
                                 <CardHeader className="px-8 pt-8">
                                     <CardTitle>Hệ thống & Tích hợp</CardTitle>
                                     <p className="text-sm text-muted-foreground">Sao lưu dữ liệu và quản lý kết nối API</p>
@@ -683,6 +687,11 @@ export default function SettingsPage() {
 
                                 </CardContent>
                             </Card>
+                        </TabsContent>
+
+                        {/* AUDIT LOG TAB */}
+                        <TabsContent value="audit" className="mt-0">
+                            <AuditLogViewer />
                         </TabsContent>
 
                     </div>

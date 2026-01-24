@@ -1,12 +1,21 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { ItemSchema, ItemFormData, TemplateSchema, TemplateData } from "@/types/schema";
 import { revalidatePath } from "next/cache";
 
 import { formatDateVN } from "@/lib/utils/date";
+import { logActivity } from "@/lib/audit";
+import { triggerWebhooks } from "@/lib/webhooks";
+import { unlink } from "fs/promises";
+import { join } from "path";
+import { hashPassword, verifyPassword, createSession, deleteSession, requireAuth } from "@/lib/auth";
 
 export async function createItem(data: ItemFormData) {
+    // 1. Auth Check
+    await requireAuth();
+
     const result = ItemSchema.safeParse(data);
     if (!result.success) return { success: false, error: result.error.message };
 
@@ -21,7 +30,7 @@ export async function createItem(data: ItemFormData) {
         const dbPurchaseDate = purchaseDate ? new Date(purchaseDate) : null;
         const dbPurchasePrice = purchasePrice ? parseFloat(purchasePrice.toString()) : null;
         const dbLocationId = (locationId && locationId !== "") ? locationId : null;
-        const dbSpecs = JSON.stringify(specs);
+        const dbSpecs = specs ? JSON.stringify(specs) : "{}";
 
         // Location lookup
         let locName = "Kho chưa phân loại";
@@ -31,7 +40,7 @@ export async function createItem(data: ItemFormData) {
         }
 
         // Transactions
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Auto-save Brand
             if (rest.brand) {
                 try { await tx.brand.upsert({ where: { name: rest.brand }, update: {}, create: { name: rest.brand } }); } catch (e) { }
@@ -85,6 +94,31 @@ export async function createItem(data: ItemFormData) {
             }
         });
 
+        // --- POST-ACTION SIDE EFFECTS (Non-blocking) ---
+        const newItem = await prisma.item.findFirst({ orderBy: { createdAt: 'desc' }, select: { id: true, name: true } });
+        if (newItem) {
+            await logActivity({
+                action: "CREATE",
+                entityType: "ITEM",
+                entityId: newItem.id,
+                entityName: newItem.name,
+                details: `Tạo mới thiết bị: ${newItem.name} tại ${locName}`
+            });
+            await triggerWebhooks("item.created", { ...rest, id: newItem.id, name: newItem.name });
+
+            if (rest.status === 'Lent') {
+                await logActivity({
+                    action: "LEND",
+                    entityType: "ITEM",
+                    entityId: newItem.id,
+                    entityName: newItem.name,
+                    details: `Cho ${borrowerName} mượn ngay khi tạo`
+                });
+                await triggerWebhooks("item.lent", { itemId: newItem.id, borrowerName, borrowDate: new Date() });
+            }
+        }
+        // -----------------------------------------------
+
         revalidatePath("/");
         return { success: true };
     } catch (error: any) {
@@ -94,6 +128,9 @@ export async function createItem(data: ItemFormData) {
 }
 
 export async function updateItem(id: string, data: ItemFormData) {
+    // 1. Auth Check
+    await requireAuth();
+
     const result = ItemSchema.safeParse(data);
     if (!result.success) return { success: false, error: result.error.message };
 
@@ -108,13 +145,12 @@ export async function updateItem(id: string, data: ItemFormData) {
         const dbPurchaseDate = purchaseDate ? new Date(purchaseDate) : null;
         const dbPurchasePrice = purchasePrice ? parseFloat(purchasePrice.toString()) : null;
         const dbLocationId = (locationId && locationId !== "") ? locationId : null;
-        // @ts-ignore
-        const dbSpecs = JSON.stringify(specs);
+        const dbSpecs = specs ? JSON.stringify(specs) : "{}";
 
         const oldItem = await prisma.item.findUnique({ where: { id }, include: { location: true } });
         if (!oldItem) return { success: false, error: "Không tìm thấy" };
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Auto-save Brand
             if (rest.brand) {
                 try { await tx.brand.upsert({ where: { name: rest.brand }, update: {}, create: { name: rest.brand } }); } catch (e) { }
@@ -182,6 +218,17 @@ export async function updateItem(id: string, data: ItemFormData) {
                 const storedLoc = dbLocationId ? await tx.location.findUnique({ where: { id: dbLocationId } }) : null;
                 const locName = storedLoc?.name || "Kho";
 
+                // FIX: Cập nhật returnDate cho LendingRecord đang active
+                const activeRecord = await tx.lendingRecord.findFirst({
+                    where: { itemId: id, returnDate: null }
+                });
+                if (activeRecord) {
+                    await tx.lendingRecord.update({
+                        where: { id: activeRecord.id },
+                        data: { returnDate: new Date() }
+                    });
+                }
+
                 await tx.itemHistory.create({
                     data: {
                         itemId: id,
@@ -192,6 +239,37 @@ export async function updateItem(id: string, data: ItemFormData) {
             }
         });
 
+        // --- POST-ACTION SIDE EFFECTS ---
+        const updatedItem = await prisma.item.findUnique({ where: { id }, select: { name: true } });
+        await logActivity({
+            action: "UPDATE",
+            entityType: "ITEM",
+            entityId: id,
+            entityName: updatedItem?.name || "Unknown Item",
+            details: "Cập nhật thông tin thiết bị"
+        });
+        await triggerWebhooks("item.updated", { id, changes: rest });
+
+        // Check for specific events based on logic above
+        // Note: Since we are outside transaction, precise diff is harder, but we can infer from inputs
+        if (data.locationId && data.locationId !== oldItem.locationId) {
+            await triggerWebhooks("item.moved", { id, from: oldItem.locationId, to: data.locationId });
+        }
+        if (data.status === 'Lent' && oldItem.status !== 'Lent') {
+            await triggerWebhooks("item.lent", { id, borrowerName });
+        }
+        if (oldItem.status === 'Lent' && data.status !== 'Lent') {
+            await logActivity({
+                action: "RETURN",
+                entityType: "ITEM",
+                entityId: id,
+                entityName: updatedItem?.name || "Unknown Item",
+                details: "Đã trả lại thiết bị"
+            });
+            await triggerWebhooks("item.returned", { id });
+        }
+        // ------------------------------
+
         revalidatePath("/");
         return { success: true };
     } catch (error: any) {
@@ -201,13 +279,43 @@ export async function updateItem(id: string, data: ItemFormData) {
 }
 
 export async function deleteItem(id: string) {
+    // Auth Check
+    await requireAuth();
+
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Xóa bị khóa." };
     }
     // -----------------------
     try {
+        // 1. Get attachments to delete files
+        const attachments = await prisma.attachment.findMany({ where: { itemId: id } });
+
+        // 2. Delete database record (Cascades to history, attachments DB records)
+        const item = await prisma.item.findUnique({ where: { id }, select: { name: true } });
         await prisma.item.delete({ where: { id } });
+
+        // 3. Cleanup files from disk (Fire and forget or await)
+        for (const file of attachments) {
+            try {
+                const filePath = join(process.cwd(), "public", file.url); // url is relative usually? Check upload logic
+                // upload logic: /uploads/attachments/...
+                // So join(process.cwd(), "public", file.url) is correct if url starts with /uploads
+                await unlink(filePath);
+            } catch (e) {
+                console.error(`Failed to delete file: ${file.url}`, e);
+            }
+        }
+
+        // 4. Log & Webhook
+        await logActivity({
+            action: "DELETE",
+            entityType: "ITEM",
+            entityId: id,
+            entityName: item?.name || "Unknown",
+            details: "Đã xóa thiết bị vĩnh viễn"
+        });
+        await triggerWebhooks("item.deleted", { id, name: item?.name });
         revalidatePath("/");
         return { success: true };
     } catch (e) {
@@ -235,6 +343,7 @@ export async function getAllItems() {
 
 
 export async function bulkMoveItems(ids: string[], locationId: string | null) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Di chuyển hàng loạt bị khóa." };
@@ -249,7 +358,7 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
             if (l) locName = l.name;
         }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Update all items
             await tx.item.updateMany({
                 where: { id: { in: ids } },
@@ -268,6 +377,19 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
             }
         });
 
+        // --- LOGGING ---
+        await logActivity({
+            action: "MOVE",
+            entityType: "ITEM",
+            entityId: null,
+            entityName: `Batch ${ids.length} items`,
+            details: `Di chuyển ${ids.length} thiết bị sang ${locName}`
+        });
+        ids.forEach(id => {
+            triggerWebhooks("item.moved", { id, to: dbLocationId });
+        });
+        // --------------
+
         revalidatePath("/");
         return { success: true };
     } catch (e: any) {
@@ -276,14 +398,39 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
 }
 
 export async function bulkDeleteItems(ids: string[]) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Xóa hàng loạt bị khóa." };
     }
     // -----------------------
     try {
+        // 1. Get all attachments for these items
+        const attachments = await prisma.attachment.findMany({ where: { itemId: { in: ids } } });
+
+        // 2. Delete
         await prisma.item.deleteMany({
             where: { id: { in: ids } }
+        });
+
+        // 3. Cleanup files
+        // We do this concurrently for speed
+        Promise.allSettled(attachments.map(async (file) => {
+            try {
+                await unlink(join(process.cwd(), "public", file.url));
+            } catch (e) { /* ignore missing files */ }
+        }));
+
+        // 4. Log
+        await logActivity({
+            action: "DELETE",
+            entityType: "ITEM",
+            entityId: null,
+            entityName: `Batch ${ids.length} items`,
+            details: `Xóa hàng loạt ${ids.length} thiết bị`
+        });
+        ids.forEach(id => {
+            triggerWebhooks("item.deleted", { id });
         });
         revalidatePath("/");
         return { success: true };
@@ -305,17 +452,15 @@ export async function getContacts() {
 // --- Auth & Settings Actions ---
 
 export async function loginUser(username: string, pass: string) {
-    // Ensure default admin exists if needed
-    // Ensure default admin exists ONLY if database is empty
-    // Ensure default admin exists if needed
     // Ensure default admin exists ONLY if database is empty
     if (username === 'admin' && process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') {
         const userCount = await prisma.user.count();
         if (userCount === 0) {
+            const hashedAdmin = await hashPassword('admin');
             await prisma.user.create({
                 data: {
                     username: 'admin',
-                    password: 'admin',
+                    password: hashedAdmin,
                     fullName: 'Administrator',
                     theme: 'default',
                     colors: null
@@ -324,22 +469,47 @@ export async function loginUser(username: string, pass: string) {
         }
     }
 
-    // Security Check: If logging in as 'admin' with default password, BLOCK it if other users exist
+    // Security Check: If logging in as 'admin' with default password check logic
     if (username === 'admin' && pass === 'admin') {
         const otherUsersCount = await prisma.user.count({
             where: { username: { not: 'admin' } }
         });
         if (otherUsersCount > 0) {
-            return { success: false, error: "Tài khoản admin mặc định đã bị vô hiệu hóa vì hệ thống đã có người dùng mới." };
+            // Check if admin password is still default (plain or hash of 'admin')
+            const adminUser = await prisma.user.findUnique({ where: { username: 'admin' } });
+            if (adminUser) {
+                const isDefault = adminUser.password === 'admin' || await verifyPassword('admin', adminUser.password);
+                if (isDefault) {
+                    return { success: false, error: "Tài khoản admin mặc định đã bị vô hiệu hóa an toàn." };
+                }
+            }
         }
     }
 
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) return { success: false, error: "Người dùng không tồn tại" };
 
-    if (user.password !== pass) {
+    // --- SECURE PASSWORD CHECK (With Auto-Migration) ---
+    let isValid = await verifyPassword(pass, user.password);
+
+    if (!isValid) {
+        // Fallback: Check if stored password is raw plaintext (Legacy/Migration support)
+        if (user.password === pass) {
+            isValid = true;
+            // Auto-migrate to hash for security improvement
+            console.log(`Migrating password for user ${username} to hash...`);
+            const hashed = await hashPassword(pass);
+            await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+        }
+    }
+
+    if (!isValid) {
         return { success: false, error: "Sai mật khẩu" };
     }
+    // ---------------------------------------------------
+
+    // Create Session Cookie
+    await createSession(user.id, user.username);
 
     return {
         success: true,
@@ -354,15 +524,23 @@ export async function loginUser(username: string, pass: string) {
     };
 }
 
+export async function logoutAction() {
+    await deleteSession();
+    return { success: true };
+}
+
 export async function updateUserProfile(id: string, newUsername: string, newPass: string, newFullName?: string, newAvatar?: string) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Cập nhật hồ sơ bị khóa." };
     }
     // -----------------------
     try {
-        const data: any = { username: newUsername };
-        if (newPass && newPass.trim() !== '') data.password = newPass;
+        const data: Prisma.UserUpdateInput = { username: newUsername };
+        if (newPass && newPass.trim() !== '') {
+            data.password = await hashPassword(newPass);
+        }
         if (newFullName) data.fullName = newFullName;
         if (newAvatar) data.avatar = newAvatar;
 
@@ -392,6 +570,7 @@ export async function updateUserProfile(id: string, newUsername: string, newPass
 }
 
 export async function saveThemeSettings(id: string, theme: string, colors: string) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Lưu giao diện bị khóa." };
@@ -409,6 +588,7 @@ export async function saveThemeSettings(id: string, theme: string, colors: strin
 }
 
 export async function addBrandAction(name: string) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Thêm hãng bị khóa." };
@@ -424,6 +604,7 @@ export async function addBrandAction(name: string) {
 }
 
 export async function createTemplate(data: TemplateData) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Tạo mẫu bị khóa." };
@@ -453,6 +634,7 @@ export async function getTemplates() {
 }
 
 export async function deleteTemplate(id: string) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Xóa mẫu bị khóa." };
@@ -471,7 +653,12 @@ export async function deleteTemplate(id: string) {
 // --- SYSTEM Backup & Restore Actions ---
 
 export async function exportDatabase() {
+    await requireAuth();
     try {
+        // Lấy users nhưng loại bỏ password để bảo mật
+        const usersRaw = await prisma.user.findMany();
+        const usersSafe = usersRaw.map(({ password, ...rest }) => rest);
+
         const data = {
             items: await prisma.item.findMany(),
             itemHistory: await prisma.itemHistory.findMany(),
@@ -480,7 +667,7 @@ export async function exportDatabase() {
             templates: await prisma.template.findMany(),
             contacts: await prisma.contact.findMany(),
             brands: await prisma.brand.findMany(),
-            users: await prisma.user.findMany(),
+            users: usersSafe,  // Không chứa password
             version: "1.0",
             exportedAt: new Date().toISOString()
         };
@@ -491,6 +678,7 @@ export async function exportDatabase() {
 }
 
 export async function importDatabase(jsonString: string, clearExisting = false) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Nhập dữ liệu bị khóa." };
@@ -500,7 +688,7 @@ export async function importDatabase(jsonString: string, clearExisting = false) 
         const data = JSON.parse(jsonString);
         if (!data.version) throw new Error("File không hợp lệ");
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             if (clearExisting) {
                 // Delete everything in reverse order of dependency
                 await tx.itemHistory.deleteMany();
@@ -573,6 +761,7 @@ export async function importDatabase(jsonString: string, clearExisting = false) 
 // --- API Key Management ---
 
 export async function generateApiKey(name: string) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Tạo API Key bị khóa." };
@@ -591,6 +780,7 @@ export async function generateApiKey(name: string) {
 }
 
 export async function revokeApiKey(id: string) {
+    await requireAuth();
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Xóa API Key bị khóa." };

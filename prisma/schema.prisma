@@ -37,6 +37,18 @@ model Item {
   
   lendingRecords   LendingRecord[]
   history          ItemHistory[]
+  attachments      Attachment[]
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  name      String
+  type      String   // MIME type or category: image, document, invoice, warranty, other
+  url       String   // File path or URL
+  size      Int?     // File size in bytes
+  createdAt DateTime @default(now())
 }
 
 model ItemHistory {
@@ -105,5 +117,30 @@ model ApiKey {
   name      String
   key       String   @unique
   lastUsed  DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String   // CREATE, UPDATE, DELETE, LEND, RETURN, LOGIN, EXPORT, IMPORT
+  entityType String   // Item, Location, User, etc.
+  entityId   String?
+  entityName String?  // Human-readable name for display  
+  details    String?  // JSON or text details
+  userId     String?
+  userName   String?  // Store username for historical reference
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model WebhookConfig {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  events    String   // Comma-separated: item.created,item.updated,item.deleted,item.lent,item.returned
+  secret    String?  // Optional secret for signature verification
+  active    Boolean  @default(true)
+  lastError String?
+  lastRun   DateTime?
   createdAt DateTime @default(now())
 }

@@ -59,7 +59,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
             <input
                 type={type}
                 className={cn(
-                    "flex h-10 w-full rounded-lg border border-input bg-white/50 backdrop-blur-sm px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all",
+                    "flex h-10 w-full rounded-lg border border-input bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all text-gray-900 dark:text-gray-100",
                     className
                 )}
                 ref={ref}
@@ -90,7 +90,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
             <select
                 ref={ref}
                 className={cn(
-                    "flex h-10 w-full appearance-none items-center justify-between rounded-lg border border-input bg-white/50 backdrop-blur-sm px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all",
+                    "flex h-10 w-full appearance-none items-center justify-between rounded-lg border border-input bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all text-gray-900 dark:text-gray-100",
                     className
                 )}
                 {...props}
@@ -139,7 +139,7 @@ export const Tabs = ({ children, defaultValue, className }: { children: React.Re
 
 export const TabsList = ({ children, className }: any) => {
     return (
-        <div className={cn("inline-flex h-11 items-center justify-center rounded-xl bg-muted/80 p-1 text-muted-foreground", className)}>
+        <div className={cn("inline-flex h-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 p-1 text-gray-600 dark:text-gray-400", className)}>
             {children}
         </div>
     )
@@ -160,11 +160,13 @@ export const TabsTrigger = ({ value, children, className }: any) => {
     )
 }
 
-export const TabsContent = ({ value, children, className }: any) => {
+export const TabsContent = ({ value, children, className, lazy = false }: any) => {
     const { activeTab } = useTabs();
     const isActive = value === activeTab;
 
-    // Using hidden to preserve state
+    if (lazy && !isActive) return null;
+
+    // Using hidden to preserve state (if not lazy)
     return (
         <div
             className={cn("mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", !isActive && "hidden", className)}
