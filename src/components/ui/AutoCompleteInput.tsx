@@ -29,6 +29,9 @@ export function AutoCompleteInput({ suggestions, value, onValueChange, className
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState(value);
 
+    // Deduplicate suggestions
+    const uniqueSuggestions = React.useMemo(() => Array.from(new Set(suggestions)), [suggestions]);
+
     // Sync internal state with external value
     React.useEffect(() => {
         setInputValue(value);
@@ -61,9 +64,9 @@ export function AutoCompleteInput({ suggestions, value, onValueChange, className
             />
 
             {/* Dropdown Menu - Custom built for absolute control */}
-            {open && suggestions.length > 0 && (
+            {open && uniqueSuggestions.length > 0 && (
                 <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-[200px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
-                    {suggestions.filter(s => s.toLowerCase().includes(inputValue.toLowerCase())).map((suggestion) => (
+                    {uniqueSuggestions.filter(s => s.toLowerCase().includes(inputValue.toLowerCase())).map((suggestion) => (
                         <div
                             key={suggestion}
                             className="px-3 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 cursor-pointer transition-colors"
@@ -75,7 +78,7 @@ export function AutoCompleteInput({ suggestions, value, onValueChange, className
                             {suggestion}
                         </div>
                     ))}
-                    {suggestions.filter(s => s.toLowerCase().includes(inputValue.toLowerCase())).length === 0 && (
+                    {uniqueSuggestions.filter(s => s.toLowerCase().includes(inputValue.toLowerCase())).length === 0 && (
                         <div className="px-3 py-2 text-xs text-gray-400 italic text-center">
                             Không có gợi ý phù hợp
                         </div>

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Calendar, MapPin, History, Edit3, Trash2, Save, User, Clock, Package, ArrowRight, ArrowLeft, Copy } from "lucide-react";
+import { X, Calendar, MapPin, History, Edit3, Trash2, Save, User, Clock, Package, ArrowRight, ArrowLeft, Copy, Plus } from "lucide-react";
 import { Button, Input, Select, Label } from "@/components/ui/primitives";
 import { updateItem, deleteItem } from "@/app/actions";
+import { useRouter } from "next/navigation";
+import { SpecInput } from "./SpecInput";
 import { useToast } from "@/components/ui/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -130,6 +132,14 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                     </div>
                 </div>
 
+                {/* Notes Display */}
+                {item.notes && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-xl border border-yellow-100 dark:border-yellow-900/20 mb-6">
+                        <h3 className="text-xs font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mb-2 flex items-center gap-2"><Edit3 className="h-3 w-3" /> Ghi chú</h3>
+                        <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">{item.notes}</p>
+                    </div>
+                )}
+
                 {/* Specs Grid */}
                 <div>
                     <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3">Chi tiết kỹ thuật</h3>
@@ -205,9 +215,11 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
 
 function EditMode({ item, locations, onCancel, onClose }: { item: any, locations: any[], onCancel: () => void, onClose: () => void }) {
     const { toast } = useToast();
+    const router = useRouter();
     const [serverBrands, setServerBrands] = useState<any[]>([]);
     const [serverContacts, setServerContacts] = useState<any[]>([]);
     const [imgPreview, setImgPreview] = useState<string | null>(item.image || null);
+    const [warrantyMonths, setWarrantyMonths] = useState<string>("");
 
     useEffect(() => {
         import("@/app/actions").then(mod => {
@@ -231,6 +243,18 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
     });
 
     const watchedStatus = form.watch("status");
+    const purchaseDate = form.watch("purchaseDate");
+
+    useEffect(() => {
+        if (purchaseDate && warrantyMonths) {
+            const months = parseInt(warrantyMonths);
+            if (!isNaN(months)) {
+                const date = new Date(purchaseDate);
+                date.setMonth(date.getMonth() + months);
+                form.setValue("warrantyEnd", date.toISOString().split('T')[0]);
+            }
+        }
+    }, [purchaseDate, warrantyMonths, form]);
     const watchedColor = form.watch("color");
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,7 +276,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
         if (res.success) {
             toast("Đã cập nhật!", "success");
             onClose();
-            // Removed reload/navigation to prevent hanging
+            router.refresh();
         } else {
             toast("Lỗi: " + res.error, "error");
         }
@@ -375,11 +399,41 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                         </div>
                         <div>
                             <Label>Hết hạn bảo hành</Label>
-                            <Input type="date" {...form.register("warrantyEnd")} />
+                            <div className="flex gap-2">
+                                <Input type="date" {...form.register("warrantyEnd")} className="flex-1" />
+                            </div>
+                            <div className="flex gap-2 mt-1 items-center">
+                                <Input
+                                    type="number"
+                                    placeholder="Tháng..."
+                                    className="h-8 w-20 text-xs"
+                                    value={warrantyMonths}
+                                    onChange={(e) => setWarrantyMonths(e.target.value)}
+                                />
+                                <Select
+                                    className="h-8 flex-1 bg-white dark:bg-gray-800 text-xs"
+                                    onChange={(e) => {
+                                        if (e.target.value) setWarrantyMonths(e.target.value);
+                                    }}
+                                    value={""}
+                                >
+                                    <option value="">+ Chọn nhanh...</option>
+                                    <option value="6">6 Tháng</option>
+                                    <option value="12">12 Tháng</option>
+                                    <option value="18">18 Tháng</option>
+                                    <option value="24">24 Tháng (2 Năm)</option>
+                                    <option value="36">36 Tháng (3 Năm)</option>
+                                </Select>
+                            </div>
                         </div>
                         <div className="col-span-2">
                             <Label>Ghi chú</Label>
-                            <Input {...form.register("notes")} placeholder="Ghi chú thêm về tình trạng, lịch sử..." />
+                            <Label>Ghi chú</Label>
+                            <textarea
+                                {...form.register("notes")}
+                                placeholder="Ghi chú thêm về tình trạng, lịch sử..."
+                                className="flex min-h-[80px] w-full rounded-lg border border-input bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-gray-900 dark:text-gray-100"
+                            />
                         </div>
                         <div className="col-span-2 space-y-2">
                             <Label>Thông số kỹ thuật</Label>
@@ -390,20 +444,13 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
 
                                     const updateSpec = (key: string, val: string) => {
                                         const newSpecs = { ...currentSpecs, [key]: val };
-                                        form.setValue("specs", newSpecs);
+                                        form.setValue("specs", newSpecs, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                                     };
 
                                     const removeSpec = (keyToRem: string) => {
                                         const newSpecs = { ...currentSpecs };
                                         delete newSpecs[keyToRem];
                                         form.setValue("specs", newSpecs);
-                                    };
-
-                                    const addSpec = () => {
-                                        const newKey = prompt("Nhập tên thông số (Ví dụ: Dung lượng):");
-                                        if (newKey) {
-                                            updateSpec(newKey, "");
-                                        }
                                     };
 
                                     return (
@@ -424,9 +471,10 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                                                     </Button>
                                                 </div>
                                             ))}
-                                            <Button type="button" variant="outline" size="sm" onClick={addSpec} className="w-full h-8 text-xs border-dashed text-gray-500 hover:text-primary-600 hover:border-primary-300">
-                                                + Thêm thông số
-                                            </Button>
+
+                                            <SpecInput
+                                                onAdd={(key, val) => updateSpec(key, val)}
+                                            />
                                         </>
                                     );
                                 })()}

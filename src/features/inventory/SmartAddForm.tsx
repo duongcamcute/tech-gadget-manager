@@ -7,9 +7,10 @@ import { createItem } from "@/app/actions";
 import { ITEM_TYPES } from "@/lib/constants/options";
 import { ItemSchema, ItemFormData } from "@/types/schema";
 import { LendingFields } from "./LendingFields";
+import { SpecInput } from "./SpecInput";
 import { TECH_SUGGESTIONS } from "@/lib/constants";
 import { Button, Input, Label, Select, Card, CardHeader, CardTitle, CardContent } from "@/components/ui/primitives";
-import { Loader2, Wand2, RefreshCcw, Calendar, ExternalLink, MapPin, Clock, Tag, Box, Copy, Zap, Save } from "lucide-react";
+import { Loader2, Wand2, RefreshCcw, Calendar, ExternalLink, MapPin, Clock, Tag, Box, Copy, Zap, Save, Trash2, Plus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { AutoCompleteInput } from "@/components/ui/AutoCompleteInput";
@@ -610,13 +611,29 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                             </div>
                             <div className="space-y-1">
                                 <Label className="text-xs flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" /> Bảo hành (Tháng)</Label>
-                                <Input
-                                    type="number"
-                                    placeholder="VNĐ Bảo hành..."
-                                    className="h-9"
-                                    value={warrantyMonths}
-                                    onChange={(e) => setWarrantyMonths(e.target.value)}
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        type="number"
+                                        placeholder="Nhập..."
+                                        className="h-9 w-20"
+                                        value={warrantyMonths}
+                                        onChange={(e) => setWarrantyMonths(e.target.value)}
+                                    />
+                                    <Select
+                                        className="h-9 flex-1 bg-white text-xs"
+                                        onChange={(e) => {
+                                            if (e.target.value) setWarrantyMonths(e.target.value);
+                                        }}
+                                        value={""} // Reset after select implies? Or keep uncontrolled-ish
+                                    >
+                                        <option value="">Chọn nhanh...</option>
+                                        <option value="6">6 Tháng</option>
+                                        <option value="12">12 Tháng</option>
+                                        <option value="18">18 Tháng</option>
+                                        <option value="24">24 Tháng (2 Năm)</option>
+                                        <option value="36">36 Tháng (3 Năm)</option>
+                                    </Select>
+                                </div>
                                 {form.watch("warrantyEnd") && <div className="text-[10px] text-green-600 font-bold text-right">Đến: {new Date(form.watch("warrantyEnd")!).toLocaleDateString('vi-VN')}</div>}
                             </div>
                             <div className="space-y-1 col-span-2">
@@ -626,14 +643,55 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                     <Input {...form.register("purchaseUrl")} placeholder="Link..." className="h-9 flex-[2]" />
                                 </div>
                             </div>
+                            <div className="col-span-2 space-y-1">
+                                <Label className="text-xs text-muted-foreground">Ghi chú</Label>
+                                <Input {...form.register("notes")} placeholder="Ghi chú thêm..." className="h-9" />
+                            </div>
+                        </div>
+
+                        {/* Dynamic Extra Specs for ALL Types */}
+                        <div className="pt-2 border-t border-dashed mt-2">
+                            <Label className="text-xs font-bold text-gray-500 mb-2 block">Thêm thông số khác</Label>
+                            <div className="space-y-2">
+                                {Object.entries(form.watch('specs') || {}).filter(([k]) => !['capacity', 'interface', 'bandwidth', 'power', 'ports', 'cableType', 'length', 'connectivity', 'dpi', 'switch', 'type', 'feature', 'resolution', 'size', 'panel', 'other'].includes(k)).map(([k, v]) => (
+                                    <div key={k} className="flex gap-2 items-center">
+                                        <div className="w-1/3 bg-gray-100 px-2 py-1.5 rounded text-xs border truncate font-medium text-gray-600">{k}</div>
+                                        <Input
+                                            value={v as string}
+                                            onChange={(e) => {
+                                                const current = form.getValues('specs');
+                                                form.setValue('specs', { ...current, [k]: e.target.value });
+                                            }}
+                                            className="h-8 text-xs flex-1 bg-white"
+                                        />
+                                        <Button type="button" variant="ghost" size="sm" onClick={() => {
+                                            const current = form.getValues('specs');
+                                            const newSpecs = { ...current };
+                                            delete newSpecs[k];
+                                            form.setValue('specs', newSpecs);
+                                        }} className="h-8 w-8 p-0 text-red-400 hover:text-red-500 hover:bg-red-50">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+
+                                <SpecInput
+                                    onAdd={(key, val) => {
+                                        const current = form.getValues('specs') || {};
+                                        form.setValue('specs', { ...current, [key]: val }, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
+
+
 
                     <Button type="submit" disabled={isSubmitting} className="w-full font-bold bg-primary-500 hover:bg-primary-600 text-white shadow-xl shadow-primary-500/20 hover:shadow-primary-500/30 transition-all h-12 text-base rounded-xl mt-2">
                         {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : quantity > 1 ? `Lưu ${quantity} thiết bị` : "Lưu vào kho đồ"}
                     </Button>
                 </form>
             </CardContent>
-        </Card>
+        </Card >
     );
 }

@@ -105,6 +105,12 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
+        // --- DEMO MODE CHECK ---
+        if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+            return NextResponse.json({ error: "Chế độ Demo: Không được phép tạo dữ liệu mới." }, { status: 403 });
+        }
+        // -----------------------
+
         // Validate required fields
         if (!body.name || !body.type || !body.category) {
             return NextResponse.json({

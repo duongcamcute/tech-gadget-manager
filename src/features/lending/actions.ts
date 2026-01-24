@@ -5,8 +5,12 @@ import { revalidatePath } from "next/cache";
 import { formatDateVN } from "@/lib/utils/date";
 import { logActivity } from "@/lib/audit";
 import { triggerWebhooks } from "@/lib/webhooks";
+import { requireAuth } from "@/lib/auth";
 
 export async function lendItem(itemId: string, borrowerName: string, dueDate?: Date) {
+    // Auth Check
+    await requireAuth();
+
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Cho mượn bị khóa." };
@@ -70,6 +74,9 @@ export async function lendItem(itemId: string, borrowerName: string, dueDate?: D
 }
 
 export async function bulkLendItems(itemIds: string[], borrowerName: string, dueDate?: Date) {
+    // Auth Check
+    await requireAuth();
+
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Cho mượn hàng loạt bị khóa." };
@@ -137,6 +144,9 @@ export async function bulkLendItems(itemIds: string[], borrowerName: string, due
 
 
 export async function returnItem(itemId: string) {
+    // Auth Check
+    await requireAuth();
+
     // --- DEMO MODE CHECK ---
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return { success: false, error: "Chế độ Demo: Tính năng Trả đồ bị khóa." };
