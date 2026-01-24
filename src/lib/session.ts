@@ -24,7 +24,8 @@ export async function createSession(userId: string, username: string) {
     const cookieStore = await cookies();
     cookieStore.set('session', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        // Allow disabling secure cookies for self-hosted HTTP environments
+        secure: process.env.NODE_ENV === 'production' && process.env.DISABLE_SECURE_COOKIES !== 'true',
         expires: expiresAt,
         sameSite: 'lax',
         path: '/',

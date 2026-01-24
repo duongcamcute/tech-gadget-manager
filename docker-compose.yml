@@ -11,6 +11,8 @@ services:
       - DATABASE_URL=file:/app/db/prod.db
       # Production Mode
       - NODE_ENV=production
+      # Disable Secure Cookie for HTTP (Self-hosted)
+      - DISABLE_SECURE_COOKIES=true
       # Security Keys (Thay đổi thành chuỗi ngẫu nhiên dài)
       - JWT_SECRET=change_this_to_a_super_secret_random_string_in_production_12345
       # Disable Demo Mode
