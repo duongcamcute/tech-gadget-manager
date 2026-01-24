@@ -238,7 +238,9 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
             status: item.status,
             dueDate: item.lendingRecords?.[0]?.dueDate ? new Date(item.lendingRecords[0].dueDate).toISOString().split('T')[0] : null,
             borrowDate: item.lendingRecords?.[0]?.borrowDate ? new Date(item.lendingRecords[0].borrowDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            borrowerName: item.lendingRecords?.[0]?.borrowerName || ""
+            borrowerName: item.lendingRecords?.[0]?.borrowerName || "",
+            warrantyEnd: item.warrantyEnd ? new Date(item.warrantyEnd).toISOString().split('T')[0] : null,
+            serialNumber: item.serialNumber || ""
         }
     });
 

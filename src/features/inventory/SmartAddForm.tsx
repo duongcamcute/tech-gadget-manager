@@ -459,6 +459,10 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                             <Input {...form.register("model")} placeholder="A2337..." className="h-10 font-mono text-sm" />
                         </div>
                         <div className="space-y-1.5 col-span-2 lg:col-span-1">
+                            <Label>Serial Number</Label>
+                            <Input {...form.register("serialNumber")} placeholder="S/N..." className="h-10 font-mono text-sm" />
+                        </div>
+                        <div className="space-y-1.5 col-span-2 lg:col-span-1">
                             <Label>Trạng thái</Label>
                             <Select {...form.register("status")} className="bg-white focus:border-primary-500 h-10">
                                 <option value="Available">Sẵn sàng</option>
