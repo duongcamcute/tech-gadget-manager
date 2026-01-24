@@ -26,8 +26,9 @@ export async function createItem(data: ItemFormData) {
     // -----------------------
 
     try {
-        const { purchaseDate, locationId, specs, borrowerName, dueDate, borrowDate, purchasePrice, ...rest } = result.data;
+        const { purchaseDate, warrantyEnd, locationId, specs, borrowerName, dueDate, borrowDate, purchasePrice, ...rest } = result.data;
         const dbPurchaseDate = purchaseDate ? new Date(purchaseDate) : null;
+        const dbWarrantyEnd = warrantyEnd ? new Date(warrantyEnd) : null;
         const dbPurchasePrice = purchasePrice ? parseFloat(purchasePrice.toString()) : null;
         const dbLocationId = (locationId && locationId !== "") ? locationId : null;
         const dbSpecs = specs ? JSON.stringify(specs) : "{}";
@@ -54,6 +55,7 @@ export async function createItem(data: ItemFormData) {
                     category: rest.category || "General",
                     locationId: dbLocationId,
                     purchaseDate: dbPurchaseDate,
+                    warrantyEnd: dbWarrantyEnd,
                     purchasePrice: dbPurchasePrice,
                     specs: dbSpecs,
                     history: {
@@ -141,8 +143,9 @@ export async function updateItem(id: string, data: ItemFormData) {
     // -----------------------
 
     try {
-        const { purchaseDate, locationId, specs, borrowerName, dueDate, borrowDate, purchasePrice, ...rest } = result.data;
+        const { purchaseDate, warrantyEnd, locationId, specs, borrowerName, dueDate, borrowDate, purchasePrice, ...rest } = result.data;
         const dbPurchaseDate = purchaseDate ? new Date(purchaseDate) : null;
+        const dbWarrantyEnd = warrantyEnd ? new Date(warrantyEnd) : null;
         const dbPurchasePrice = purchasePrice ? parseFloat(purchasePrice.toString()) : null;
         const dbLocationId = (locationId && locationId !== "") ? locationId : null;
         const dbSpecs = specs ? JSON.stringify(specs) : "{}";
@@ -165,6 +168,7 @@ export async function updateItem(id: string, data: ItemFormData) {
                     category: rest.category || oldItem.category,
                     locationId: dbLocationId,
                     purchaseDate: dbPurchaseDate,
+                    warrantyEnd: dbWarrantyEnd,
                     purchasePrice: dbPurchasePrice,
                     specs: dbSpecs
                 }
