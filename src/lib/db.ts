@@ -13,13 +13,18 @@ const prismaClientSingleton = () => {
         return new PrismaClient();
     }
 
-    // CASE 2: Production WITHOUT DATABASE_URL = ERROR
-    // This prevents accidentally using dev.db in production
+    // CASE 2: Production WITHOUT DATABASE_URL
+    // We do NOT want to copy dev.db here to avoid data loss issues.
+    // If DATABASE_URL is missing, we log a warning but still return a client.
+    // Prisma will throw an error at RUNTIME if it tries to connect without a URL, which is what we want.
+    // This allows 'next build' to pass (which might not need DB connection) but fails safely at runtime.
     if (process.env.NODE_ENV === "production") {
-        console.error("[DB] ⛔ CRITICAL ERROR: DATABASE_URL is required in production!");
-        console.error("[DB] Please set DATABASE_URL environment variable.");
-        console.error("[DB] Example: DATABASE_URL=file:/app/db/prod.db");
-        throw new Error("DATABASE_URL is required in production environment. Set it in docker-compose.yml or environment variables.");
+        console.warn("[DB] ⚠️ WARNING: DATABASE_URL is not set in production.");
+        console.warn("[DB] This is okay during build time, but will fail at runtime.");
+
+        // Return a client without explicit datasources. 
+        // It will try to use env("DATABASE_URL") by default, or fail if missing.
+        return new PrismaClient();
     }
 
     // CASE 3: Development - use default from schema.prisma (prisma/dev.db)
