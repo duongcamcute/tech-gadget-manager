@@ -690,7 +690,8 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                             <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 space-y-2">
                                 {(() => {
                                     const currentSpecs = form.watch("specs") || {};
-                                    const entries = Object.entries(currentSpecs);
+                                    // Filter out null/undefined values to avoid display issues
+                                    const entries = Object.entries(currentSpecs).filter(([_, v]) => v !== null && v !== undefined);
 
                                     const updateSpec = (key: string, val: string) => {
                                         const newSpecs = { ...currentSpecs, [key]: val };
@@ -716,7 +717,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                                                         className="h-8 text-xs flex-1 bg-white"
                                                         placeholder="Giá trị..."
                                                     />
-                                                    <Button type="button" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => removeSpec(k)}>
+                                                    <Button type="button" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => removeSpec(k)}>
                                                         <Trash2 size={14} />
                                                     </Button>
                                                 </div>
