@@ -7,7 +7,7 @@ import { Card, Button, Input, Select } from "@/components/ui/primitives";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ItemDetailDialog } from "./ItemDetailDialog";
 import { LocationDetailView } from "@/features/locations/LocationDetailView";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { ITEM_ICONS, ITEM_STATUS, ITEM_TYPES, LOCATION_ICONS } from "@/lib/constants/options";
 import { getColorHex } from "@/lib/utils/colors";
@@ -69,7 +69,20 @@ export default function InventoryManager({ initialItems, locations }: { initialI
     const [isQrPreviewOpen, setIsQrPreviewOpen] = useState(false);
 
     const router = useRouter();
+    const searchParams = useSearchParams(); // Added useSearchParams
     const { toast } = useToast();
+
+    // Auto-open Item Detail from URL
+    useEffect(() => {
+        const itemId = searchParams.get("item");
+        if (itemId) {
+            const found = initialItems.find(i => i.id === itemId);
+            if (found) {
+                setSelectedItem(found);
+            }
+        }
+    }, [searchParams, initialItems]);
+
 
     // Derived Selection Helpers
     const toggleSelection = (id: string) => {
