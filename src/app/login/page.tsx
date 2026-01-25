@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { loginUser } from "@/app/actions";
 import { useRouter } from "next/navigation";
-import { Button, Input, Label, Card } from "@/components/ui/primitives"; // Simplified imports
+import { Button, Input, Label } from "@/components/ui/primitives"; // Simplified imports
 import { Loader2, Sparkles, ArrowRight, Lock, User as UserIcon } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
@@ -24,15 +24,16 @@ export default function LoginPage() {
         try {
             const res = await loginUser(username, password);
             if (res.success && res.user) {
-                loginStore(res.user as any);
+                loginStore(res.user as Parameters<typeof loginStore>[0]);
                 toast("Đăng nhập thành công!", "success");
                 router.push("/");
             } else {
                 toast(res.error || "Đăng nhập thất bại", "error");
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Không xác định";
             console.error(err);
-            toast("Lỗi kết nối: " + (err.message || "Không xác định"), "error");
+            toast("Lỗi kết nối: " + errorMessage, "error");
         } finally {
             setLoading(false);
         }

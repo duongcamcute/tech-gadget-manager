@@ -14,21 +14,23 @@ import { AuditLogViewer } from "@/features/audit/AuditLogViewer";
 // --- Item Type Manager Component ---
 function ItemTypeManager() {
     const { toast } = useToast();
-    const [itemTypes, setItemTypes] = useState<any[]>([]);
+    const [itemTypes, setItemTypes] = useState<{ id: string; value: string; label: string }[]>([]);
     const [newValue, setNewValue] = useState("");
     const [newLabel, setNewLabel] = useState("");
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        loadItemTypes();
-    }, []);
 
     const loadItemTypes = async () => {
         try {
             const res = await getItemTypes();
             setItemTypes(res);
-        } catch (e) { }
+        } catch {
+            // Silently ignore errors
+        }
     };
+
+    useEffect(() => {
+        loadItemTypes();
+    }, []);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -88,7 +90,7 @@ function ItemTypeManager() {
             <div className="pt-3 border-t border-gray-200">
                 <Label className="text-xs uppercase font-bold text-gray-500 mb-2 block">Loại tùy chỉnh của bạn</Label>
                 <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
-                    {itemTypes.map((t: any) => (
+                    {itemTypes.map((t: { id: string; value: string; label: string }) => (
                         <div key={t.id} className="group flex items-center gap-1 bg-white border border-gray-200 px-2 py-1 rounded-md text-sm shadow-sm hover:border-green-300 transition-colors">
                             <span className="font-medium">{t.label}</span>
                             <span className="text-[10px] text-gray-400 font-mono">({t.value})</span>
@@ -129,53 +131,59 @@ export default function SettingsPage() {
 
     // Brand State
     const [brandName, setBrandName] = useState("");
-    const [brandsList, setBrandsList] = useState<any[]>([]);
+    const [brandsList, setBrandsList] = useState<{ id: string; name: string }[]>([]);
 
     // API & System State
-    const [apiKeys, setApiKeys] = useState<any[]>([]);
+    const [apiKeys, setApiKeys] = useState<{ id: string; name: string; key: string; createdAt: Date; lastUsed: Date | null }[]>([]);
     const [newKeyName, setNewKeyName] = useState("");
     const [importFile, setImportFile] = useState<File | null>(null);
     const [clearBeforeImport, setClearBeforeImport] = useState(false);
-
-    useEffect(() => {
-        loadBrands();
-        loadApiKeys();
-    }, []);
 
     const loadBrands = async () => {
         try {
             const res = await getBrands();
             setBrandsList(res);
-        } catch (e) { }
+        } catch {
+            // Silently ignore errors
+        }
     };
 
     const loadApiKeys = async () => {
         try {
             const res = await getApiKeys();
             setApiKeys(res);
-        } catch (e) { }
+        } catch {
+            // Silently ignore errors
+        }
     };
+
+    useEffect(() => {
+        loadBrands();
+        loadApiKeys();
+    }, []);
 
     // ... inside component
 
     // Template State
-    const [templates, setTemplates] = useState<any[]>([]);
+    const [templates, setTemplates] = useState<{ id: string; name: string; config: string }[]>([]);
     const [newTemplateName, setNewTemplateName] = useState("");
     // Visual Editor State
     const [tempType, setTempType] = useState(ITEM_TYPES[0].value);
     const [tempBrand, setTempBrand] = useState("");
     const [tempSpecs, setTempSpecs] = useState<{ key: string, value: string }[]>([{ key: "", value: "" }]);
 
-    useEffect(() => {
-        loadTemplates();
-    }, []);
-
     const loadTemplates = async () => {
         try {
             const res = await getTemplates();
             setTemplates(res);
-        } catch (e) { }
+        } catch {
+            // Silently ignore errors
+        }
     };
+
+    useEffect(() => {
+        loadTemplates();
+    }, []);
 
     const handleAddSpecRow = () => {
         setTempSpecs([...tempSpecs, { key: "", value: "" }]);
@@ -678,7 +686,7 @@ export default function SettingsPage() {
                                         <div className="mt-4 pt-4 border-t border-gray-200">
                                             <Label className="text-xs uppercase font-bold text-gray-500 mb-3 block">Danh sách hãng hiện có</Label>
                                             <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
-                                                {brandsList.map((b: any) => (
+                                                {brandsList.map((b) => (
                                                     <div key={b.id} className="group flex items-center gap-1 bg-white border border-gray-200 px-2 py-1 rounded-md text-sm shadow-sm hover:border-orange-300 transition-colors">
                                                         <span>{b.name}</span>
                                                     </div>
@@ -768,7 +776,7 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                                            {apiKeys.map((k: any) => (
+                                            {apiKeys.map((k) => (
                                                 <div key={k.id} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
                                                     <div className="flex flex-col gap-0.5">
                                                         <span className="font-bold text-sm text-gray-800">{k.name}</span>

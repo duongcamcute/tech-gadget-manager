@@ -49,7 +49,12 @@ export async function GET(request: NextRequest) {
         const brand = searchParams.get("brand");
         const search = searchParams.get("search");
 
-        const where: any = {};
+        const where: {
+            status?: string;
+            category?: string;
+            brand?: string;
+            OR?: { name?: { contains: string }; model?: { contains: string }; serialNumber?: { contains: string } }[];
+        } = {};
         if (status) where.status = status;
         if (category) where.category = category;
         if (brand) where.brand = brand;

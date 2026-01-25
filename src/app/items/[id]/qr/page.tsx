@@ -1,9 +1,8 @@
 import { QRCodeGenerator } from "@/features/qr/QRCodeGenerator";
 import { getItem } from "../../actions";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/primitives";
 import Link from "next/link";
-import { ArrowLeft, Printer, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 
 // Fix: params is a Promise in Next.js 15+
 export default async function ItemQRPage({ params }: { params: Promise<{ id: string }> }) {

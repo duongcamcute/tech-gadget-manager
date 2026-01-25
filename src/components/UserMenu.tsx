@@ -43,16 +43,16 @@ export default function UserMenu() {
         <div className="relative">
             <button
                 onClick={() => setOpen(!open)}
-                className="group flex items-center gap-3 pl-1 pr-3 py-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-primary-100/50 dark:border-gray-700 hover:border-primary-200 dark:hover:border-gray-600 rounded-full transition-all hover:shadow-md shadow-sm"
+                className="group flex items-center gap-1 sm:gap-3 pl-1 pr-1.5 sm:pr-3 py-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-primary-100/50 dark:border-gray-700 hover:border-primary-200 dark:hover:border-gray-600 rounded-full transition-all hover:shadow-md shadow-sm"
             >
-                <div className="h-9 w-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner ring-2 ring-white dark:ring-gray-800 overflow-hidden">
+                <div className="h-8 w-8 sm:h-9 sm:w-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-inner ring-2 ring-white dark:ring-gray-800 overflow-hidden shrink-0">
                     <AvatarImage />
                 </div>
-                <div className="flex flex-col items-start mr-1">
+                <div className="hidden sm:flex flex-col items-start mr-1">
                     <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-tight max-w-[100px] truncate">{displayName}</span>
                     <span className="text-[10px] text-primary-600 dark:text-primary-400 font-medium leading-none">Admin</span>
                 </div>
-                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`} />
             </button>
 
             {open && (

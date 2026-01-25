@@ -339,15 +339,15 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
     };
 
     return (
-        <Card className="shadow-lg border-0 ring-1 ring-primary-100 dark:ring-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between border-b border-primary-50">
+        <Card className="shadow-lg border-0 ring-1 ring-primary-100 dark:ring-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between border-b border-primary-50 dark:border-gray-800/50">
                 <CardTitle className="flex items-center gap-2 text-primary-600">
                     <Wand2 className="h-5 w-5" />
                     Thêm thiết bị mới
                 </CardTitle>
                 <div className="flex items-center gap-2">
                     {/* Quantity Input */}
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 h-8">
+                    <div className="flex items-center bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg px-2 h-8">
                         <Copy className="h-3 w-3 text-gray-500 mr-2" />
                         <span className="text-xs text-gray-500 mr-2 font-medium">Số lượng:</span>
                         <input
@@ -356,10 +356,10 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                             max="50"
                             value={quantity}
                             onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                            className="w-8 bg-transparent text-sm font-bold text-center border-none focus:ring-0 p-0"
+                            className="w-8 bg-transparent text-sm font-bold text-center border-none focus:ring-0 p-0 text-gray-900 dark:text-gray-100"
                         />
                     </div>
-                    <Button type="button" variant="ghost" onClick={handleReset} className="h-8 w-8 p-0 text-primary-400 hover:text-primary-600 hover:bg-primary-50" title="Nhập lại từ đầu">
+                    <Button type="button" variant="ghost" onClick={handleReset} className="h-8 w-8 p-0 text-primary-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30" title="Nhập lại từ đầu">
                         <RefreshCcw className="h-4 w-4" />
                     </Button>
                 </div>
@@ -368,9 +368,9 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
                     {/* Template Quick Select */}
-                    <div className="bg-primary-50/50 p-1.5 rounded-xl border border-primary-100 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-primary-500 uppercase px-2 whitespace-nowrap">⚡ Mẫu nhanh</span>
-                        <Select onChange={handleTemplateChange} className="bg-transparent border-0 h-8 text-sm focus:ring-0 text-gray-700 font-medium flex-1">
+                    <div className="bg-primary-50/50 dark:bg-primary-900/20 p-1.5 rounded-xl border border-primary-100 dark:border-primary-900/40 flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-primary-500 dark:text-primary-400 uppercase px-2 whitespace-nowrap">⚡ Mẫu nhanh</span>
+                        <Select onChange={handleTemplateChange} className="bg-transparent border-0 h-8 text-sm focus:ring-0 text-gray-700 dark:text-gray-300 font-medium flex-1">
                             <option value="">-- Chọn để điền tự động --</option>
                             {VN_TEMPLATES.map((t) => (
                                 <option key={t.label} value={t.label}>{t.label}</option>
@@ -381,7 +381,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                 ))}
                             </optgroup>}
                         </Select>
-                        <Button type="button" size="sm" variant="ghost" className="h-8 text-xs text-primary-600 hover:bg-primary-100 px-2" onClick={handleSaveAsTemplate} title="Lưu cấu hình hiện tại thành mẫu mới">
+                        <Button type="button" size="sm" variant="ghost" className="h-8 text-xs text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/40 px-2" onClick={handleSaveAsTemplate} title="Lưu cấu hình hiện tại thành mẫu mới">
                             <Save className="h-3.5 w-3.5 mr-1" /> Lưu mẫu
                         </Button>
                     </div>
@@ -393,7 +393,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
 
                     {/* Image Upload Area */}
                     <div className="flex items-center gap-4">
-                        <div className={`h-16 w-16 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden bg-gray-50 ${imgPreview ? 'border-primary-500' : 'border-gray-200'}`}>
+                        <div className={`h-16 w-16 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-800 ${imgPreview ? 'border-primary-500' : 'border-gray-200 dark:border-gray-700'}`}>
                             {imgPreview ? (
                                 <img src={imgPreview} alt="Preview" className="h-full w-full object-cover" />
                             ) : (
@@ -434,7 +434,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                         variant="outline"
                                         role="combobox"
                                         aria-expanded={openType}
-                                        className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200"
+                                        className="w-full justify-between bg-white dark:bg-gray-800 h-10 font-normal px-3 border-gray-200 dark:border-gray-700"
                                     >
                                         <span className="truncate">
                                             {watchedType
@@ -508,7 +508,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                         </div>
                         <div className="space-y-1.5 col-span-2 lg:col-span-1">
                             <Label>Trạng thái</Label>
-                            <Select {...form.register("status")} className="bg-white focus:border-primary-500 h-10">
+                            <Select {...form.register("status")} className="bg-white dark:bg-gray-800 focus:border-primary-500 h-10 border-gray-200 dark:border-gray-700">
                                 <option value="Available">Sẵn sàng</option>
                                 <option value="InUse">Đang dùng</option>
                                 <option value="Lent">Cho mượn</option>
@@ -530,7 +530,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                     variant="outline"
                                     role="combobox"
                                     aria-expanded={openLocation}
-                                    className="w-full justify-between bg-white h-10 font-normal px-3 border-gray-200"
+                                    className="w-full justify-between bg-white dark:bg-gray-800 h-10 font-normal px-3 border-gray-200 dark:border-gray-700"
                                 >
                                     <span className="truncate">
                                         {form.watch("locationId")
@@ -581,16 +581,16 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                     </div>
 
                     {/* Dynamic Specs Section - Richer */}
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 shadow-inner">
+                    <div className="bg-slate-50 dark:bg-gray-950/20 p-4 rounded-xl border border-slate-200/60 dark:border-gray-800 shadow-inner">
                         {watchedType === 'Cable' ? (
                             <div className="space-y-3">
-                                <Label className="text-xs uppercase font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2 flex items-center gap-2">
+                                <Label className="text-xs uppercase font-bold text-slate-500 dark:text-gray-400 border-b border-slate-200 dark:border-gray-800 pb-2 mb-2 flex items-center gap-2">
                                     <Zap className="h-3 w-3 text-yellow-500" /> Thông số Kỹ thuật Cáp
                                 </Label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
                                         <Label className="text-xs">Chức năng</Label>
-                                        <Select {...form.register("specs.cableType")} className="h-9 text-sm bg-white">
+                                        <Select {...form.register("specs.cableType")} className="h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                             <option value="All">Sạc + Dữ Liệu (Full)</option>
                                             <option value="Charging">Chuyên Sạc (Charging Only)</option>
                                             <option value="Data">Chuyên Dữ Liệu</option>
@@ -598,7 +598,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-xs">Độ dài</Label>
-                                        <Input {...form.register("specs.length")} placeholder="1m..." className="h-9 bg-white" />
+                                        <Input {...form.register("specs.length")} placeholder="1m..." className="h-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" />
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-xs">Chuẩn kết nối</Label>
@@ -617,7 +617,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                             value={form.watch('specs.bandwidth') || ''}
                                             onValueChange={(v) => form.setValue('specs.bandwidth', v)}
                                             placeholder="40 Gbps..."
-                                            className="h-9 bg-white"
+                                            className="h-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                         />
                                     </div>
                                     <div className="space-y-1 col-span-2">
@@ -627,14 +627,14 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                             value={form.watch('specs.power') || ''}
                                             onValueChange={(v) => form.setValue('specs.power', v)}
                                             placeholder="100W..."
-                                            className="h-9 bg-white"
+                                            className="h-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                         />
                                     </div>
                                 </div>
                             </div>
                         ) : watchedType === 'Storage' ? (
                             <div className="space-y-3">
-                                <Label className="text-xs uppercase font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2 flex items-center gap-2">
+                                <Label className="text-xs uppercase font-bold text-slate-500 dark:text-gray-400 border-b border-slate-200 dark:border-gray-800 pb-2 mb-2 flex items-center gap-2">
                                     <Box className="h-3 w-3 text-purple-500" /> Thông số Lưu trữ
                                 </Label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -645,7 +645,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                             value={form.watch('specs.capacity') || ''}
                                             onValueChange={(v) => form.setValue('specs.capacity', v)}
                                             placeholder="1 TB..."
-                                            className="h-9 bg-white"
+                                            className="h-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -662,7 +662,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                <Label className="text-xs uppercase font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2 flex items-center gap-2">
+                                <Label className="text-xs uppercase font-bold text-slate-500 dark:text-gray-400 border-b border-slate-200 dark:border-gray-800 pb-2 mb-2 flex items-center gap-2">
                                     <Tag className="h-3 w-3" /> Thông số chung
                                 </Label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -673,12 +673,12 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                             value={form.watch('specs.power') || ''}
                                             onValueChange={(v) => form.setValue('specs.power', v)}
                                             placeholder="Nhập thông số..."
-                                            className="h-9 bg-white"
+                                            className="h-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                         />
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-xs">Tính năng khác</Label>
-                                        <Input {...form.register("specs.other")} placeholder="..." className="h-9 bg-white" />
+                                        <Input {...form.register("specs.other")} placeholder="..." className="h-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" />
                                     </div>
                                 </div>
                             </div>
@@ -713,7 +713,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                         onChange={(e) => setWarrantyMonths(e.target.value)}
                                     />
                                     <Select
-                                        className="h-9 flex-1 bg-white text-xs"
+                                        className="h-9 flex-1 bg-white dark:bg-gray-800 text-xs border-gray-200 dark:border-gray-700"
                                         onChange={(e) => {
                                             if (e.target.value) setWarrantyMonths(e.target.value);
                                         }}
@@ -748,14 +748,14 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                             <div className="space-y-2">
                                 {Object.entries(form.watch('specs') || {}).filter(([k]) => !['capacity', 'interface', 'bandwidth', 'power', 'ports', 'cableType', 'length', 'connectivity', 'dpi', 'switch', 'type', 'feature', 'resolution', 'size', 'panel', 'other'].includes(k)).map(([k, v]) => (
                                     <div key={k} className="flex gap-2 items-center">
-                                        <div className="w-1/3 bg-gray-100 px-2 py-1.5 rounded text-xs border truncate font-medium text-gray-600">{k}</div>
+                                        <div className="w-1/3 bg-gray-100 dark:bg-gray-800 px-2 py-1.5 rounded text-xs border border-gray-200 dark:border-gray-700 truncate font-medium text-gray-600 dark:text-gray-400">{k}</div>
                                         <Input
                                             value={v as string}
                                             onChange={(e) => {
                                                 const current = form.getValues('specs');
                                                 form.setValue('specs', { ...current, [k]: e.target.value });
                                             }}
-                                            className="h-8 text-xs flex-1 bg-white"
+                                            className="h-8 text-xs flex-1 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                         />
                                         <Button type="button" variant="ghost" size="sm" onClick={() => {
                                             const current = form.getValues('specs');

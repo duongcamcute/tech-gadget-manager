@@ -330,20 +330,22 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             </div>
 
             {/* View Toggle & Count */}
-            <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 border-l-4 border-primary-500 pl-3">Danh sách thiết bị</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
+                <div className="flex items-center justify-between sm:justify-start gap-4">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 border-l-4 border-primary-500 pl-3 whitespace-nowrap">Danh sách thiết bị</h2>
                     <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
                         <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}><LayoutGrid className="w-4 h-4" /></button>
                         <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}><List className="w-4 h-4" /></button>
                     </div>
                 </div>
-                <div className="flex gap-2 items-center">
-                    <Select className="h-8 text-xs w-40 bg-white dark:bg-gray-800 dark:text-gray-100" onChange={(e) => { if (e.target.value) setViewLocation(locations.find(l => l.id === e.target.value)); }}>
+                <div className="flex gap-2 items-center justify-between sm:justify-end">
+                    <Select className="h-9 text-xs w-full sm:w-40 bg-white dark:bg-gray-800 dark:text-gray-100 rounded-xl" onChange={(e) => { if (e.target.value) setViewLocation(locations.find(l => l.id === e.target.value)); }}>
                         <option value="">Quản lý túi đồ...</option>
                         {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </Select>
-                    <span className="text-xs font-medium text-primary-600 bg-primary-50 px-3 py-1 rounded-full border border-primary-100">{filteredItems.length} kết quả</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-primary-600 bg-primary-50 dark:bg-primary-900/30 px-3 py-1.5 rounded-full border border-primary-100 dark:border-primary-800 whitespace-nowrap shadow-sm">
+                        {filteredItems.length} kết quả
+                    </span>
                 </div>
             </div>
 

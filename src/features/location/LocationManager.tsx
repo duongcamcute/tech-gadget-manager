@@ -177,7 +177,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
         return (
             <div className="select-none">
                 <div
-                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-primary-100 text-primary-900 font-bold' : 'hover:bg-primary-50/50 text-gray-700'}`}
+                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-900 dark:text-primary-100 font-bold' : 'hover:bg-primary-50/50 dark:hover:bg-primary-900/20 text-gray-700 dark:text-gray-300'}`}
                     style={{ marginLeft: `${level * 16}px` }}
                     onClick={() => {
                         setSelectedLocationId(node.id);
@@ -203,13 +203,13 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
 
                     {/* Item Count Badge */}
                     {node._count && node._count.items > 0 && (
-                        <span className="bg-primary-200 text-primary-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                        <span className="bg-primary-200 dark:bg-primary-800 text-primary-800 dark:text-primary-100 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                             {node._count.items}
                         </span>
                     )}
                 </div>
                 {isExpanded && hasChildren && (
-                    <div className="border-l border-primary-100 ml-[11px]">
+                    <div className="border-l border-primary-100 dark:border-primary-900/50 ml-[11px]">
                         {node.children.map(child => <LocationTreeItem key={child.id} node={child} level={level + 1} />)}
                     </div>
                 )}
@@ -244,9 +244,9 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             )}
 
             {/* Tree View */}
-            <Card className="w-full md:col-span-4 border-primary-100 shadow-sm flex flex-col h-[350px] md:h-full bg-white">
-                <CardHeader className="pb-2 border-b border-primary-50 bg-primary-50/30">
-                    <CardTitle className="text-base text-primary-700 flex justify-between items-center">
+            <Card className="w-full md:col-span-4 border-primary-100 dark:border-gray-800 shadow-sm flex flex-col h-[350px] md:h-full bg-white dark:bg-gray-900">
+                <CardHeader className="pb-2 border-b border-primary-50 dark:border-gray-800 bg-primary-50/30 dark:bg-gray-800/20">
+                    <CardTitle className="text-base text-primary-700 dark:text-primary-400 flex justify-between items-center">
                         <span>Danh sách vị trí</span>
                         <div className="flex gap-1">
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.refresh()}> <RefreshCw size={14} /> </Button>
@@ -265,31 +265,31 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                 </CardHeader>
                 <CardContent className="flex-1 overflow-auto pt-2 pl-2">
                     {initialLocations.map(node => <LocationTreeItem key={node.id} node={node} />)}
-                    {initialLocations.length === 0 && <p className="text-sm text-gray-400 text-center py-10">Chưa có vị trí nào</p>}
+                    {initialLocations.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-10">Chưa có vị trí nào</p>}
                 </CardContent>
             </Card>
 
             {/* Details & Actions Panel */}
-            <Card className="w-full md:col-span-8 border-primary-100 shadow-sm overflow-hidden flex flex-col bg-white min-h-[400px] md:h-full">
+            <Card className="w-full md:col-span-8 border-primary-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col bg-white dark:bg-gray-900 min-h-[400px] md:h-full">
                 {!selectedLocationId && !isCreating ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-300">
-                        <MapPin className="h-16 w-16 mb-4 opacity-20 text-primary-500" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-gray-300 dark:text-gray-700">
+                        <MapPin className="h-16 w-16 mb-4 opacity-20 text-primary-500 dark:text-primary-400" />
                         <p>Chọn vị trí để xem kho</p>
                     </div>
                 ) : (isCreating || isEditing) ? (
                     <div className="p-4 md:p-8 max-w-lg mx-auto w-full">
-                        <h3 className="font-bold text-lg text-primary-800 mb-6 flex items-center gap-2">
+                        <h3 className="font-bold text-lg text-primary-800 dark:text-primary-400 mb-6 flex items-center gap-2">
                             {isEditing ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
                             {isEditing ? "Chỉnh sửa vị trí" : (selectedLocationId && !isEditing ? "Thêm vị trí con" : "Tạo vị trí gốc mới")}
                         </h3>
                         <div className="space-y-4">
                             <div>
                                 <Label>Tên vị trí</Label>
-                                <Input value={newLocName} onChange={e => setNewLocName(e.target.value)} placeholder="Tên phòng, Tủ, Balo..." className="border-primary-200" />
+                                <Input value={newLocName} onChange={e => setNewLocName(e.target.value)} placeholder="Tên phòng, Tủ, Balo..." className="border-primary-200 dark:border-gray-700 dark:bg-gray-800" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <Select value={newLocType} onChange={e => setNewLocType(e.target.value)} className="border-primary-200">
+                                    <Select value={newLocType} onChange={e => setNewLocType(e.target.value)} className="border-primary-200 dark:border-gray-700 dark:bg-gray-800">
                                         <option value="Fixed">Cố định (Phòng/Nhà)</option>
                                         <option value="Container">Túi/Hộp (Di động)</option>
                                         <option value="Person">Người (Cho mượn)</option>
@@ -300,7 +300,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     <IconSelect
                                         value={newLocIcon}
                                         onValueChange={setNewLocIcon}
-                                        className="border-primary-200"
+                                        className="border-primary-200 dark:border-gray-700 dark:bg-gray-800"
                                         groups={LOCATION_ICON_GROUPS}
                                         iconMap={LOCATION_ICONS}
                                     />
@@ -310,7 +310,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     <Select
                                         value={newLocParentId || ""}
                                         onChange={e => setNewLocParentId(e.target.value || null)}
-                                        className="border-primary-200"
+                                        className="border-primary-200 dark:border-gray-700 dark:bg-gray-800"
                                         disabled={!isEditing && !!selectedLocationId && !isCreating} // If creating child, parent is fixed initially but let's allow changing
                                     >
                                         <option value="">-- Gốc (Root) --</option>
@@ -325,19 +325,19 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                 </div>
                             </div>
                             <div className="flex gap-2 pt-4">
-                                <Button onClick={isEditing ? handleUpdate : handleCreate} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-bold shadow-lg shadow-primary-500/20">
+                                <Button onClick={isEditing ? handleUpdate : handleCreate} className="flex-1 bg-primary-500 dark:bg-primary-600 hover:bg-primary-600 dark:hover:bg-primary-700 text-white font-bold shadow-lg shadow-primary-500/20">
                                     {isEditing ? "Cập nhật" : "Lưu vị trí"}
                                 </Button>
-                                <Button onClick={() => { setIsCreating(false); setIsEditing(false); }} variant="outline" className="flex-1 border-primary-200 text-primary-600 hover:bg-primary-50">Hủy</Button>
+                                <Button onClick={() => { setIsCreating(false); setIsEditing(false); }} variant="outline" className="flex-1 border-primary-200 dark:border-gray-700 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/40">Hủy</Button>
                             </div>
                         </div>
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col h-full">
                         {/* Detail Header */}
-                        <div className="px-6 py-4 border-b border-primary-100 bg-primary-50/30 flex justify-between items-start">
+                        <div className="px-6 py-4 border-b border-primary-100 dark:border-gray-800 bg-primary-50/30 dark:bg-gray-800/40 flex justify-between items-start">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                     {(() => {
                                         if (selectedLocation?.icon) {
                                             const { icon: Icon, color } = LOCATION_ICONS[selectedLocation.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
@@ -347,8 +347,8 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     })()}
                                     {selectedLocation?.name}
                                 </h2>
-                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                    <span className="bg-white border border-gray-200 px-2 py-0.5 rounded text-xs">{selectedLocation?.type}</span>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                                    <span className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded text-xs">{selectedLocation?.type}</span>
                                     <span>•</span>
                                     <span>ID: {selectedLocation?.id.slice(0, 8)}</span>
                                 </p>
@@ -360,7 +360,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     setNewLocIcon(selectedLocation?.icon || "");
                                     setNewLocParentId(selectedLocation?.parentId || null);
                                     setIsEditing(true);
-                                }} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
+                                }} className="bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-700 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 gap-1">
                                     <Pencil size={14} /> Sửa
                                 </Button>
                                 <Button size="sm" onClick={async () => {
@@ -372,7 +372,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     const items = await getAllItems();
                                     setAllItems(items);
                                     setIsManageOpen(true);
-                                }} className="bg-primary-500 text-white hover:bg-primary-600 gap-1 shadow-sm">
+                                }} className="bg-primary-500 dark:bg-primary-600 text-white hover:bg-primary-600 dark:hover:bg-primary-700 gap-1 shadow-sm">
                                     <Package size={14} /> Quản lý túi đồ
                                 </Button>
                                 <Button size="sm" onClick={() => {
@@ -380,23 +380,23 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     setNewLocName("");
                                     setNewLocIcon("");
                                     setNewLocParentId(selectedLocationId); // Set current as parent for new child
-                                }} className="bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 gap-1">
+                                }} className="bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-700 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 gap-1">
                                     <Plus size={14} /> Thêm con
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => handleDelete(selectedLocationId!)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
+                                <Button size="sm" variant="ghost" onClick={() => handleDelete(selectedLocationId!)} className="text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                                     <Trash2 size={16} />
                                 </Button>
                             </div>
                         </div>
 
                         {/* Items List */}
-                        <div className="flex-1 overflow-auto bg-slate-50 p-6">
-                            <h3 className="text-sm font-bold text-gray-500 uppercase mb-4 flex justify-between">
+                        <div className="flex-1 overflow-auto bg-slate-50 dark:bg-gray-950/40 p-6">
+                            <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex justify-between">
                                 <span>📦 Thiết bị tại đây ({locationItems.length})</span>
                             </h3>
 
                             {isLoadingItems ? (
-                                <div className="text-center py-10 text-gray-400 animate-pulse">Đang tải danh sách...</div>
+                                <div className="text-center py-10 text-gray-400 dark:text-gray-600 animate-pulse">Đang tải danh sách...</div>
                             ) : locationItems.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {locationItems.map(item => {
@@ -404,15 +404,15 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                         return (
                                             <div
                                                 key={item.id}
-                                                className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer hover:border-primary-300"
+                                                className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer hover:border-primary-300 dark:hover:border-primary-700"
                                                 onClick={() => handleItemClick(item.id)}
                                             >
-                                                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
+                                                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100 dark:bg-gray-700' : bg}`}>
                                                     {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-5 w-5 ${color}`} />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="font-medium text-sm truncate" title={item.name}>{item.name}</div>
-                                                    <div className="text-xs text-gray-500 truncate">{item.brand || "No Brand"} • {item.model || ""}</div>
+                                                    <div className="font-medium text-sm truncate text-gray-900 dark:text-gray-100" title={item.name}>{item.name}</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.brand || "No Brand"} • {item.model || ""}</div>
                                                 </div>
                                                 <div className={`w-2 h-2 rounded-full ${item.status === 'Available' ? 'bg-green-500' : 'bg-primary-500'}`} />
                                             </div>
@@ -420,9 +420,9 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                     })}
                                 </div>
                             ) : (
-                                <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl bg-white/50">
-                                    <Package className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                                    <p className="text-gray-400 text-sm">Chưa có thiết bị nào trực tiếp ở đây.</p>
+                                <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl bg-white/50 dark:bg-gray-900/50">
+                                    <Package className="h-10 w-10 mx-auto text-gray-300 dark:text-gray-700 mb-2" />
+                                    <p className="text-gray-400 dark:text-gray-600 text-sm">Chưa có thiết bị nào trực tiếp ở đây.</p>
                                 </div>
                             )}
                         </div>

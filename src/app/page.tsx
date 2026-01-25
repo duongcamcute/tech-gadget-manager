@@ -19,13 +19,13 @@ export default async function Home() {
       {/* Header - Full Width but centered content */}
       <div className="bg-white/80 dark:bg-gray-900/80 sticky top-0 z-40 backdrop-blur-md border-b border-primary-100 dark:border-gray-700 shadow-sm">
         <div className="container mx-auto px-3 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3 max-w-5xl">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
-              <Box className="h-6 w-6" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20 shrink-0">
+              <Box className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">TechGadget Manager</h1>
-              <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">Quản lý kho đồ công nghệ cá nhân</p>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100 truncate">TechGadget</h1>
+              <p className="text-[10px] sm:text-xs text-primary-600 dark:text-primary-400 font-medium truncate max-w-[150px] sm:max-w-none">Quản lý kho cá nhân</p>
             </div>
           </div>
 
