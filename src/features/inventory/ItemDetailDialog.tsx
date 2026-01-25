@@ -27,6 +27,42 @@ const formatCurrency = (amount: number | null | undefined) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
+const calculateUsageDuration = (startDate: string | Date | null | undefined) => {
+    if (!startDate) return null;
+    const start = new Date(startDate);
+    const now = new Date();
+
+    // Nếu ngày mua > hiện tại (vô lý)
+    if (start > now) return "Chưa sử dụng";
+
+    let years = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth() - start.getMonth();
+    let days = now.getDate() - start.getDate();
+
+    if (days < 0) {
+        months--;
+        // Lấy số ngày của tháng trước đó
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+    }
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} năm`);
+    if (months > 0) parts.push(`${months} tháng`);
+
+    // Nếu chưa đầy 1 tháng, hiển thị số ngày
+    if (years === 0 && months === 0) {
+        if (days === 0) return "Vừa mới mua";
+        return `${days} ngày`;
+    }
+
+    return parts.join(" ");
+};
+
 // --- Local UI Components for speed ---
 const Badge = ({ children, className }: { children: React.ReactNode, className?: string }) => (
     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${className}`}>{children}</span>
@@ -170,19 +206,33 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                 <div>
                     <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3">Chi tiết kỹ thuật</h3>
                     <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-gray-900/50 p-4 rounded-xl border border-slate-100 dark:border-gray-700">
-                        {item.brand && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Hãng sản xuất</p><p className="font-medium text-gray-900 dark:text-gray-100">{item.brand}</p></div>}
-                        {item.model && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Model</p><p className="font-mono font-medium text-gray-900 dark:text-gray-100">{item.model}</p></div>}
-                        {/* Removed duplicate Model */}
+                        {item.brand && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Hãng sản xuất</p><p className="font-medium text-gray-900 dark:text-gray-100 break-words">{item.brand}</p></div>}
+                        {item.model && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Model</p><p className="font-mono font-medium text-gray-900 dark:text-gray-100 break-words">{item.model}</p></div>}
+
                         {item.color && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Màu sắc</p><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: getColorHex(item.color) }}></div><p className="font-medium text-gray-900 dark:text-gray-100">{item.color}</p></div></div>}
-                        {item.purchaseDate && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Ngày mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatDateVN(item.purchaseDate)}</p></div>}
+
+                        {item.purchaseDate && (
+                            <>
+                                <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Ngày mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatDateVN(item.purchaseDate)}</p></div>
+                                <div>
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Đã dùng</p>
+                                    <p className="font-medium text-blue-600 dark:text-blue-400">
+                                        ⏱️ {calculateUsageDuration(item.purchaseDate)}
+                                    </p>
+                                </div>
+                            </>
+                        )}
+
                         {item.purchasePrice && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Giá mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(item.purchasePrice)}</p></div>}
                         {item.warrantyEnd && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Bảo hành đến</p><p className="font-medium text-green-700 dark:text-green-400">{formatDateVN(item.warrantyEnd)}</p></div>}
-                        {item.purchaseLocation && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Nơi mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{item.purchaseLocation}</p></div>}
-                        {item.purchaseUrl && <div className="col-span-2"><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Link mua hàng</p><a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 dark:text-blue-400 hover:underline break-words block">{item.purchaseUrl}</a></div>}
+                        {item.purchaseLocation && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Nơi mua</p><p className="font-medium text-gray-900 dark:text-gray-100 break-words">{item.purchaseLocation}</p></div>}
 
-                        {/* Dynamic Specs */}
+                        {/* Force full width on mobile for URL to avoid layout break */}
+                        {item.purchaseUrl && <div className="col-span-2"><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Link mua hàng</p><a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 dark:text-blue-400 hover:underline break-all block">{item.purchaseUrl}</a></div>}
+
+                        {/* Dynamic Specs - Smart Layout */}
                         {Object.entries(item.specs ? JSON.parse(item.specs as string) : {}).map(([k, v]: any) => (
-                            <div key={k} className="col-span-1">
+                            <div key={k} className={`${String(v).length > 20 ? 'col-span-2' : 'col-span-1'}`}>
                                 <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{k}</p>
                                 <p className="font-medium text-gray-900 dark:text-gray-100 break-words" title={v}>{v}</p>
                             </div>

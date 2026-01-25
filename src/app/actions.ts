@@ -123,9 +123,9 @@ export async function createItem(data: ItemFormData) {
 
         revalidatePath("/");
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("CREATE ERROR:", error);
-        return { success: false, error: "Lỗi lưu dữ liệu: " + (error.message || "") };
+        return { success: false, error: "Lỗi lưu dữ liệu: " + (error instanceof Error ? error.message : "Unknown error") };
     }
 }
 
@@ -276,9 +276,10 @@ export async function updateItem(id: string, data: ItemFormData) {
 
         revalidatePath("/");
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("UPDATE ERROR:", error);
-        return { success: false, error: "Lỗi cập nhật: " + error.message };
+        const errorMessage = error instanceof Error ? error.message : "Unkown error";
+        return { success: false, error: "Lỗi cập nhật: " + errorMessage };
     }
 }
 
@@ -320,7 +321,6 @@ export async function deleteItem(id: string) {
             details: "Đã xóa thiết bị vĩnh viễn"
         });
         await triggerWebhooks("item.deleted", { id, name: item?.name });
-        revalidatePath("/");
         return { success: true };
     } catch (e) {
         return { success: false, error: "Không thể xóa" };
@@ -396,8 +396,9 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
 
         revalidatePath("/");
         return { success: true };
-    } catch (e: any) {
-        return { success: false, error: "Lỗi chuyển kho hàng loạt: " + e.message };
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        return { success: false, error: "Lỗi chuyển kho hàng loạt: " + msg };
     }
 }
 
@@ -438,8 +439,9 @@ export async function bulkDeleteItems(ids: string[]) {
         });
         revalidatePath("/");
         return { success: true };
-    } catch (e: any) {
-        return { success: false, error: "Lỗi xóa hàng loạt: " + e.message };
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        return { success: false, error: "Lỗi xóa hàng loạt: " + msg };
     }
 }
 
@@ -568,8 +570,9 @@ export async function updateUserProfile(id: string, newUsername: string, newPass
                 avatar: updated.avatar ?? null
             }
         };
-    } catch (e: any) {
-        return { success: false, error: "Lỗi cập nhật: " + e.message };
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        return { success: false, error: "Lỗi cập nhật: " + msg };
     }
 }
 
@@ -586,7 +589,7 @@ export async function saveThemeSettings(id: string, theme: string, colors: strin
             data: { theme, colors }
         });
         return { success: true };
-    } catch (e: any) {
+    } catch (e) {
         return { success: false, error: "Lỗi lưu cài đặt" };
     }
 }
@@ -602,7 +605,7 @@ export async function addBrandAction(name: string) {
         await prisma.brand.create({ data: { name } });
         revalidatePath("/");
         return { success: true };
-    } catch (e: any) {
+    } catch (e) {
         return { success: false, error: "Hãng đã tồn tại hoặc lỗi khác" };
     }
 }
@@ -625,11 +628,11 @@ export async function createTemplate(data: TemplateData) {
                 config: result.data.config
             }
         });
-        revalidatePath("/");
         revalidatePath("/settings");
         return { success: true };
-    } catch (e: any) {
-        return { success: false, error: "Lỗi tạo mẫu: " + e.message };
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        return { success: false, error: "Lỗi tạo mẫu: " + msg };
     }
 }
 
@@ -646,10 +649,9 @@ export async function deleteTemplate(id: string) {
     // -----------------------
     try {
         await prisma.template.delete({ where: { id } });
-        revalidatePath("/");
         revalidatePath("/settings");
         return { success: true };
-    } catch (e: any) {
+    } catch (e) {
         return { success: false, error: "Lỗi xóa mẫu" };
     }
 }
@@ -661,6 +663,7 @@ export async function exportDatabase() {
     try {
         // Lấy users nhưng loại bỏ password để bảo mật
         const usersRaw = await prisma.user.findMany();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const usersSafe = usersRaw.map(({ password, ...rest }) => rest);
 
         const data = {
@@ -676,8 +679,9 @@ export async function exportDatabase() {
             exportedAt: new Date().toISOString()
         };
         return { success: true, data: JSON.stringify(data, null, 2) };
-    } catch (e: any) {
-        return { success: false, error: "Lỗi xuất dữ liệu: " + e.message };
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        return { success: false, error: "Lỗi xuất dữ liệu: " + msg };
     }
 }
 
