@@ -17,6 +17,8 @@ services:
       - JWT_SECRET=change_this_to_a_super_secret_random_string_in_production_12345
       # Disable Demo Mode
       - NEXT_PUBLIC_DEMO_MODE=false
+      # Optimize SQLite (Write-Ahead Logging) - Important for Performance
+      - PRISMA_SQLITE_WAL=true
     volumes:
       # Persistent Data (Database, Uploads)
       # Map thư mục ./db trên máy host vào /app/db trong container

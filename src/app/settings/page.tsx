@@ -9,6 +9,7 @@ import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Tabs, T
 import { Loader2, Save, Plus, ArrowLeft, Trash2, LayoutGrid, Palette, User, ShieldCheck, Home, Server, Key, Download, Upload, Copy, Database, History } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AuditLogViewer } from "@/features/audit/AuditLogViewer";
 
 // --- Item Type Manager Component ---
@@ -483,14 +484,14 @@ export default function SettingsPage() {
             {/* Header */}
             <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-20">
                 <div className="container mx-auto px-4 h-16 flex items-center gap-4 max-w-4xl">
-                    <Button variant="ghost" size="icon" onClick={() => router.push("/")} className="rounded-full hover:bg-gray-100 -ml-2">
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                    </Button>
+                    <Link href="/" className="inline-flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 -ml-2 transition-colors">
+                        <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                    </Link>
                     <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Cài đặt hệ thống</h1>
                     <div className="ml-auto">
-                        <Button variant="outline" size="sm" onClick={() => router.push("/")} className="hidden sm:flex items-center gap-2">
+                        <Link href="/" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                             <Home className="w-4 h-4" /> Về trang chủ
-                        </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
