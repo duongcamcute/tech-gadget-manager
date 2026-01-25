@@ -411,40 +411,110 @@ export default function SettingsPage() {
 
     const handleExport = async () => {
         setLoading(true);
-        const res = await exportDatabase();
-        if (res.success && res.data) {
-            const blob = new Blob([res.data], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `backup_tgm_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            toast("Xuất dữ liệu thành công", "success");
-        } else {
-            toast(res.error || "Lỗi xuất file", "error");
+        try {
+            const { exportDatabase } = await import("@/app/actions");
+            const res = await exportDatabase();
+
+            if (res.success && res.data) {
+                const blob = new Blob([res.data], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `tech-gadget-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                toast("Xuất dữ liệu thành công", "success");
+            } else {
+                toast(res.error || "Lỗi xuất dữ liệu", "error");
+            }
+        } catch (e) {
+            toast("Lỗi hệ thống", "error");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
+    };
+
+    const handleExportFull = async () => {
+        setLoading(true);
+        toast("Đang nén dữ liệu và nhận file...", "info");
+        try {
+            const { exportFullDatabase } = await import("@/app/actions");
+            const res = await exportFullDatabase();
+
+            if (res.success && res.data) {
+                // Decode Base64
+                const byteCharacters = atob(res.data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "application/zip" });
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `tech-gadget-full-backup-${new Date().toISOString().slice(0, 10)}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                toast("Xuất ZIP đầy đủ thành công!", "success");
+            } else {
+                toast(res.error || "Lỗi nén dữ liệu", "error");
+            }
+        } catch (e) {
+            toast("Lỗi hệ thống: " + (e as Error).message, "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleImport = async () => {
         if (!importFile) return;
-        if (clearBeforeImport && !confirm("CẢNH BÁO: Bạn có chắc muốn xóa TOÀN BỘ dữ liệu hiện tại trước khi nhập không? Hành động này không thể hoàn tác!")) return;
+        if (clearBeforeImport && !confirm("CẢNH BÁO: Dữ liệu hiện tại sẽ bị xóa hoàn toàn. Bạn có chắc chắn không?")) return;
 
         setLoading(true);
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const text = e.target?.result as string;
-            const res = await importDatabase(text, clearBeforeImport);
-            if (res.success) {
-                toast("Nhập dữ liệu thành công", "success");
-                setTimeout(() => window.location.reload(), 1000);
+        toast("Đang xử lý nhập dữ liệu...", "info");
+
+        try {
+            const isZip = importFile.name.toLowerCase().endsWith(".zip");
+
+            let res;
+            if (isZip) {
+                const reader = new FileReader();
+                reader.readAsDataURL(importFile);
+                await new Promise((resolve) => {
+                    reader.onload = async () => {
+                        try {
+                            const base64 = (reader.result as string).split(',')[1];
+                            const { importFullDatabase } = await import("@/app/actions");
+                            res = await importFullDatabase(base64, clearBeforeImport);
+                            resolve(true);
+                        } catch (e) { resolve(false); }
+                    }
+                    reader.onerror = () => resolve(false);
+                });
             } else {
-                toast(res.error || "Lỗi nhập file", "error");
+                const text = await importFile.text();
+                const { importDatabase } = await import("@/app/actions");
+                res = await importDatabase(text, clearBeforeImport);
             }
+
+            // @ts-ignore
+            if (res && res.success) {
+                toast("Nhập dữ liệu thành công! Đang tải lại...", "success");
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                // @ts-ignore
+                toast(res?.error || "Lỗi nhập file", "error");
+            }
+        } catch (e) {
+            toast("File không hợp lệ hoặc lỗi hệ thống", "error");
+        } finally {
             setLoading(false);
-        };
-        reader.readAsText(importFile);
+            setImportFile(null);
+        }
     };
 
     const handleGenerateKey = async () => {
@@ -720,24 +790,54 @@ export default function SettingsPage() {
                                             <span>Sao lưu & Khôi phục</span>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* JSON Backup */}
                                             <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 flex flex-col gap-2">
-                                                <h5 className="font-semibold text-sm">Xuất dữ liệu (Backup)</h5>
-                                                <p className="text-xs text-gray-500 mb-2">Tải về toàn bộ dữ liệu dưới dạng file JSON.</p>
-                                                <Button onClick={handleExport} disabled={loading} variant="outline" className="w-full bg-white hover:bg-gray-100">
-                                                    <Download className="mr-2 h-4 w-4" /> Tải về ngay
+                                                <div className="flex justify-between items-center">
+                                                    <h5 className="font-semibold text-sm">Backup Cơ bản (JSON)</h5>
+                                                    <span className="text-[10px] bg-gray-200 px-1.5 py-0.5 rounded text-gray-600">Nhẹ</span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mb-2">Chỉ chứa dữ liệu văn bản. Không bao gồm ảnh.</p>
+                                                <Button onClick={handleExport} disabled={loading} variant="outline" className="w-full bg-white hover:bg-gray-100 text-xs h-8">
+                                                    <Download className="mr-2 h-3.5 w-3.5" /> Tải JSON
                                                 </Button>
                                             </div>
-                                            <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 flex flex-col gap-2">
-                                                <h5 className="font-semibold text-sm">Nhập dữ liệu (Restore)</h5>
-                                                <p className="text-xs text-gray-500 mb-2">Khôi phục từ file JSON đã xuất trước đó.</p>
-                                                <div className="flex flex-col gap-2">
-                                                    <Input type="file" accept=".json" onChange={e => setImportFile(e.target.files?.[0] || null)} className="bg-white h-9 text-xs" />
-                                                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                                                        <input type="checkbox" checked={clearBeforeImport} onChange={e => setClearBeforeImport(e.target.checked)} className="rounded border-gray-300" />
-                                                        Xóa dữ liệu cũ trước khi nhập
+
+                                            {/* ZIP Backup */}
+                                            <div className="p-4 border border-blue-100 ring-1 ring-blue-200 rounded-xl bg-blue-50/50 flex flex-col gap-2 relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-1 bg-blue-500 rounded-bl-lg">
+                                                    <span className="text-[10px] font-bold text-white px-1">KHUYÊN DÙNG</span>
+                                                </div>
+                                                <h5 className="font-semibold text-sm text-blue-900">Backup Đầy đủ (ZIP)</h5>
+                                                <p className="text-xs text-blue-700/80 mb-2">Bao gồm toàn bộ dữ liệu VÀ hình ảnh.</p>
+                                                <Button onClick={handleExportFull} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 shadow-sm">
+                                                    <Download className="mr-2 h-3.5 w-3.5" /> Tải ZIP (Full)
+                                                </Button>
+                                            </div>
+
+                                            {/* Restore Section */}
+                                            <div className="md:col-span-2 p-4 border border-gray-200 rounded-xl bg-gray-50 flex flex-col gap-3 mt-2">
+                                                <h5 className="font-semibold text-sm flex items-center gap-2">
+                                                    <Upload className="w-4 h-4 text-gray-500" /> Nhập dữ liệu (Khôi phục)
+                                                </h5>
+                                                <p className="text-xs text-gray-500">Hỗ trợ cả file .json (cơ bản) và .zip (đầy đủ)</p>
+
+                                                <div className="flex flex-col sm:flex-row gap-3 items-end sm:items-center bg-white p-3 rounded-lg border border-gray-200">
+                                                    <div className="flex-1 w-full">
+                                                        <Input
+                                                            type="file"
+                                                            accept=".json,.zip"
+                                                            onChange={e => setImportFile(e.target.files?.[0] || null)}
+                                                            className="bg-gray-50 h-9 text-xs file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
+                                                        />
+                                                    </div>
+
+                                                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer whitespace-nowrap select-none">
+                                                        <input type="checkbox" checked={clearBeforeImport} onChange={e => setClearBeforeImport(e.target.checked)} className="rounded border-gray-300 w-4 h-4 text-primary-600 focus:ring-primary-500" />
+                                                        Xóa dữ liệu cũ
                                                     </label>
-                                                    <Button onClick={handleImport} disabled={!importFile || loading} className="w-full">
-                                                        <Upload className="mr-2 h-4 w-4" /> Tiến hành nhập
+
+                                                    <Button onClick={handleImport} disabled={!importFile || loading} className="shrink-0 bg-red-600 hover:bg-red-700 text-white h-9 px-4 shadow-sm">
+                                                        Khôi phục
                                                     </Button>
                                                 </div>
                                             </div>

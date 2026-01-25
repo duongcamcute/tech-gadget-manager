@@ -11,6 +11,8 @@ import { triggerWebhooks } from "@/lib/webhooks";
 import { unlink } from "fs/promises";
 import { join } from "path";
 import { hashPassword, verifyPassword, createSession, deleteSession, requireAuth } from "@/lib/auth";
+import AdmZip from "adm-zip";
+import { writeFile, readFile } from "fs/promises";
 
 export async function createItem(data: ItemFormData) {
     // 1. Auth Check
@@ -874,5 +876,151 @@ export async function deleteItemType(id: string) {
         return { success: true };
     } catch (e: any) {
         return { success: false, error: "Lỗi xóa loại thiết bị: " + e.message };
+    }
+}
+
+// --- FULL ZIP BACKUP & RESTORE ---
+
+export async function exportFullDatabase() {
+    await requireAuth();
+    try {
+        const usersRaw = await prisma.user.findMany();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const usersSafe = usersRaw.map(({ password, ...rest }) => rest);
+
+        const data = {
+            items: await prisma.item.findMany(),
+            itemHistory: await prisma.itemHistory.findMany(),
+            locations: await prisma.location.findMany(),
+            lendingRecords: await prisma.lendingRecord.findMany(),
+            templates: await prisma.template.findMany(),
+            contacts: await prisma.contact.findMany(),
+            brands: await prisma.brand.findMany(),
+            users: usersSafe,
+            version: "1.0",
+            exportedAt: new Date().toISOString()
+        };
+
+        const zip = new AdmZip();
+        // Add JSON
+        zip.addFile("database.json", Buffer.from(JSON.stringify(data, null, 2), "utf8"));
+
+        // Add Uploads Folder (Check if exists first)
+        const uploadPath = join(process.cwd(), "public", "uploads");
+        try {
+            // Using synchronous method which is default for adm-zip
+            zip.addLocalFolder(uploadPath, "uploads");
+        } catch (e) {
+            console.warn("Uploads folder not found or empty", e);
+        }
+
+        const buffer = zip.toBuffer();
+        // Return base64 string
+        return { success: true, data: buffer.toString('base64') };
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        console.error("FULL EXPORT ERROR", e);
+        return { success: false, error: "Lỗi xuất Full ZIP: " + msg };
+    }
+}
+
+export async function importFullDatabase(base64String: string, clearExisting = false) {
+    await requireAuth();
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return { success: false, error: "Chế độ Demo: Tính năng Nhập dữ liệu bị khóa." };
+    }
+
+    try {
+        const buffer = Buffer.from(base64String, 'base64');
+        const zip = new AdmZip(buffer);
+
+        // 1. Read JSON
+        const jsonEntry = zip.getEntry("database.json");
+        if (!jsonEntry) throw new Error("Không tìm thấy file database.json trong ZIP");
+
+        const jsonString = jsonEntry.getData().toString("utf8");
+        const data = JSON.parse(jsonString);
+
+        if (!data.version) throw new Error("File JSON không hợp lệ");
+
+        // 2. Restore DB Logic
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+            // Clear existing
+            if (clearExisting) {
+                await tx.lendingRecord.deleteMany({});
+                await tx.itemHistory.deleteMany({});
+                await tx.attachment.deleteMany({});
+                await tx.item.deleteMany({});
+                await tx.location.deleteMany({});
+                await tx.template.deleteMany({});
+                await tx.contact.deleteMany({});
+                await tx.brand.deleteMany({});
+            }
+
+            // Restore in order
+            // 1. Brands, Contacts, Templates
+            if (data.brands) for (const b of data.brands) await tx.brand.upsert({ where: { id: b.id }, update: {}, create: b });
+            if (data.contacts) for (const c of data.contacts) await tx.contact.upsert({ where: { id: c.id }, update: {}, create: c });
+            if (data.templates) for (const t of data.templates) await tx.template.upsert({ where: { id: t.id }, update: {}, create: t });
+
+            // 2. Locations (Double pass for hierarchy)
+            if (data.locations) {
+                for (const l of data.locations) {
+                    const { parentId, ...rest } = l;
+                    await tx.location.upsert({
+                        where: { id: l.id },
+                        update: { ...rest, parentId: null },
+                        create: { ...rest, parentId: null }
+                    });
+                }
+                for (const l of data.locations) {
+                    if (l.parentId) {
+                        await tx.location.update({ where: { id: l.id }, data: { parentId: l.parentId } });
+                    }
+                }
+            }
+
+            // 3. Items
+            if (data.items) {
+                for (const item of data.items) {
+                    await tx.item.upsert({
+                        where: { id: item.id },
+                        update: item,
+                        create: item
+                    });
+                }
+            }
+
+            // 4. History & Lending
+            if (data.itemHistory) {
+                for (const h of data.itemHistory) {
+                    // Check FK
+                    const exists = await tx.item.findUnique({ where: { id: h.itemId } });
+                    if (exists) await tx.itemHistory.upsert({ where: { id: h.id }, update: {}, create: h });
+                }
+            }
+            if (data.lendingRecords) {
+                for (const r of data.lendingRecords) {
+                    const exists = await tx.item.findUnique({ where: { id: r.itemId } });
+                    if (exists) await tx.lendingRecord.upsert({ where: { id: r.id }, update: {}, create: r });
+                }
+            }
+        });
+
+        // 3. Extract Files
+        try {
+            const uploadPath = join(process.cwd(), "public"); // Extract "uploads/" folder into "public/"
+            zip.extractAllTo(uploadPath, true); // overwrite
+        } catch (e) {
+            console.error("ZIP Extract Error", e);
+        }
+
+        revalidatePath("/");
+        return { success: true };
+
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        console.error("FULL IMPORT ERROR", e);
+        return { success: false, error: "Lỗi Full Restore: " + msg };
     }
 }
