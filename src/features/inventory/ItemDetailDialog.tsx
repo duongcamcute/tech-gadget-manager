@@ -134,6 +134,15 @@ export function ItemDetailDialog({ item, isOpen, onClose, locations }: { item: a
     );
 }
 
+// Helper to safely parse specs
+const safeParseSpecs = (specs: any) => {
+    try {
+        if (!specs) return {};
+        if (typeof specs === 'object') return specs;
+        return JSON.parse(specs);
+    } catch { return {}; }
+};
+
 function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT") => void, onDelete: () => void }) {
     const { toast } = useToast();
     const router = useRouter();
@@ -165,85 +174,205 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
         'Lost': "bg-red-100 text-red-800 border-red-200",
     } as any;
 
-    // Use local state for history
     const history = localHistory;
+    const allSpecs = safeParseSpecs(item.specs);
+
+    // List of keys we handle manually in the UI (to avoid duplication in dynamic list)
+    // Actually, we will render ALL dynamic specs in the bottom grid, except maybe "other" if we want to special case it.
+    // For now, let's treat standard fields (brand, model) as separate from "specs" json object.
+    // But "specs" json object contains things like "power", "capacity". We should render all of them.
 
     return (
-        <div className="grid md:grid-cols-12 min-h-full">
-            {/* Left Column: Info */}
-            <div className="md:col-span-7 p-6 space-y-6">
+        <div className="flex flex-col min-h-full">
+            {/* Top Section: Image & History */}
+            <div className="grid md:grid-cols-12 border-b border-gray-100 dark:border-gray-700">
+                {/* Image & Basic Info Column */}
+                <div className="md:col-span-7 p-6 space-y-6">
+                    {/* Image */}
+                    {item.image ? (
+                        <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                            <img src={item.image} alt={item.name} className="w-full max-h-[400px] object-contain hover:scale-105 transition-transform duration-500" />
+                        </div>
+                    ) : (
+                        <div className="h-64 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                            <div className="text-center">
+                                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                <span className="text-sm">Không có hình ảnh</span>
+                            </div>
+                        </div>
+                    )}
 
-                {/* Image if exists */}
-                {item.image && (
-                    <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                        <img src={item.image} alt={item.name} className="w-full max-h-[350px] object-contain hover:scale-105 transition-transform duration-500" />
-                    </div>
-                )}
-
-                {/* Status Bar */}
-                <div className="flex items-center gap-3 flex-wrap">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wide flex items-center gap-2 ${styles[item.status] || styles['Available']}`}>
-                        {item.status === 'Available' && "Checking: Sẵn sàng"}
-                        {item.status === 'InUse' && "Đang sử dụng"}
-                        {item.status === 'Lent' && "Đang cho mượn"}
-                        {item.status === 'Lost' && "Thất lạc"}
-                    </span>
-                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">
-                        <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500 dark:text-gray-400" />
-                        <span className="font-medium">{item.location?.name || "Chưa có vị trí"}</span>
+                    {/* Basic Status Bar (Mobile Friendly) */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wide flex items-center gap-2 ${styles[item.status] || styles['Available']}`}>
+                            <div className={`w-2 h-2 rounded-full ${item.status === 'Available' ? 'bg-emerald-500' : item.status === 'InUse' ? 'bg-blue-500' : item.status === 'Lent' ? 'bg-primary-500' : 'bg-red-500'}`} />
+                            {item.status === 'Available' && "Sẵn sàng"}
+                            {item.status === 'InUse' && "Đang sử dụng"}
+                            {item.status === 'Lent' && "Đang cho mượn"}
+                            {item.status === 'Lost' && "Thất lạc"}
+                        </span>
+                        <div className="flex items-center text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700">
+                            <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500 dark:text-gray-400" />
+                            <span className="font-medium">{item.location?.name || "Chưa có vị trí"}</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Notes Display */}
+                {/* History Column (Scrollable, matching height visually) */}
+                <div className="md:col-span-5 bg-gray-50/50 dark:bg-gray-800/50 border-l border-gray-100 dark:border-gray-700 p-6 flex flex-col">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 flex items-center gap-2 shrink-0">
+                        <History className="h-4 w-4" /> Lịch sử thiết bị
+                    </h3>
+
+                    {/* Scrollable Container with Max Height */}
+                    <div className="overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                        <div className="relative space-y-6 pl-2 pb-2">
+                            {/* Line */}
+                            <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200 dark:bg-slate-700" />
+
+                            {history.map((h: any, idx: number) => (
+                                <div key={h.id || idx} className="relative pl-6 group">
+                                    <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-800 bg-primary-400 shadow-sm z-10" />
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{h.action === 'CREATED' ? 'Nhập kho' : h.action === 'MOVED' ? 'Di chuyển' : h.action === 'LENT' ? 'Cho mượn' : h.action === 'RETURNED' ? 'Đã trả lại' : 'Cập nhật'}</span>
+                                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 break-words bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded p-1.5 shadow-sm inline-block">
+                                                {h.details}
+                                            </div>
+                                            <span className="text-[10px] text-gray-400 font-mono mt-1">{formatDateTimeVN(h.timestamp)}</span>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteHistory(h.id)}
+                                            className="h-6 w-6 p-0 text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                            title="Xóa mục lịch sử này"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {history.length === 0 && (
+                                <div className="relative pl-6">
+                                    <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-slate-300 border-2 border-white" />
+                                    <p className="text-sm text-gray-500 italic">Chưa có lịch sử ghi nhận.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Section: Full Width Details */}
+            <div className="p-6 space-y-6 bg-white dark:bg-gray-800">
+
+                {/* Notes (Full Width) */}
                 {item.notes && (
-                    <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-xl border border-yellow-100 dark:border-yellow-900/20 mb-6">
-                        <h3 className="text-xs font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mb-2 flex items-center gap-2"><Edit3 className="h-3 w-3" /> Ghi chú</h3>
+                    <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-xl border border-yellow-100 dark:border-yellow-900/20">
+                        <h3 className="text-xs font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <Edit3 className="h-3 w-3" /> Ghi chú
+                        </h3>
                         <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">{item.notes}</p>
                     </div>
                 )}
 
-                {/* Specs Grid */}
+                {/* Technical Specs Grid (Full Width -> 2/3 cols) */}
                 <div>
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3">Chi tiết kỹ thuật</h3>
-                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-gray-900/50 p-4 rounded-xl border border-slate-100 dark:border-gray-700">
-                        {item.brand && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Hãng sản xuất</p><p className="font-medium text-gray-900 dark:text-gray-100 break-words">{item.brand}</p></div>}
-                        {item.model && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Model</p><p className="font-mono font-medium text-gray-900 dark:text-gray-100 break-words">{item.model}</p></div>}
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">
+                        Chi tiết kỹ thuật
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
 
-                        {item.color && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Màu sắc</p><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: getColorHex(item.color) }}></div><p className="font-medium text-gray-900 dark:text-gray-100">{item.color}</p></div></div>}
-
-                        {item.purchaseDate && (
-                            <>
-                                <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Ngày mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatDateVN(item.purchaseDate)}</p></div>
-                                <div>
-                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Đã dùng</p>
-                                    <p className="font-medium text-blue-600 dark:text-blue-400">
-                                        ⏱️ {calculateUsageDuration(item.purchaseDate)}
-                                    </p>
+                        {/* Standard Fields */}
+                        {item.brand && (
+                            <div className="border-l-2 border-indigo-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Hãng sản xuất</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 break-words text-sm">{item.brand}</p>
+                            </div>
+                        )}
+                        {item.model && (
+                            <div className="border-l-2 border-indigo-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Model</p>
+                                <p className="font-mono font-medium text-gray-900 dark:text-gray-100 break-words text-sm">{item.model}</p>
+                            </div>
+                        )}
+                        {item.color && (
+                            <div className="border-l-2 border-indigo-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Màu sắc</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: getColorHex(item.color) }}></div>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{item.color}</p>
                                 </div>
-                            </>
+                            </div>
+                        )}
+                        {item.serialNumber && (
+                            <div className="border-l-2 border-indigo-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Serial Number</p>
+                                <p className="font-mono font-medium text-gray-900 dark:text-gray-100 break-words text-sm">{item.serialNumber}</p>
+                            </div>
                         )}
 
-                        {item.purchasePrice && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Giá mua</p><p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(item.purchasePrice)}</p></div>}
-                        {item.warrantyEnd && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Bảo hành đến</p><p className="font-medium text-green-700 dark:text-green-400">{formatDateVN(item.warrantyEnd)}</p></div>}
-                        {item.purchaseLocation && <div><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Nơi mua</p><p className="font-medium text-gray-900 dark:text-gray-100 break-words">{item.purchaseLocation}</p></div>}
+                        {/* Financial / Dates */}
+                        {item.purchaseDate && (
+                            <div className="border-l-2 border-emerald-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Ngày mua</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{formatDateVN(item.purchaseDate)}</p>
+                                <p className="text-[10px] text-blue-500 mt-0.5">{calculateUsageDuration(item.purchaseDate)}</p>
+                            </div>
+                        )}
 
-                        {/* Force full width on mobile for URL to avoid layout break */}
-                        {item.purchaseUrl && <div className="col-span-2"><p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Link mua hàng</p><a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 dark:text-blue-400 hover:underline break-all block">{item.purchaseUrl}</a></div>}
+                        {item.purchasePrice && (
+                            <div className="border-l-2 border-emerald-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Giá mua</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{formatCurrency(item.purchasePrice)}</p>
+                            </div>
+                        )}
 
-                        {/* Dynamic Specs - Smart Layout */}
-                        {Object.entries(item.specs ? JSON.parse(item.specs as string) : {}).map(([k, v]: any) => (
-                            <div key={k} className={`${String(v).length > 20 ? 'col-span-2' : 'col-span-1'}`}>
-                                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{k}</p>
-                                <p className="font-medium text-gray-900 dark:text-gray-100 break-words" title={v}>{v}</p>
+                        {item.warrantyEnd && (
+                            <div className="border-l-2 border-emerald-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Bảo hành</p>
+                                <p className="font-medium text-green-700 dark:text-green-400 text-sm">{formatDateVN(item.warrantyEnd)}</p>
+                            </div>
+                        )}
+
+                        {item.purchaseLocation && (
+                            <div className="border-l-2 border-emerald-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Nơi mua</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 break-words text-sm">{item.purchaseLocation}</p>
+                            </div>
+                        )}
+
+                        {/* Purchase URL (Always full width on mobile, span on desktop if needed) */}
+                        {item.purchaseUrl && (
+                            <div className="col-span-2 border-l-2 border-blue-100 pl-3">
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Link mua hàng</p>
+                                <a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 dark:text-blue-400 hover:underline break-all text-sm line-clamp-2 hover:line-clamp-none">{item.purchaseUrl}</a>
+                            </div>
+                        )}
+
+                        {/* DYNAMIC SPECS LOOP - Render ALL of them */}
+                        {Object.entries(allSpecs).map(([k, v]: any) => (
+                            <div key={k} className={`border-l-2 border-slate-200 pl-3 ${String(v).length > 30 ? 'col-span-2' : ''}`}>
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">{k}</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100 break-words text-sm whitespace-pre-line" title={v}>{String(v)}</p>
                             </div>
                         ))}
+
+                        {/* Fallback if practically empty */}
+                        {(!item.brand && !item.model && Object.keys(allSpecs).length === 0) && (
+                            <div className="col-span-full py-4 text-center text-gray-400 text-sm italic">
+                                Chưa có thông tin kỹ thuật chi tiết.
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="pt-4 flex gap-3">
-                    <Button onClick={() => setMode("EDIT")} className="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm">
-                        <Edit3 className="h-4 w-4 mr-2" /> Chỉnh sửa / Cập nhật
+                {/* Footer Actions */}
+                <div className="pt-6 flex gap-3 border-t border-gray-100 dark:border-gray-700 mt-6">
+                    <Button onClick={() => setMode("EDIT")} className="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+                        <Edit3 className="h-4 w-4 mr-2" /> Chỉnh sửa
                     </Button>
                     <Button
                         onClick={() => window.location.href = `/?clone=${item.id}`}
@@ -256,46 +385,6 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                     <Button onClick={onDelete} variant="ghost" className="text-red-500 hover:bg-red-50 hover:text-red-600">
                         <Trash2 className="h-4 w-4" />
                     </Button>
-                </div>
-            </div>
-
-            {/* Right Column: History */}
-            <div className="md:col-span-5 bg-gray-50/50 dark:bg-gray-800/50 border-l border-gray-100 dark:border-gray-700 p-6 overflow-y-auto max-h-[500px]">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <History className="h-4 w-4" /> Lịch sử thiết bị
-                </h3>
-                <div className="relative space-y-6 pl-2">
-                    {/* Line */}
-                    <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200 dark:bg-slate-700" />
-
-                    {history.map((h: any, idx: number) => (
-                        <div key={h.id || idx} className="relative pl-6 group">
-                            <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-800 bg-primary-400 shadow-sm z-10" />
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col flex-1 min-w-0">
-                                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{h.action === 'CREATED' ? 'Nhập kho' : h.action === 'MOVED' ? 'Di chuyển' : h.action === 'LENT' ? 'Cho mượn' : h.action === 'RETURNED' ? 'Đã trả lại' : 'Cập nhật'}</span>
-                                    <span className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 break-words">{h.details}</span>
-                                    <span className="text-[10px] text-gray-400 font-mono mt-1">{formatDateTimeVN(h.timestamp)}</span>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteHistory(h.id)}
-                                    className="h-6 w-6 p-0 text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                    title="Xóa mục lịch sử này"
-                                >
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
-
-                    {history.length === 0 && (
-                        <div className="relative pl-6">
-                            <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-slate-300 border-2 border-white" />
-                            <p className="text-sm text-gray-500 italic">Chưa có lịch sử ghi nhận.</p>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
