@@ -9,6 +9,8 @@ services:
     environment:
       # Database Connection (SQLite file in volume)
       - DATABASE_URL=file:/app/db/prod.db
+      # Public URL for QR Codes (Thay đổi thành domain thực tế của bạn, VD: https://my-nas.com)
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
       # Production Mode
       - NODE_ENV=production
       # Disable Secure Cookie for HTTP (Self-hosted)

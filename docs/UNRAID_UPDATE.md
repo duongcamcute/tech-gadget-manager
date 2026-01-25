@@ -10,6 +10,7 @@ Hãy thêm biến sau vào cấu hình container của bạn (Edit Container):
 |-----|-------|-------|
 | `PRISMA_SQLITE_WAL` | `true` | **Quan trọng**: Giúp app chạy nhanh hơn và tránh lỗi lock database |
 | `DATABASE_URL` | `file:/app/db/prod.db` | Bắt buộc để dữ liệu không bị mất |
+| `NEXT_PUBLIC_APP_URL` | `https://your-domain.com` | **Cần thiết cho QR**: Nhập địa chỉ Cloudflare Tunnel/Public URL của bạn để mã QR dẫn đúng link |
 
 ## Cách cập nhật (Update) an toàn
 

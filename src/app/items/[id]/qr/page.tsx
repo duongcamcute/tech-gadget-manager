@@ -13,6 +13,7 @@ export default async function ItemQRPage({ params }: { params: Promise<{ id: str
         notFound();
     }
 
+    // URL for QR: Prefer Env Var (Public URL), fallback to localhost implies internal usage mostly
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const qrValue = `${appUrl}/items/${item.id}`;
 

@@ -49,7 +49,12 @@ export const QrCard = ({ item, simpleMode = false }: { item: ItemForPrint, simpl
                 </div>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                     <div style={exportStyle.qrContainer}>
-                        <QRCodeSVG value={`https://tech-gadget.app/items/${item.id}`} size={160} level="H" includeMargin={false} />
+                        <QRCodeSVG
+                            value={`${process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')}/items/${item.id}`}
+                            size={160}
+                            level="H"
+                            includeMargin={false}
+                        />
                     </div>
                 </div>
                 <div style={exportStyle.footer}>
@@ -83,7 +88,7 @@ export const QrCard = ({ item, simpleMode = false }: { item: ItemForPrint, simpl
             <div className="flex-1 flex items-center justify-center w-full py-4 z-10">
                 <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
                     <QRCodeSVG
-                        value={`https://tech-gadget.app/items/${item.id}`}
+                        value={`${process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')}/items/${item.id}`}
                         size={160}
                         level="H"
                         includeMargin={false}
