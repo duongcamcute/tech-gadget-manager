@@ -85,10 +85,21 @@ export function QrScanner({ onScan, onClose }: QrScannerProps) {
             // It's a URL, extract item ID if possible
             try {
                 const url = new URL(decodedText);
-                const itemId = url.searchParams.get("item");
-                if (itemId) {
-                    router.push(`/?item=${itemId}`);
+                const itemIdParam = url.searchParams.get("item");
+
+                // Case 1: Query Param (?item=...)
+                if (itemIdParam) {
+                    router.push(`/?item=${itemIdParam}`);
                     onClose?.();
+                    return;
+                }
+
+                // Case 2: Path URL (/items/...)
+                const pathMatch = url.pathname.match(/\/items\/([a-zA-Z0-9-]+)/);
+                if (pathMatch && pathMatch[1]) {
+                    router.push(`/?item=${pathMatch[1]}`);
+                    onClose?.();
+                    return;
                 }
             } catch {
                 // Not a valid URL
