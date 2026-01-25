@@ -20,17 +20,18 @@ function ItemTypeManager() {
     const [newLabel, setNewLabel] = useState("");
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const loadItemTypes = async () => {
-            try {
-                const res = await getItemTypes();
-                setItemTypes(res);
-            } catch {
-                // Silently ignore errors
-            }
-        };
-        loadItemTypes();
+    const loadItemTypes = React.useCallback(async () => {
+        try {
+            const res = await getItemTypes();
+            setItemTypes(res);
+        } catch {
+            // Silently ignore errors
+        }
     }, []);
+
+    useEffect(() => {
+        loadItemTypes();
+    }, [loadItemTypes]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -139,19 +140,24 @@ export default function SettingsPage() {
     const [importFile, setImportFile] = useState<File | null>(null);
     const [clearBeforeImport, setClearBeforeImport] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const brands = await getBrands();
-                setBrandsList(brands);
-            } catch { }
-            try {
-                const keys = await getApiKeys();
-                setApiKeys(keys);
-            } catch { }
-        };
-        fetchData();
+    const loadBrands = React.useCallback(async () => {
+        try {
+            const res = await getBrands();
+            setBrandsList(res);
+        } catch { }
     }, []);
+
+    const loadApiKeys = React.useCallback(async () => {
+        try {
+            const res = await getApiKeys();
+            setApiKeys(res);
+        } catch { }
+    }, []);
+
+    useEffect(() => {
+        loadBrands();
+        loadApiKeys();
+    }, [loadBrands, loadApiKeys]);
 
     // ... inside component
 
@@ -163,16 +169,16 @@ export default function SettingsPage() {
     const [tempBrand, setTempBrand] = useState("");
     const [tempSpecs, setTempSpecs] = useState<{ key: string, value: string }[]>([{ key: "", value: "" }]);
 
-    const loadTemplates = async () => {
+    const loadTemplates = useCallback(async () => { // Wrapped with useCallback
         try {
             const res = await getTemplates();
             setTemplates(res);
         } catch { }
-    };
+    }, []);
 
     useEffect(() => {
         loadTemplates();
-    }, []);
+    }, [loadTemplates]); // Added loadTemplates to dependency array
 
     const handleAddSpecRow = () => {
         setTempSpecs([...tempSpecs, { key: "", value: "" }]);
