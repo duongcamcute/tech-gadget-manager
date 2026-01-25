@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Item" ADD COLUMN "brand" TEXT;
-ALTER TABLE "Item" ADD COLUMN "color" TEXT;
-ALTER TABLE "Item" ADD COLUMN "model" TEXT;
-ALTER TABLE "Item" ADD COLUMN "serialNumber" TEXT;

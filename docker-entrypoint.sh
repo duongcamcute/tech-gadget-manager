@@ -20,9 +20,16 @@ if [ -f "/app/db/prod.db-wal" ]; then
 fi
 
 # Switch to nextjs user to run migration and app
-# Deploy migrations (using db push for auto-sync without history conflicts)
+# Helper to creating/deploying migrations (safer than db push for production)
 echo "Running database migrations..."
-su-exec nextjs npx prisma db push --skip-generate
+if [ -f "/app/prisma/migrations/migration_lock.toml" ]; then
+    echo "Migration lock found. Running migrate deploy..."
+    su-exec nextjs npx prisma migrate deploy
+else
+    echo "No migration lock found. Initializing..."
+    # Fallback only for fresh install if needed, or force deploy
+    su-exec nextjs npx prisma migrate deploy
+fi
 
 echo "Starting Next.js application..."
 # exec replaces the shell process, su-exec switches user
