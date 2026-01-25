@@ -98,21 +98,16 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                         let parsedSpecs = {};
                         try {
                             parsedSpecs = typeof rest.specs === 'string' ? JSON.parse(rest.specs) : rest.specs;
-                        } catch (e) { }
+                        } catch { }
 
-                        // @ts-ignore
+                        // Populate form with cloned data
                         form.reset({
                             ...rest,
-                            name: rest.name + " (Copy)",
-                            locationId: rest.locationId || "",
                             specs: parsedSpecs,
                             purchaseDate: rest.purchaseDate ? new Date(rest.purchaseDate).toISOString().split('T')[0] : null,
-                            purchasePrice: rest.purchasePrice ? rest.purchasePrice : null, // keep number or string? form handles both but let's stick to what reset expects
-                            image: rest.image || "",
-                            color: rest.color || "",
-                            status: "Available" // Reset status for new item
+                            warrantyEnd: rest.warrantyEnd ? new Date(rest.warrantyEnd).toISOString().split('T')[0] : null,
+                            locationId: rest.locationId || undefined // Ensure undefined if null
                         });
-
                         setImgPreview(rest.image || null);
                         if (rest.purchasePrice) setDisplayPrice(formatMoney(rest.purchasePrice));
 
