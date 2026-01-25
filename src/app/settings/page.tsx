@@ -20,16 +20,15 @@ function ItemTypeManager() {
     const [newLabel, setNewLabel] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const loadItemTypes = async () => {
-        try {
-            const res = await getItemTypes();
-            setItemTypes(res);
-        } catch {
-            // Silently ignore errors
-        }
-    };
-
     useEffect(() => {
+        const loadItemTypes = async () => {
+            try {
+                const res = await getItemTypes();
+                setItemTypes(res);
+            } catch {
+                // Silently ignore errors
+            }
+        };
         loadItemTypes();
     }, []);
 
@@ -140,27 +139,18 @@ export default function SettingsPage() {
     const [importFile, setImportFile] = useState<File | null>(null);
     const [clearBeforeImport, setClearBeforeImport] = useState(false);
 
-    const loadBrands = async () => {
-        try {
-            const res = await getBrands();
-            setBrandsList(res);
-        } catch {
-            // Silently ignore errors
-        }
-    };
-
-    const loadApiKeys = async () => {
-        try {
-            const res = await getApiKeys();
-            setApiKeys(res);
-        } catch {
-            // Silently ignore errors
-        }
-    };
-
     useEffect(() => {
-        loadBrands();
-        loadApiKeys();
+        const fetchData = async () => {
+            try {
+                const brands = await getBrands();
+                setBrandsList(brands);
+            } catch { }
+            try {
+                const keys = await getApiKeys();
+                setApiKeys(keys);
+            } catch { }
+        };
+        fetchData();
     }, []);
 
     // ... inside component
@@ -177,9 +167,7 @@ export default function SettingsPage() {
         try {
             const res = await getTemplates();
             setTemplates(res);
-        } catch {
-            // Silently ignore errors
-        }
+        } catch { }
     };
 
     useEffect(() => {
