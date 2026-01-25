@@ -5,8 +5,8 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  // Development default. Production will override this via PrismaClient constructor in db.ts
-  url      = "file:./dev.db"
+  // Sử dụng biến môi trường để có thể cấu hình đường dẫn trong Docker
+  url      = env("DATABASE_URL")
 }
 
 model Item {
