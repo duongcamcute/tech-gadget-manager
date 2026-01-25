@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import * as React from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { updateUserProfile, saveThemeSettings, addBrandAction, getBrands, createTemplate, deleteTemplate, getTemplates, exportDatabase, importDatabase, generateApiKey, revokeApiKey, getApiKeys, getItemTypes, createItemType, deleteItemType } from "@/app/actions";
 import { ITEM_TYPES } from "@/lib/constants/options";
@@ -20,7 +21,7 @@ function ItemTypeManager() {
     const [newLabel, setNewLabel] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const loadItemTypes = React.useCallback(async () => {
+    const loadItemTypes = useCallback(async () => {
         try {
             const res = await getItemTypes();
             setItemTypes(res);
@@ -140,14 +141,14 @@ export default function SettingsPage() {
     const [importFile, setImportFile] = useState<File | null>(null);
     const [clearBeforeImport, setClearBeforeImport] = useState(false);
 
-    const loadBrands = React.useCallback(async () => {
+    const loadBrands = useCallback(async () => {
         try {
             const res = await getBrands();
             setBrandsList(res);
         } catch { }
     }, []);
 
-    const loadApiKeys = React.useCallback(async () => {
+    const loadApiKeys = useCallback(async () => {
         try {
             const res = await getApiKeys();
             setApiKeys(res);
