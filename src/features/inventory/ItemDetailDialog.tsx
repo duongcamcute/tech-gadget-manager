@@ -108,7 +108,7 @@ export function ItemDetailDialog({ item, isOpen, onClose, locations }: { item: a
                             <div className="w-8 h-8 rounded-full shadow-inner border border-gray-100" style={{ backgroundColor: getColorHex(item.color) }} title={item.color || "No color"} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{mode === 'EDIT' ? 'Chỉnh sửa thông tin' : item.name}</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 break-words leading-tight">{mode === 'EDIT' ? 'Chỉnh sửa thông tin' : item.name}</h2>
                             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                 <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 rounded text-xs">#{item.id.slice(0, 6)}</span>
                                 <span>•</span>
