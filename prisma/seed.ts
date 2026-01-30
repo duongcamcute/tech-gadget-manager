@@ -23,8 +23,6 @@ async function main() {
         data: { name: 'Ngăn kéo bàn', type: 'Fixed', parentId: office.id }
     });
 
-    const locations = [home, office, backpack, drawer];
-
     // 3. Sample Data
     const sampleItems = [
         { name: 'MacBook Pro 14"', type: 'Laptop', brand: 'Apple', model: 'M3 Pro', locationId: backpack.id, specs: JSON.stringify({ power: '96W', processor: 'M3', ram: '36GB' }), price: 45000000, color: 'Space Black' },

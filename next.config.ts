@@ -1,6 +1,6 @@
-import type { NextConfig } from "next";
-
+/* eslint-disable @typescript-eslint/no-require-imports */
 const withPWA = require("next-pwa")({
+
   dest: "public",
   register: true,
   skipWaiting: true,
@@ -34,6 +34,7 @@ const withPWA = require("next-pwa")({
   ],
 });
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const nextConfig: any = {
   output: "standalone",
   // Move outputFileTracingIncludes to root as per warning

@@ -53,19 +53,21 @@ export async function lendItem(itemId: string, borrowerName: string, dueDate?: D
             });
         });
 
-        // --- SIDE EFFECTS ---
-        const item = await prisma.item.findUnique({ where: { id: itemId }, select: { name: true } });
-        await logActivity({
-            action: "LEND",
-            entityType: "ITEM",
-            entityId: itemId,
-            entityName: item?.name,
-            details: `Cho ${borrowerName} mượn`
-        });
-        await triggerWebhooks("item.lent", { itemId, borrowerName, dueDate });
-        // --------------------
-
+        // --- SIDE EFFECTS (Non-blocking) ---
         revalidatePath("/");
+
+        // Fire-and-forget: không await để response nhanh
+        prisma.item.findUnique({ where: { id: itemId }, select: { name: true } }).then(item => {
+            logActivity({
+                action: "LEND",
+                entityType: "ITEM",
+                entityId: itemId,
+                entityName: item?.name,
+                details: `Cho ${borrowerName} mượn`
+            });
+        });
+        triggerWebhooks("item.lent", { itemId, borrowerName, dueDate });
+        // --------------------
         return { success: true };
     } catch (error) {
         console.error("Lend error:", error);
@@ -121,8 +123,11 @@ export async function bulkLendItems(itemIds: string[], borrowerName: string, due
             }
         });
 
-        // --- SIDE EFFECTS ---
-        await logActivity({
+        // --- SIDE EFFECTS (Non-blocking) ---
+        revalidatePath("/");
+
+        // Fire-and-forget
+        logActivity({
             action: "LEND",
             entityType: "ITEM",
             entityId: null,
@@ -133,8 +138,6 @@ export async function bulkLendItems(itemIds: string[], borrowerName: string, due
             triggerWebhooks("item.lent", { itemId: id, borrowerName, dueDate });
         });
         // --------------------
-
-        revalidatePath("/");
         return { success: true };
     } catch (error: any) {
         console.error("Bulk lend error:", error);
@@ -184,19 +187,21 @@ export async function returnItem(itemId: string) {
             });
         });
 
-        // --- SIDE EFFECTS ---
-        const item = await prisma.item.findUnique({ where: { id: itemId }, select: { name: true } });
-        await logActivity({
-            action: "RETURN",
-            entityType: "ITEM",
-            entityId: itemId,
-            entityName: item?.name,
-            details: `Đã trả lại thiết bị`
-        });
-        await triggerWebhooks("item.returned", { itemId });
-        // --------------------
-
+        // --- SIDE EFFECTS (Non-blocking) ---
         revalidatePath("/");
+
+        // Fire-and-forget
+        prisma.item.findUnique({ where: { id: itemId }, select: { name: true } }).then(item => {
+            logActivity({
+                action: "RETURN",
+                entityType: "ITEM",
+                entityId: itemId,
+                entityName: item?.name,
+                details: `Đã trả lại thiết bị`
+            });
+        });
+        triggerWebhooks("item.returned", { itemId });
+        // --------------------
         return { success: true };
     } catch (error) {
         return { success: false, error: "Failed to return item" };

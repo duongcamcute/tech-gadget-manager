@@ -99,31 +99,33 @@ export async function createItem(data: ItemFormData) {
         });
 
         // --- POST-ACTION SIDE EFFECTS (Non-blocking) ---
-        const newItem = await prisma.item.findFirst({ orderBy: { createdAt: 'desc' }, select: { id: true, name: true } });
-        if (newItem) {
-            await logActivity({
-                action: "CREATE",
-                entityType: "ITEM",
-                entityId: newItem.id,
-                entityName: newItem.name,
-                details: `Tạo mới thiết bị: ${newItem.name} tại ${locName}`
-            });
-            await triggerWebhooks("item.created", { ...rest, id: newItem.id, name: newItem.name });
+        revalidatePath("/");
 
-            if (rest.status === 'Lent') {
-                await logActivity({
-                    action: "LEND",
+        // Fire-and-forget: không block response
+        prisma.item.findFirst({ orderBy: { createdAt: 'desc' }, select: { id: true, name: true } }).then(newItem => {
+            if (newItem) {
+                logActivity({
+                    action: "CREATE",
                     entityType: "ITEM",
                     entityId: newItem.id,
                     entityName: newItem.name,
-                    details: `Cho ${borrowerName} mượn ngay khi tạo`
+                    details: `Tạo mới thiết bị: ${newItem.name} tại ${locName}`
                 });
-                await triggerWebhooks("item.lent", { itemId: newItem.id, borrowerName, borrowDate: new Date() });
-            }
-        }
-        // -----------------------------------------------
+                triggerWebhooks("item.created", { ...rest, id: newItem.id, name: newItem.name });
 
-        revalidatePath("/");
+                if (rest.status === 'Lent') {
+                    logActivity({
+                        action: "LEND",
+                        entityType: "ITEM",
+                        entityId: newItem.id,
+                        entityName: newItem.name,
+                        details: `Cho ${borrowerName} mượn ngay khi tạo`
+                    });
+                    triggerWebhooks("item.lent", { itemId: newItem.id, borrowerName, borrowDate: new Date() });
+                }
+            }
+        });
+        // -----------------------------------------------
         return { success: true };
     } catch (error: unknown) {
         console.error("CREATE ERROR:", error);
@@ -245,38 +247,39 @@ export async function updateItem(id: string, data: ItemFormData) {
             }
         });
 
-        // --- POST-ACTION SIDE EFFECTS ---
-        const updatedItem = await prisma.item.findUnique({ where: { id }, select: { name: true } });
-        await logActivity({
-            action: "UPDATE",
-            entityType: "ITEM",
-            entityId: id,
-            entityName: updatedItem?.name || "Unknown Item",
-            details: "Cập nhật thông tin thiết bị"
-        });
-        await triggerWebhooks("item.updated", { id, changes: rest });
+        // --- POST-ACTION SIDE EFFECTS (Non-blocking) ---
+        revalidatePath("/");
 
-        // Check for specific events based on logic above
-        // Note: Since we are outside transaction, precise diff is harder, but we can infer from inputs
-        if (data.locationId && data.locationId !== oldItem.locationId) {
-            await triggerWebhooks("item.moved", { id, from: oldItem.locationId, to: data.locationId });
-        }
-        if (data.status === 'Lent' && oldItem.status !== 'Lent') {
-            await triggerWebhooks("item.lent", { id, borrowerName });
-        }
-        if (oldItem.status === 'Lent' && data.status !== 'Lent') {
-            await logActivity({
-                action: "RETURN",
+        // Fire-and-forget
+        prisma.item.findUnique({ where: { id }, select: { name: true } }).then(updatedItem => {
+            logActivity({
+                action: "UPDATE",
                 entityType: "ITEM",
                 entityId: id,
                 entityName: updatedItem?.name || "Unknown Item",
-                details: "Đã trả lại thiết bị"
+                details: "Cập nhật thông tin thiết bị"
             });
-            await triggerWebhooks("item.returned", { id });
-        }
-        // ------------------------------
+            triggerWebhooks("item.updated", { id, changes: rest });
 
-        revalidatePath("/");
+            // Check for specific events
+            if (data.locationId && data.locationId !== oldItem.locationId) {
+                triggerWebhooks("item.moved", { id, from: oldItem.locationId, to: data.locationId });
+            }
+            if (data.status === 'Lent' && oldItem.status !== 'Lent') {
+                triggerWebhooks("item.lent", { id, borrowerName });
+            }
+            if (oldItem.status === 'Lent' && data.status !== 'Lent') {
+                logActivity({
+                    action: "RETURN",
+                    entityType: "ITEM",
+                    entityId: id,
+                    entityName: updatedItem?.name || "Unknown Item",
+                    details: "Đã trả lại thiết bị"
+                });
+                triggerWebhooks("item.returned", { id });
+            }
+        });
+        // ------------------------------
         return { success: true };
     } catch (error: unknown) {
         console.error("UPDATE ERROR:", error);
@@ -383,8 +386,11 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
             }
         });
 
-        // --- LOGGING ---
-        await logActivity({
+        // --- LOGGING (Non-blocking) ---
+        revalidatePath("/");
+
+        // Fire-and-forget
+        logActivity({
             action: "MOVE",
             entityType: "ITEM",
             entityId: null,
@@ -395,8 +401,6 @@ export async function bulkMoveItems(ids: string[], locationId: string | null) {
             triggerWebhooks("item.moved", { id, to: dbLocationId });
         });
         // --------------
-
-        revalidatePath("/");
         return { success: true };
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Unknown error";
