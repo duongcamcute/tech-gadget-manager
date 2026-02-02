@@ -21,6 +21,7 @@ import { IconSelect } from "@/components/ui/IconSelect";
 import { getColorHex } from "@/lib/utils/colors";
 import { ITEM_TYPES, LOCATION_ICONS, ITEM_ICONS } from "@/lib/constants/options";
 import { TECH_SUGGESTIONS } from "@/lib/constants";
+import { optimizeImage, formatBytes, getBase64Size } from "@/lib/imageUtils";
 
 const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "---";
@@ -461,16 +462,23 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
     }, [purchaseDate, warrantyMonths, form]);
     const watchedColor = form.watch("color");
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const res = reader.result as string;
-                setImgPreview(res);
-                form.setValue("image", res);
-            };
-            reader.readAsDataURL(file);
+            try {
+                // Optimize image: resize to 800x800 max, convert to WebP
+                const optimized = await optimizeImage(file);
+                setImgPreview(optimized);
+                form.setValue("image", optimized);
+
+                // Log size reduction
+                const originalSize = file.size;
+                const newSize = getBase64Size(optimized);
+                console.log(`Image optimized: ${formatBytes(originalSize)} → ${formatBytes(newSize)} (${Math.round((1 - newSize / originalSize) * 100)}% smaller)`);
+            } catch (err) {
+                console.error("Image optimization failed:", err);
+                toast("Lỗi xử lý ảnh", "error");
+            }
         }
     };
 

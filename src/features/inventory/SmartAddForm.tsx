@@ -23,6 +23,8 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn, buildLocationTree } from "@/lib/utils";
 import { LOCATION_ICONS, ITEM_ICONS } from "@/lib/constants/options";
 
+import { optimizeImage, formatBytes, getBase64Size } from "@/lib/imageUtils";
+
 const COLORS = [
     { name: 'Đen', hex: '#000000', class: 'bg-black' },
     { name: 'Trắng', hex: '#ffffff', class: 'bg-white border border-gray-200' },
@@ -201,16 +203,23 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
         }
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const res = reader.result as string;
-                setImgPreview(res);
-                form.setValue("image", res);
-            };
-            reader.readAsDataURL(file);
+            try {
+                // Optimize image: resize to 800x800 max, convert to WebP
+                const optimized = await optimizeImage(file);
+                setImgPreview(optimized);
+                form.setValue("image", optimized);
+
+                // Log size reduction
+                const originalSize = file.size;
+                const newSize = getBase64Size(optimized);
+                console.log(`Image optimized: ${formatBytes(originalSize)} → ${formatBytes(newSize)} (${Math.round((1 - newSize / originalSize) * 100)}% smaller)`);
+            } catch (err) {
+                console.error("Image optimization failed:", err);
+                toast("Lỗi xử lý ảnh", "error");
+            }
         }
     };
 
