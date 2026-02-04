@@ -17,6 +17,7 @@ import {
     Container, Backpack, Luggage,
     User, Users,
     Table, Layers,
+    Zap, Clock, Info, DollarSign, Star, Award, ThumbsUp, Check, AlertTriangle, Settings, Search, Link2, Mail, Music, Video, Image,
     type LucideIcon
 } from "lucide-react";
 
@@ -228,5 +229,94 @@ export const LOCATION_ICON_GROUPS = [
     {
         label: "Con người",
         items: ["Person", "Family"]
+    }
+];
+
+// Badge Configuration
+export const BADGE_ICONS_MAP: Record<string, any> = {
+    // Hardware
+    'cpu': Cpu,
+    'circuit': CircuitBoard,
+    'ram': MemoryStick,
+    'fan': Fan,
+    'battery': Battery,
+    'wifi': Wifi,
+    'bluetooth': Bluetooth,
+    'server': Server,
+    'harddrive': HardDrive,
+
+    // Abstract
+    'zap': Zap,
+    'tag': Tag,
+    'box': Box,
+    'clock': Clock,
+    'user': User,
+    'info': Info,
+    'dollar': DollarSign,
+    'lock': Lock,
+    'shield': Shield,
+    'star': Star,
+    'award': Award,
+    'thumbs-up': ThumbsUp,
+    'check': Check,
+    'alert': AlertTriangle,
+
+    // Tools
+    'tools': Wrench,
+    'settings': Settings,
+    'search': Search,
+    'link': Link2,
+
+    // Office
+    'file': FileText,
+    'folder': Folder,
+    'archive': Archive,
+    'mail': Mail,
+
+    // Fun
+    'gamepad': Gamepad2,
+    'music': Music,
+    'video': Video,
+    'image': Image,
+};
+
+export const BADGE_COLORS_MAP: Record<string, string> = {
+    'blue': "bg-blue-50 text-blue-700 border-blue-100",
+    'red': "bg-red-50 text-red-700 border-red-100",
+    'green': "bg-green-50 text-green-700 border-green-100",
+    'emerald': "bg-emerald-50 text-emerald-700 border-emerald-100",
+    'orange': "bg-orange-50 text-orange-700 border-orange-100",
+    'amber': "bg-amber-50 text-amber-700 border-amber-100",
+    'yellow': "bg-yellow-50 text-yellow-700 border-yellow-100",
+    'purple': "bg-purple-50 text-purple-700 border-purple-100",
+    'fuchsia': "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100",
+    'pink': "bg-pink-50 text-pink-700 border-pink-100",
+    'rose': "bg-rose-50 text-rose-700 border-rose-100",
+    'cyan': "bg-cyan-50 text-cyan-700 border-cyan-100",
+    'sky': "bg-sky-50 text-sky-700 border-sky-100",
+    'indigo': "bg-indigo-50 text-indigo-700 border-indigo-100",
+    'violet': "bg-violet-50 text-violet-700 border-violet-100",
+    'slate': "bg-slate-50 text-slate-700 border-slate-100",
+    'gray': "bg-gray-50 text-gray-700 border-gray-100",
+    'stone': "bg-stone-50 text-stone-700 border-stone-100",
+    'zinc': "bg-zinc-50 text-zinc-700 border-zinc-100",
+};
+
+export const BADGE_ICON_GROUPS = [
+    {
+        label: "Phổ biến",
+        items: ['tag', 'zap', 'battery', 'wifi', 'cpu', 'box', 'clock', 'user', 'dollar']
+    },
+    {
+        label: "Phần cứng",
+        items: ['circuit', 'ram', 'fan', 'server', 'harddrive', 'gamepad', 'video', 'music', 'image']
+    },
+    {
+        label: "Hành chính",
+        items: ['info', 'lock', 'shield', 'file', 'folder', 'archive', 'mail', 'link']
+    },
+    {
+        label: "Trạng thái",
+        items: ['check', 'alert', 'star', 'award', 'thumbs-up', 'settings', 'search', 'tools']
     }
 ];

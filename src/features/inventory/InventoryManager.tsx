@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { QrCode, Package, Database, Search, LayoutDashboard, Tag, Wallet, Check, X, ArrowRightLeft, List, LayoutGrid, HelpCircle, Trash2, AlertTriangle, Shield, Clock, Image as ImageIcon } from "lucide-react";
+import { QrCode, Package, Database, Search, LayoutDashboard, Tag, Wallet, Check, X, ArrowRightLeft, List, LayoutGrid, HelpCircle, Trash2, AlertTriangle, Shield, Image as ImageIcon } from "lucide-react";
 import { Card, Button, Input, Select } from "@/components/ui/primitives";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ItemDetailDialog } from "./ItemDetailDialog";
@@ -17,6 +17,10 @@ import { bulkMoveItems, bulkDeleteItems } from "@/app/actions";
 import { bulkLendItems, lendItem, returnItem } from "@/features/lending/actions";
 import { checkOverdue, getUrgencyLevel, formatOverdueStatus } from "@/lib/utils/overdueChecker";
 import { checkWarranty, getWarrantyUrgency, formatWarrantyStatus } from "@/lib/utils/warrantyChecker";
+import { Tag as TagIcon } from "lucide-react";
+import { BADGE_ICONS_MAP, BADGE_COLORS_MAP } from "@/lib/constants/options";
+
+
 
 function getItemIconData(item: any) {
     const type = item.category || item.type || 'Other';
@@ -570,16 +574,55 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                             <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 line-clamp-2 leading-tight mb-2" title={item.name}>{item.name}</h3>
 
                                             <div className="flex flex-wrap gap-1">
-                                                {/* Check displayBadges array - if exists only show selected, else show all */}
+                                                {/* Display Badges (Dynamic) */}
                                                 {(() => {
-                                                    const badges = specs.displayBadges || ['power', 'length', 'capacity']; // default show all
+                                                    let activeBadges: any[] = specs.displayBadges || [];
+
+                                                    // Migration for old string[] format
+                                                    if (activeBadges.length > 0 && typeof activeBadges[0] === 'string') {
+                                                        const defaultMap: any = {
+                                                            power: { icon: 'zap', color: 'orange' },
+                                                            length: { icon: 'tag', color: 'emerald' },
+                                                            capacity: { icon: 'battery', color: 'purple' },
+                                                            interface: { icon: 'tag', color: 'blue' },
+                                                            bandwidth: { icon: 'zap', color: 'cyan' }
+                                                        };
+                                                        activeBadges = activeBadges.map((key: string) => ({
+                                                            key,
+                                                            icon: defaultMap[key]?.icon || 'tag',
+                                                            color: defaultMap[key]?.color || 'blue'
+                                                        }));
+                                                    }
+
+                                                    // If empty and not customized, show defaults if values exist (Legacy fallback)
+                                                    if (activeBadges.length === 0 && !specs.displayBadges) {
+                                                        if (specs.power) activeBadges.push({ key: 'power', icon: 'zap', color: 'orange' });
+                                                        if (specs.length) activeBadges.push({ key: 'length', icon: 'tag', color: 'emerald' });
+                                                        if (specs.capacity) activeBadges.push({ key: 'capacity', icon: 'battery', color: 'purple' });
+                                                    }
+
                                                     return (
                                                         <>
-                                                            {badges.includes('power') && specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] text-orange-700 border border-orange-100 font-medium whitespace-nowrap" title="Công suất">⚡ {specs.power}</span>}
-                                                            {badges.includes('length') && specs.length && <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] text-emerald-700 border border-emerald-100 font-medium whitespace-nowrap" title="Độ dài">📏 {specs.length}</span>}
-                                                            {badges.includes('capacity') && specs.capacity && <span className="bg-purple-50 px-1.5 py-0.5 rounded text-[10px] text-purple-700 border border-purple-100 font-medium whitespace-nowrap" title="Dung lượng">🔋 {specs.capacity}</span>}
-                                                            {badges.includes('interface') && specs.interface && <span className="bg-blue-50 px-1.5 py-0.5 rounded text-[10px] text-blue-700 border border-blue-100 font-medium whitespace-nowrap" title="Kết nối">🔌 {specs.interface}</span>}
-                                                            {badges.includes('bandwidth') && specs.bandwidth && <span className="bg-cyan-50 px-1.5 py-0.5 rounded text-[10px] text-cyan-700 border border-cyan-100 font-medium whitespace-nowrap" title="Tốc độ">⚡ {specs.bandwidth}</span>}
+                                                            {activeBadges.map((badge: any, idx: number) => {
+                                                                const Icon = BADGE_ICONS_MAP[badge.icon] || TagIcon;
+                                                                const colorClass = BADGE_COLORS_MAP[badge.color] || BADGE_COLORS_MAP['blue'];
+                                                                const value = item[badge.key] || specs[badge.key];
+
+                                                                if (!value) return null; // Don't show empty badges
+
+                                                                // Format value specially for dates or known fields if needed
+                                                                let displayValue = value;
+                                                                if (badge.key === 'warrantyEnd' && value) {
+                                                                    displayValue = new Date(value).toLocaleDateString('vi-VN');
+                                                                }
+
+                                                                return (
+                                                                    <span key={idx} className={`${colorClass} px-1.5 py-0.5 rounded text-[10px] border font-medium whitespace-nowrap flex items-center gap-1`} title={badge.key}>
+                                                                        <Icon size={10} />
+                                                                        <span className="max-w-[80px] truncate">{displayValue}</span>
+                                                                    </span>
+                                                                );
+                                                            })}
                                                         </>
                                                     );
                                                 })()}

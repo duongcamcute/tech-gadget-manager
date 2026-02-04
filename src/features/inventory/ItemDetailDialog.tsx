@@ -19,7 +19,7 @@ import { AutoCompleteInput } from "@/components/ui/AutoCompleteInput";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import { IconSelect } from "@/components/ui/IconSelect";
 import { getColorHex } from "@/lib/utils/colors";
-import { ITEM_TYPES, LOCATION_ICONS, ITEM_ICONS } from "@/lib/constants/options";
+import { ITEM_TYPES, LOCATION_ICONS, ITEM_ICONS, BADGE_ICONS_MAP, BADGE_COLORS_MAP } from "@/lib/constants/options";
 import { TECH_SUGGESTIONS } from "@/lib/constants";
 import { optimizeImage, formatBytes, getBase64Size } from "@/lib/imageUtils";
 
@@ -337,12 +337,14 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                             </div>
                         )}
 
-                        {item.warrantyEnd && (
-                            <div className="border-l-2 border-emerald-100 pl-3">
-                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Bảo hành</p>
+                        <div className="border-l-2 border-emerald-100 pl-3">
+                            <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Bảo hành</p>
+                            {item.warrantyEnd ? (
                                 <p className="font-medium text-green-700 dark:text-green-400 text-sm">{formatDateVN(item.warrantyEnd)}</p>
-                            </div>
-                        )}
+                            ) : (
+                                <p className="font-medium text-gray-400 text-sm italic">Không bảo hành</p>
+                            )}
+                        </div>
 
                         {item.purchaseLocation && (
                             <div className="border-l-2 border-emerald-100 pl-3">
@@ -666,33 +668,68 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                             <Label>Nơi mua</Label>
                             <Input {...form.register("purchaseLocation")} placeholder="Cửa hàng, Shopee..." />
                         </div>
-                        <div>
-                            <Label>Hết hạn bảo hành</Label>
-                            <div className="flex gap-2">
-                                <Input type="date" {...form.register("warrantyEnd")} className="flex-1" />
+                        <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-center mb-2">
+                                <Label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Hạn bảo hành</Label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="edit-no-warranty"
+                                        checked={!form.watch("warrantyEnd") && warrantyMonths === ""}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                // Disable Warranty
+                                                setWarrantyMonths("");
+                                                form.setValue("warrantyEnd", null, { shouldDirty: true });
+                                            } else {
+                                                // Enable Warranty (Restore default)
+                                                setWarrantyMonths("12");
+                                                // Trigger update via effect or manual set if date exists
+                                                const pDate = form.getValues("purchaseDate");
+                                                if (pDate) {
+                                                    const d = new Date(pDate);
+                                                    d.setMonth(d.getMonth() + 12);
+                                                    form.setValue("warrantyEnd", d.toISOString().split('T')[0], { shouldDirty: true });
+                                                }
+                                            }
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                                    />
+                                    <label htmlFor="edit-no-warranty" className="text-xs font-medium text-gray-600 dark:text-gray-400 cursor-pointer select-none">Không bảo hành</label>
+                                </div>
                             </div>
-                            <div className="flex gap-2 mt-1 items-center">
+                            <div className={`flex flex-col gap-2 transition-opacity duration-200 ${(!form.watch("warrantyEnd") && warrantyMonths === "") ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <Input
-                                    type="number"
-                                    placeholder="Tháng..."
-                                    className="h-8 w-20 text-xs"
-                                    value={warrantyMonths}
-                                    onChange={(e) => setWarrantyMonths(e.target.value)}
+                                    type="date"
+                                    {...form.register("warrantyEnd")}
+                                    className="h-9 bg-white dark:bg-gray-900"
+                                    disabled={!form.watch("warrantyEnd") && warrantyMonths === ""}
                                 />
-                                <Select
-                                    className="h-8 flex-1 bg-white dark:bg-gray-800 text-xs"
-                                    onChange={(e) => {
-                                        if (e.target.value) setWarrantyMonths(e.target.value);
-                                    }}
-                                    value={""}
-                                >
-                                    <option value="">+ Chọn nhanh...</option>
-                                    <option value="6">6 Tháng</option>
-                                    <option value="12">12 Tháng</option>
-                                    <option value="18">18 Tháng</option>
-                                    <option value="24">24 Tháng (2 Năm)</option>
-                                    <option value="36">36 Tháng (3 Năm)</option>
-                                </Select>
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        type="number"
+                                        placeholder="Tháng..."
+                                        className="h-9 w-20 text-xs bg-white dark:bg-gray-900"
+                                        value={warrantyMonths}
+                                        onChange={(e) => setWarrantyMonths(e.target.value)}
+                                        disabled={!form.watch("warrantyEnd") && warrantyMonths === ""}
+                                    />
+                                    <Select
+                                        className="h-9 flex-1 bg-white dark:bg-gray-900 text-xs"
+                                        onChange={(e) => {
+                                            if (e.target.value) setWarrantyMonths(e.target.value);
+                                        }}
+                                        value={""}
+                                        disabled={!form.watch("warrantyEnd") && warrantyMonths === ""}
+                                    >
+                                        <option value="">+ Chọn nhanh...</option>
+                                        <option value="6">6 Tháng</option>
+                                        <option value="12">12 Tháng</option>
+                                        <option value="18">18 Tháng</option>
+                                        <option value="24">24 Tháng (2 Năm)</option>
+                                        <option value="36">36 Tháng (3 Năm)</option>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                         <div className="col-span-2">
@@ -754,58 +791,131 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                             </div>
                         </div>
 
-                        {/* Display Badges Selection */}
-                        <div className="col-span-2 space-y-2">
-                            <Label className="flex items-center gap-2">
-                                Hiển thị trên Card
-                                <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">Badge</span>
-                            </Label>
-                            <p className="text-[10px] text-gray-500 -mt-1">Chọn thông số sẽ hiển thị dưới dạng badge trên card của thiết bị</p>
-                            <div className="bg-gradient-to-r from-orange-50 to-emerald-50 rounded-lg p-3 border border-orange-200/50">
-                                {(() => {
-                                    const currentSpecs = form.watch("specs") || {};
-                                    const displayBadges: string[] = currentSpecs.displayBadges || ['power', 'length', 'capacity'];
-                                    const allBadgeOptions = [
-                                        { key: 'power', label: 'Công suất', icon: '⚡', color: 'bg-orange-100 border-orange-200 text-orange-700' },
-                                        { key: 'length', label: 'Độ dài', icon: '📏', color: 'bg-emerald-100 border-emerald-200 text-emerald-700' },
-                                        { key: 'capacity', label: 'Dung lượng', icon: '🔋', color: 'bg-purple-100 border-purple-200 text-purple-700' },
-                                        { key: 'interface', label: 'Kết nối', icon: '🔌', color: 'bg-blue-100 border-blue-200 text-blue-700' },
-                                        { key: 'bandwidth', label: 'Tốc độ', icon: '⚡', color: 'bg-cyan-100 border-cyan-200 text-cyan-700' },
-                                    ];
-
-                                    const toggleBadge = (key: string) => {
-                                        let newBadges = [...displayBadges];
-                                        if (newBadges.includes(key)) {
-                                            newBadges = newBadges.filter(b => b !== key);
-                                        } else {
-                                            newBadges.push(key);
-                                        }
-                                        form.setValue("specs", { ...currentSpecs, displayBadges: newBadges }, { shouldDirty: true });
-                                    };
-
-                                    return (
-                                        <div className="flex flex-wrap gap-2">
-                                            {allBadgeOptions.map(opt => {
-                                                const isChecked = displayBadges.includes(opt.key);
-                                                const hasValue = currentSpecs[opt.key];
-                                                return (
-                                                    <button
-                                                        key={opt.key}
-                                                        type="button"
-                                                        onClick={() => toggleBadge(opt.key)}
-                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all text-xs font-medium ${isChecked ? opt.color + ' shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'} ${!hasValue ? 'opacity-50' : ''}`}
-                                                        title={hasValue ? `${opt.label}: ${currentSpecs[opt.key]}` : `Chưa có ${opt.label}`}
-                                                    >
-                                                        <span>{opt.icon}</span>
-                                                        <span>{opt.label}</span>
-                                                        {isChecked && <Check size={12} className="ml-1" />}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    );
-                                })()}
+                        {/* Display Badges Selection (Dynamic) */}
+                        <div className="col-span-2 space-y-3 bg-gray-50/50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                            <div>
+                                <Label className="flex items-center gap-2 text-base font-semibold">
+                                    Badge hiển thị
+                                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">Custom</span>
+                                </Label>
+                                <p className="text-xs text-gray-500 mb-3">Chọn thông tin để hiển thị nổi bật trên thẻ thiết bị.</p>
                             </div>
+
+                            {(() => {
+                                // Default or existing badges
+                                const currentSpecs = form.watch("specs") || {};
+                                let currentBadges: any[] = currentSpecs.displayBadges || [];
+
+                                // Migration: If string[], convert to objects
+                                if (currentBadges.length > 0 && typeof currentBadges[0] === 'string') {
+                                    currentBadges = currentBadges.map((key: string) => ({ key, icon: 'tag', color: 'blue' }));
+                                }
+
+                                const updateBadges = (newBadges: any[]) => {
+                                    const newSpecs = { ...currentSpecs, displayBadges: newBadges };
+                                    form.setValue("specs", newSpecs, { shouldDirty: true });
+                                };
+
+                                // Get all available keys
+                                const specKeys = Object.keys(currentSpecs).filter(k => k !== 'displayBadges');
+                                const standardKeys = ['brand', 'type', 'purchaseLocation', 'warrantyEnd'];
+                                const allKeys = Array.from(new Set([...standardKeys, ...specKeys]));
+
+                                return (
+                                    <div className="space-y-3">
+                                        {/* List of active badges */}
+                                        <div className="space-y-2">
+                                            {currentBadges.map((badge: any, idx: number) => (
+                                                <div key={idx} className="flex gap-2 items-center bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm animate-in slide-in-from-left-2 fade-in duration-200">
+                                                    {/* Field Select */}
+                                                    <div className="w-1/3 min-w-[120px]">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Trường thông tin</div>
+                                                        <div className="font-medium text-sm truncate">{badge.key}</div>
+                                                    </div>
+
+                                                    {/* Icon Select (Dynamic) */}
+                                                    <div className="flex-1">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Icon</div>
+                                                        <Select
+                                                            value={badge.icon || 'tag'}
+                                                            onChange={(e) => {
+                                                                const updated = [...currentBadges];
+                                                                updated[idx] = { ...updated[idx], icon: e.target.value };
+                                                                updateBadges(updated);
+                                                            }}
+                                                            className="h-8 text-xs w-full"
+                                                        >
+                                                            {Object.keys(BADGE_ICONS_MAP).map(k => (
+                                                                <option key={k} value={k}>{k}</option>
+                                                            ))}
+                                                        </Select>
+                                                    </div>
+
+                                                    {/* Color Select (Dynamic) */}
+                                                    <div className="flex-1">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Màu</div>
+                                                        <Select
+                                                            value={badge.color || 'blue'}
+                                                            onChange={(e) => {
+                                                                const updated = [...currentBadges];
+                                                                updated[idx] = { ...updated[idx], color: e.target.value };
+                                                                updateBadges(updated);
+                                                            }}
+                                                            className="h-8 text-xs w-full"
+                                                        >
+                                                            {Object.keys(BADGE_COLORS_MAP).map(k => (
+                                                                <option key={k} value={k}>{k}</option>
+                                                            ))}
+                                                        </Select>
+                                                    </div>
+
+                                                    {/* Remove */}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-600 mt-4"
+                                                        onClick={() => {
+                                                            const updated = currentBadges.filter((_, i) => i !== idx);
+                                                            updateBadges(updated);
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Add New Badge */}
+                                        <div className="flex gap-2 items-end pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
+                                            <div className="flex-1">
+                                                <Label className="text-xs mb-1 block">Thêm badge mới</Label>
+                                                <Select
+                                                    id="new-badge-select"
+                                                    className="h-9 text-sm"
+                                                    onChange={(e) => {
+                                                        if (e.target.value) {
+                                                            const newBadge = {
+                                                                key: e.target.value,
+                                                                icon: 'tag',
+                                                                color: 'blue'
+                                                            };
+                                                            updateBadges([...currentBadges, newBadge]);
+                                                            e.target.value = ""; // Reset select
+                                                        }
+                                                    }}
+                                                    value=""
+                                                >
+                                                    <option value="">+ Chọn trường thông tin...</option>
+                                                    {allKeys.filter(k => !currentBadges.some((b: any) => b.key === k)).map(k => (
+                                                        <option key={k} value={k}>{k}</option>
+                                                    ))}
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

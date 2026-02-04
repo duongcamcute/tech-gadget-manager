@@ -19,6 +19,7 @@ interface LocationNode {
     name: string;
     type: string;
     icon?: string | null;
+    image?: string | null;
     parentId?: string | null;
     children: LocationNode[];
     _count?: { items: number };
@@ -393,28 +394,39 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                     <div className="flex-1 flex flex-col h-full">
                         {/* Detail Header */}
                         <div className="px-6 py-4 border-b border-primary-100 dark:border-gray-800 bg-primary-50/30 dark:bg-gray-800/40 flex justify-between items-start">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                    {(() => {
-                                        if (selectedLocation?.icon) {
-                                            const { icon: Icon, color } = LOCATION_ICONS[selectedLocation.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
-                                            return <Icon className={cn("h-6 w-6", color)} />;
-                                        }
-                                        return selectedLocation?.type === 'Person' ? <User className="text-purple-500" /> : selectedLocation?.type === 'Container' ? <Box className="text-primary-500" /> : <Folder className="text-amber-500" />
-                                    })()}
-                                    {selectedLocation?.name}
-                                </h2>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
-                                    <span className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded text-xs">{selectedLocation?.type}</span>
-                                    <span>•</span>
-                                    <span>ID: {selectedLocation?.id.slice(0, 8)}</span>
-                                </p>
+                            <div className="flex items-start gap-4">
+                                {selectedLocation?.image ? (
+                                    <div className="h-16 w-16 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm bg-white dark:bg-gray-800">
+                                        <img src={selectedLocation.image} alt={selectedLocation.name} className="h-full w-full object-cover" />
+                                    </div>
+                                ) : (
+                                    <div className="h-16 w-16 rounded-xl border border-primary-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                                        {(() => {
+                                            if (selectedLocation?.icon) {
+                                                const { icon: Icon, color } = LOCATION_ICONS[selectedLocation.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
+                                                return <Icon className={cn("h-8 w-8", color)} />;
+                                            }
+                                            return selectedLocation?.type === 'Person' ? <User size={32} className="text-purple-500" /> : selectedLocation?.type === 'Container' ? <Box size={32} className="text-primary-500" /> : <Folder size={32} className="text-amber-500" />
+                                        })()}
+                                    </div>
+                                )}
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                        {selectedLocation?.name}
+                                    </h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                                        <span className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded text-xs">{selectedLocation?.type}</span>
+                                        <span>•</span>
+                                        <span>ID: {selectedLocation?.id.slice(0, 8)}</span>
+                                    </p>
+                                </div>
                             </div>
                             <div className="flex gap-2">
                                 <Button size="sm" onClick={async () => {
                                     setNewLocName(selectedLocation?.name || "");
                                     setNewLocType(selectedLocation?.type || "Fixed");
                                     setNewLocIcon(selectedLocation?.icon || "");
+                                    setNewLocImage(selectedLocation?.image || null);
                                     setNewLocParentId(selectedLocation?.parentId || null);
                                     setIsEditing(true);
                                 }} className="bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-700 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 gap-1">

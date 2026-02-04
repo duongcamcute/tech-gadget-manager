@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn, buildLocationTree } from "@/lib/utils";
-import { LOCATION_ICONS, ITEM_ICONS } from "@/lib/constants/options";
+import { LOCATION_ICONS, ITEM_ICONS, BADGE_ICONS_MAP, BADGE_COLORS_MAP } from "@/lib/constants/options";
 
 import { optimizeImage, formatBytes, getBase64Size } from "@/lib/imageUtils";
 
@@ -797,6 +797,126 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                     }}
                                 />
                             </div>
+                        </div>
+
+                        {/* Display Badges Selection (Dynamic) */}
+                        <div className="bg-white dark:bg-gray-900/50 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                            <div>
+                                <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    <Tag className="h-4 w-4" /> Badge hiển thị trên Card
+                                </Label>
+                                <p className="text-[10px] text-gray-500 mb-3">Chọn thông tin để hiển thị nổi bật.</p>
+                            </div>
+
+                            {(() => {
+                                // Default or existing badges
+                                const currentSpecs = form.watch("specs") || {};
+                                let currentBadges: any[] = currentSpecs.displayBadges || [];
+
+                                const updateBadges = (newBadges: any[]) => {
+                                    const newSpecs = { ...currentSpecs, displayBadges: newBadges };
+                                    form.setValue("specs", newSpecs, { shouldDirty: true });
+                                };
+
+                                // Get all available keys
+                                const specKeys = Object.keys(currentSpecs).filter(k => k !== 'displayBadges');
+                                const standardKeys = ['brand', 'type', 'purchaseLocation', 'warrantyEnd', 'purchasePrice'];
+                                const allKeys = Array.from(new Set([...standardKeys, ...specKeys]));
+
+                                return (
+                                    <div className="space-y-3">
+                                        {/* List of active badges */}
+                                        <div className="space-y-2">
+                                            {currentBadges.map((badge: any, idx: number) => (
+                                                <div key={idx} className="flex gap-2 items-center bg-gray-50 dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                    {/* Field Select */}
+                                                    <div className="w-1/3 min-w-[120px]">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Trường thông tin</div>
+                                                        <div className="font-medium text-sm truncate">{badge.key}</div>
+                                                    </div>
+
+                                                    {/* Icon Select */}
+                                                    <div className="flex-1">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Icon</div>
+                                                        <Select
+                                                            value={badge.icon || 'tag'}
+                                                            onChange={(e) => {
+                                                                const updated = [...currentBadges];
+                                                                updated[idx] = { ...updated[idx], icon: e.target.value };
+                                                                updateBadges(updated);
+                                                            }}
+                                                            className="h-8 text-xs w-full bg-white dark:bg-gray-900"
+                                                        >
+                                                            {Object.keys(BADGE_ICONS_MAP).map(k => (
+                                                                <option key={k} value={k}>{k}</option>
+                                                            ))}
+                                                        </Select>
+                                                    </div>
+
+                                                    {/* Color Select */}
+                                                    <div className="flex-1">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Màu</div>
+                                                        <Select
+                                                            value={badge.color || 'blue'}
+                                                            onChange={(e) => {
+                                                                const updated = [...currentBadges];
+                                                                updated[idx] = { ...updated[idx], color: e.target.value };
+                                                                updateBadges(updated);
+                                                            }}
+                                                            className="h-8 text-xs w-full bg-white dark:bg-gray-900"
+                                                        >
+                                                            {Object.keys(BADGE_COLORS_MAP).map(k => (
+                                                                <option key={k} value={k}>{k}</option>
+                                                            ))}
+                                                        </Select>
+                                                    </div>
+
+                                                    {/* Remove */}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-500 mt-4"
+                                                        onClick={() => {
+                                                            const updated = currentBadges.filter((_, i) => i !== idx);
+                                                            updateBadges(updated);
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Add New Badge */}
+                                        <div className="flex gap-2 items-end pt-2">
+                                            <div className="flex-1">
+                                                <Select
+                                                    id="new-badge-select"
+                                                    className="h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                                                    onChange={(e) => {
+                                                        if (e.target.value) {
+                                                            const newBadge = {
+                                                                key: e.target.value,
+                                                                icon: 'tag',
+                                                                color: 'blue'
+                                                            };
+                                                            updateBadges([...currentBadges, newBadge]);
+                                                            e.target.value = ""; // Reset select
+                                                        }
+                                                    }}
+                                                    value=""
+                                                >
+                                                    <option value="">+ Thêm Badge hiển thị...</option>
+                                                    {allKeys.filter(k => !currentBadges.some((b: any) => b.key === k)).map(k => (
+                                                        <option key={k} value={k}>{k}</option>
+                                                    ))}
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
 
