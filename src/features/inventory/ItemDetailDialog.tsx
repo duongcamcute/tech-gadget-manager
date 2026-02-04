@@ -361,11 +361,15 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                             </div>
                         )}
 
-                        {/* DYNAMIC SPECS LOOP - Render ALL of them, skip 'other' if empty */}
+                        {/* DYNAMIC SPECS LOOP - Render ALL of them, skip 'other' if empty, skip 'displayBadges' */}
                         {Object.entries(allSpecs)
                             .filter(([k, v]: any) => {
                                 // Ẩn field "other" nếu trống
                                 if (k.toLowerCase() === 'other' && (!v || String(v).trim() === '')) {
+                                    return false;
+                                }
+                                // Ẩn displayBadges (internal config, không hiển thị)
+                                if (k === 'displayBadges') {
                                     return false;
                                 }
                                 return true;
@@ -833,22 +837,28 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                                                         <div className="font-medium text-sm truncate">{badge.key}</div>
                                                     </div>
 
-                                                    {/* Icon Select (Dynamic) */}
+                                                    {/* Icon Select (Dynamic with preview) */}
                                                     <div className="flex-1">
                                                         <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Icon</div>
-                                                        <Select
-                                                            value={badge.icon || 'tag'}
-                                                            onChange={(e) => {
-                                                                const updated = [...currentBadges];
-                                                                updated[idx] = { ...updated[idx], icon: e.target.value };
-                                                                updateBadges(updated);
-                                                            }}
-                                                            className="h-8 text-xs w-full"
-                                                        >
-                                                            {Object.keys(BADGE_ICONS_MAP).map(k => (
-                                                                <option key={k} value={k}>{k}</option>
-                                                            ))}
-                                                        </Select>
+                                                        <div className="flex items-center gap-1">
+                                                            {(() => {
+                                                                const PreviewIcon = BADGE_ICONS_MAP[badge.icon] || BADGE_ICONS_MAP['tag'];
+                                                                return <PreviewIcon size={16} className="text-gray-600 shrink-0" />;
+                                                            })()}
+                                                            <Select
+                                                                value={badge.icon || 'tag'}
+                                                                onChange={(e) => {
+                                                                    const updated = [...currentBadges];
+                                                                    updated[idx] = { ...updated[idx], icon: e.target.value };
+                                                                    updateBadges(updated);
+                                                                }}
+                                                                className="h-8 text-xs w-full"
+                                                            >
+                                                                {Object.keys(BADGE_ICONS_MAP).map(k => (
+                                                                    <option key={k} value={k}>{k}</option>
+                                                                ))}
+                                                            </Select>
+                                                        </div>
                                                     </div>
 
                                                     {/* Color Select (Dynamic) */}
