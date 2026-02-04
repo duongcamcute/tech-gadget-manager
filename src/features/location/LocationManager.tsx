@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Folder, Box, Plus, User, Trash2, ChevronRight, ChevronDown, MapPin, Package, RefreshCw, Pencil } from "lucide-react";
+import { Folder, Box, Plus, User, Trash2, ChevronRight, ChevronDown, MapPin, Package, RefreshCw, Pencil, Image as ImageIcon, X } from "lucide-react";
 import { createLocation, deleteLocation, getLocationItems, updateLocation } from "@/features/location/actions";
 import { ITEM_ICONS, LOCATION_ICONS, LOCATION_ICON_GROUPS } from "@/lib/constants/options";
 import { IconSelect } from "@/components/ui/IconSelect";
@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { ItemDetailDialog } from "@/features/inventory/ItemDetailDialog";
 import { getItem } from "@/app/actions";
 import { LocationDetailView } from "@/features/locations/LocationDetailView";
+import { optimizeImage } from "@/lib/imageUtils";
 
 interface LocationNode {
     id: string;
@@ -58,9 +59,27 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
     const [newLocName, setNewLocName] = useState("");
     const [newLocType, setNewLocType] = useState("Fixed");
     const [newLocIcon, setNewLocIcon] = useState("");
+    const [newLocImage, setNewLocImage] = useState<string | null>(null);
     const [newLocParentId, setNewLocParentId] = useState<string | null>(null);
     const { toast } = useToast();
     const router = useRouter();
+
+    // Handle image upload with optimization
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                const optimized = await optimizeImage(file);
+                setNewLocImage(optimized);
+            } catch (err) {
+                console.error('Error optimizing image:', err);
+                // Fallback to original
+                const reader = new FileReader();
+                reader.onloadend = () => setNewLocImage(reader.result as string);
+                reader.readAsDataURL(file);
+            }
+        }
+    };
 
     // Find selected node in tree to get details
     const findNode = (id: string, nodes: LocationNode[]): LocationNode | null => {
@@ -97,6 +116,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             name: newLocName,
             type: newLocType,
             icon: newLocIcon,
+            image: newLocImage,
             parentId: newLocParentId || selectedLocationId // Use explicit parent or current selected
         });
 
@@ -104,6 +124,7 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             toast("Đã tạo vị trí mới thành công", "success");
             setNewLocName("");
             setNewLocIcon("");
+            setNewLocImage(null);
             if (!selectedLocationId) setIsCreating(false);
             router.refresh();
         } else {
@@ -117,12 +138,14 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
             name: newLocName,
             type: newLocType,
             icon: newLocIcon,
+            image: newLocImage,
             parentId: newLocParentId
         });
 
         if (res.success) {
             toast("Đã cập nhật vị trí", "success");
             setIsEditing(false);
+            setNewLocImage(null);
             router.refresh();
         } else {
             toast(res.error || "Lỗi cập nhật", "error");
@@ -322,6 +345,40 @@ export function LocationManager({ initialLocations }: { initialLocations: Locati
                                                 </option>
                                             ))}
                                     </Select>
+                                </div>
+                                {/* Upload ảnh vị trí */}
+                                <div className="col-span-2">
+                                    <Label>Ảnh minh họa (Tùy chọn)</Label>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        {newLocImage ? (
+                                            <div className="relative">
+                                                <img
+                                                    src={newLocImage}
+                                                    alt="Preview"
+                                                    className="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setNewLocImage(null)}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-colors">
+                                                <ImageIcon className="w-6 h-6 text-gray-400" />
+                                                <span className="text-[10px] text-gray-400 mt-1">Upload</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageChange}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        )}
+                                        <span className="text-xs text-gray-400 dark:text-gray-500">Ảnh sẽ được nén tự động</span>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex gap-2 pt-4">

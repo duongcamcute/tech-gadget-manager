@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { QrCode, Package, Database, Search, LayoutDashboard, Tag, Wallet, Check, X, ArrowRightLeft, List, LayoutGrid, HelpCircle, Trash2, AlertTriangle, Shield, Clock } from "lucide-react";
+import { QrCode, Package, Database, Search, LayoutDashboard, Tag, Wallet, Check, X, ArrowRightLeft, List, LayoutGrid, HelpCircle, Trash2, AlertTriangle, Shield, Clock, Image as ImageIcon } from "lucide-react";
 import { Card, Button, Input, Select } from "@/components/ui/primitives";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ItemDetailDialog } from "./ItemDetailDialog";
@@ -44,6 +44,7 @@ function getStatusColorClasses(status: string) {
 export default function InventoryManager({ initialItems, locations }: { initialItems: any[], locations: any[] }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [showThumbnails, setShowThumbnails] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // Complex Filter State
@@ -52,6 +53,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
         status: 'all',
         brand: 'all',
         color: 'all',
+        location: 'all',
         power: 'all',
         length: 'all',
         capacity: 'all'
@@ -122,6 +124,9 @@ export default function InventoryManager({ initialItems, locations }: { initialI
 
             const matchesColor = activeFilters.color === 'all' || item.color === activeFilters.color;
 
+            // Location filter
+            const matchesLocation = activeFilters.location === 'all' || item.locationId === activeFilters.location;
+
             // Spec checking
             let matchesSpecs = true;
             try {
@@ -131,7 +136,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                 if (activeFilters.capacity !== 'all' && s.capacity !== activeFilters.capacity) matchesSpecs = false;
             } catch { matchesSpecs = true; }
 
-            return matchesSearch && matchesCategory && matchesBrand && matchesStatus && matchesColor && matchesSpecs;
+            return matchesSearch && matchesCategory && matchesBrand && matchesStatus && matchesColor && matchesLocation && matchesSpecs;
         });
     }, [initialItems, searchQuery, activeFilters]);
 
@@ -144,11 +149,11 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             }
             return false;
         });
-        // Warranty stats - items expiring within 30 days
-        const warrantyExpiringItems = initialItems.filter(i => {
+        // Warranty stats - chỉ lấy items SẮP HẾT (không bao gồm đã hết)
+        const warrantyExpiringSoonItems = initialItems.filter(i => {
             if (i.warrantyEnd) {
                 const info = checkWarranty(i.warrantyEnd);
-                return info.isExpiringSoon || info.isExpired;
+                return info.isExpiringSoon && !info.isExpired; // Chỉ sắp hết, chưa hết
             }
             return false;
         });
@@ -159,7 +164,7 @@ export default function InventoryManager({ initialItems, locations }: { initialI
             available: initialItems.filter(i => i.status === 'Available').length,
             unsorted: initialItems.filter(i => !i.location || !i.locationId).length,
             overdue: overdueItems.length,
-            warrantyExpiring: warrantyExpiringItems.length
+            warrantyExpiring: warrantyExpiringSoonItems.length // Chỉ sắp hết
         };
     }, [initialItems]);
 
@@ -329,13 +334,17 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                             <option value="all">Tất cả màu</option>
                             {filterOptions.colors.map(c => <option key={c} value={c}>{c}</option>)}
                         </Select>
+                        <Select value={activeFilters.location} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, location: e.target.value }))} className="w-full bg-white dark:bg-gray-800 dark:text-gray-100 rounded-xl text-xs h-9">
+                            <option value="all">Tất cả vị trí</option>
+                            {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                        </Select>
 
                         {/* Dynamic Specs Filters */}
                         {showPower && <Select value={activeFilters.power} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, power: e.target.value }))} className="bg-orange-50 border-orange-200 rounded-xl text-xs h-9"><option value="all">Công suất...</option>{filterOptions.powers.map(p => <option key={p} value={p}>{p}</option>)}</Select>}
                         {showLength && <Select value={activeFilters.length} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, length: e.target.value }))} className="bg-emerald-50 border-emerald-200 rounded-xl text-xs h-9"><option value="all">Độ dài...</option>{filterOptions.lengths.map(p => <option key={p} value={p}>{p}</option>)}</Select>}
                         {showCapacity && <Select value={activeFilters.capacity} onChange={(e: any) => setActiveFilters(prev => ({ ...prev, capacity: e.target.value }))} className="bg-purple-50 border-purple-200 rounded-xl text-xs h-9"><option value="all">Dung lượng...</option>{filterOptions.capacities.map(p => <option key={p} value={p}>{p}</option>)}</Select>}
 
-                        <Button variant="ghost" onClick={() => setActiveFilters({ category: 'all', status: 'all', brand: 'all', color: 'all', power: 'all', length: 'all', capacity: 'all' })} className="text-red-500 hover:bg-red-50 hover:text-red-600 h-9 rounded-xl px-3 border border-transparent hover:border-red-100">
+                        <Button variant="ghost" onClick={() => setActiveFilters({ category: 'all', status: 'all', brand: 'all', color: 'all', location: 'all', power: 'all', length: 'all', capacity: 'all' })} className="text-red-500 hover:bg-red-50 hover:text-red-600 h-9 rounded-xl px-3 border border-transparent hover:border-red-100">
                             Xóa bộ lọc
                         </Button>
                     </div>
@@ -349,6 +358,14 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                     <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
                         <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}><LayoutGrid className="w-4 h-4" /></button>
                         <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}><List className="w-4 h-4" /></button>
+                        <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                        <button
+                            onClick={() => setShowThumbnails(!showThumbnails)}
+                            className={`p-1.5 rounded-md transition-all ${showThumbnails ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                            title="Hiển thị ảnh thumbnail"
+                        >
+                            <ImageIcon className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
                 <div className="flex gap-2 items-center justify-between sm:justify-end">
@@ -448,17 +465,25 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                     {/* QR */}
                                     <Link href={`/items/${item.id}/qr`} className="absolute top-2 right-2 z-20 p-1.5 text-gray-300 hover:text-primary-600 hover:bg-primary-50 rounded-lg" title="Xem mã QR"><QrCode className="h-4 w-4" /></Link>
 
-                                    {/* Icon Column */}
+                                    {/* Icon Column - Show thumbnail if enabled and image exists */}
                                     <div
-                                        className={`w-28 shrink-0 flex flex-col items-center justify-center relative cursor-pointer group-hover/image overflow-hidden transition-colors duration-300 ${!item.color ? bg : ''} ${isWhite ? 'bg-white border-r border-gray-50' : ''}`}
-                                        style={!isWhite && item.color ? { backgroundColor: `${getColorHex(item.color)}15` } : {}}
+                                        className={`w-28 shrink-0 flex flex-col items-center justify-center relative cursor-pointer group-hover/image overflow-hidden transition-colors duration-300 ${!item.color && !showThumbnails ? bg : ''} ${isWhite && !showThumbnails ? 'bg-white border-r border-gray-50' : ''}`}
+                                        style={!isWhite && item.color && !showThumbnails ? { backgroundColor: `${getColorHex(item.color)}15` } : {}}
                                         onClick={() => setSelectedItem(item)}
                                     >
                                         <div className="transform transition-transform duration-500 group-hover:scale-110 mb-4">
-                                            <Icon
-                                                className={`h-12 w-12 ${!item.color ? color : ''}`}
-                                                style={item.color ? { color: isWhite ? '#fbbf24' : getColorHex(item.color) } : {}}
-                                            />
+                                            {showThumbnails && item.image ? (
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    className="w-20 h-20 object-cover rounded-lg shadow-md"
+                                                />
+                                            ) : (
+                                                <Icon
+                                                    className={`h-12 w-12 ${!item.color ? color : ''}`}
+                                                    style={item.color ? { color: isWhite ? '#fbbf24' : getColorHex(item.color) } : {}}
+                                                />
+                                            )}
                                         </div>
 
                                         {/* Status Pill in Card */}

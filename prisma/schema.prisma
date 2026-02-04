@@ -65,6 +65,7 @@ model Location {
   name      String
   type      String     
   icon      String?
+  image     String?    // Base64 WebP ảnh minh họa vị trí
   parentId  String?
   parent    Location?  @relation("LocationHierarchy", fields: [parentId], references: [id])
   children  Location[] @relation("LocationHierarchy")

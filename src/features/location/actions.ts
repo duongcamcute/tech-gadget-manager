@@ -3,13 +3,14 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-export async function createLocation(data: { name: string; type: string; parentId?: string | null; icon?: string }) {
+export async function createLocation(data: { name: string; type: string; parentId?: string | null; icon?: string; image?: string | null }) {
     try {
         const location = await prisma.location.create({
             data: {
                 name: data.name,
                 type: data.type,
                 icon: data.icon,
+                image: data.image || null,
                 parentId: data.parentId || null,
             },
         });
@@ -21,7 +22,7 @@ export async function createLocation(data: { name: string; type: string; parentI
     }
 }
 
-export async function updateLocation(id: string, data: { name: string; type: string; parentId?: string | null; icon?: string }) {
+export async function updateLocation(id: string, data: { name: string; type: string; parentId?: string | null; icon?: string; image?: string | null }) {
     try {
         // Prevent setting parent to itself
         if (data.parentId === id) {
@@ -34,6 +35,7 @@ export async function updateLocation(id: string, data: { name: string; type: str
                 name: data.name,
                 type: data.type,
                 icon: data.icon,
+                image: data.image,
                 parentId: data.parentId || null,
             },
         });
