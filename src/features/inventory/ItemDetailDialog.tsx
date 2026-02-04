@@ -206,10 +206,16 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                     {/* Basic Status Bar (Mobile Friendly) */}
                     <div className="flex flex-wrap items-center gap-3">
                         <span className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wide flex items-center gap-2 ${styles[item.status] || styles['Available']}`}>
-                            <div className={`w-2 h-2 rounded-full ${item.status === 'Available' ? 'bg-emerald-500' : item.status === 'InUse' ? 'bg-blue-500' : item.status === 'Lent' ? 'bg-primary-500' : 'bg-red-500'}`} />
+                            <div className={`w-2 h-2 rounded-full ${item.status === 'Available' ? 'bg-emerald-500' :
+                                item.status === 'InUse' ? 'bg-blue-500' :
+                                    item.status === 'Lent' ? 'bg-primary-500' :
+                                        item.status === 'Damaged' ? 'bg-orange-500' :
+                                            'bg-red-500'
+                                }`} />
                             {item.status === 'Available' && "Sẵn sàng"}
                             {item.status === 'InUse' && "Đang sử dụng"}
                             {item.status === 'Lent' && "Đang cho mượn"}
+                            {item.status === 'Damaged' && "Hư hỏng"}
                             {item.status === 'Lost' && "Thất lạc"}
                         </span>
                         <div className="flex items-center text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700">
@@ -353,13 +359,21 @@ function ViewMode({ item, setMode, onDelete }: { item: any, setMode: (m: "EDIT")
                             </div>
                         )}
 
-                        {/* DYNAMIC SPECS LOOP - Render ALL of them */}
-                        {Object.entries(allSpecs).map(([k, v]: any) => (
-                            <div key={k} className={`border-l-2 border-slate-200 pl-3 ${String(v).length > 30 ? 'col-span-2' : ''}`}>
-                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">{k}</p>
-                                <p className="font-medium text-gray-900 dark:text-gray-100 break-words text-sm whitespace-pre-line" title={v}>{String(v)}</p>
-                            </div>
-                        ))}
+                        {/* DYNAMIC SPECS LOOP - Render ALL of them, skip 'other' if empty */}
+                        {Object.entries(allSpecs)
+                            .filter(([k, v]: any) => {
+                                // Ẩn field "other" nếu trống
+                                if (k.toLowerCase() === 'other' && (!v || String(v).trim() === '')) {
+                                    return false;
+                                }
+                                return true;
+                            })
+                            .map(([k, v]: any) => (
+                                <div key={k} className={`border-l-2 border-slate-200 pl-3 ${String(v).length > 30 ? 'col-span-2' : ''}`}>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">{k}</p>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100 break-words text-sm whitespace-pre-line" title={v}>{String(v)}</p>
+                                </div>
+                            ))}
 
                         {/* Fallback if practically empty */}
                         {(!item.brand && !item.model && Object.keys(allSpecs).length === 0) && (
@@ -751,6 +765,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                                 <option value="Available">Sẵn sàng (Available)</option>
                                 <option value="InUse">Đang dùng (In Use)</option>
                                 <option value="Lent">Cho mượn (Lent)</option>
+                                <option value="Damaged">Hư hỏng (Damaged)</option>
                                 <option value="Lost">Thất lạc (Lost)</option>
                             </Select>
                         </div>

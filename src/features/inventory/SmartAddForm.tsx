@@ -516,6 +516,7 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                 <option value="Available">Sẵn sàng</option>
                                 <option value="InUse">Đang dùng</option>
                                 <option value="Lent">Cho mượn</option>
+                                <option value="Damaged">Hư hỏng</option>
                                 <option value="Lost">Thất lạc</option>
                             </Select>
                         </div>
@@ -705,6 +706,23 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                     placeholder="1.000.000..."
                                     className="h-9"
                                 />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" /> Bảo hành</Label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="no-warranty"
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setWarrantyMonths("");
+                                                form.setValue("warrantyEnd", null);
+                                            }
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                    />
+                                    <label htmlFor="no-warranty" className="text-xs text-gray-600 dark:text-gray-400">Không bảo hành</label>
+                                </div>
                             </div>
                             <div className="space-y-1">
                                 <Label className="text-xs flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" /> Bảo hành (Tháng)</Label>
