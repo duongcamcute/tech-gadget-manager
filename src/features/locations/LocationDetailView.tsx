@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button, Input } from "@/components/ui/primitives"; // Check if dialog exists, if not use custom overlay
 import { Search, MapPin, ArrowRight, ArrowLeft, Package, Plus, Trash2 } from "lucide-react";
 import { updateItem, bulkMoveItems } from "@/app/actions";
 import { cn } from "@/lib/utils";
 import { ITEM_ICONS } from "@/lib/constants/options";
 
+interface ItemType {
+    id: string;
+    name: string;
+    type: string;
+    category?: string;
+    locationId: string | null;
+    image?: string;
+    location?: { name: string };
+}
+
 // Assuming we pass all items and current location
-export function LocationDetailView({ location, allItems, onClose, onUpdate }: { location: any, allItems: any[], onClose: () => void, onUpdate: () => void }) {
+export function LocationDetailView({ location, allItems, onClose, onUpdate }: { location: { id: string; name: string }, allItems: ItemType[], onClose: () => void, onUpdate: () => void }) {
     const [searchLeft, setSearchLeft] = useState("");
     const [searchRight, setSearchRight] = useState("");
 
@@ -28,19 +38,19 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
         );
     }, [allItems, location.id, searchRight]);
 
-    const [optimisticLeft, setOptimisticLeft] = useState<any[]>([]);
-    const [optimisticRight, setOptimisticRight] = useState<any[]>([]);
+    const [optimisticLeft, setOptimisticLeft] = useState<ItemType[]>([]);
+    const [optimisticRight, setOptimisticRight] = useState<ItemType[]>([]);
 
     // Sync optimistic state with props when they change (initial load or server revalidation)
-    useMemo(() => {
+    useEffect(() => {
         setOptimisticLeft(leftItems);
     }, [leftItems]);
 
-    useMemo(() => {
+    useEffect(() => {
         setOptimisticRight(rightItems);
     }, [rightItems]);
 
-    const handleMove = async (item: any, targetLocationId: string | null) => {
+    const handleMove = async (item: ItemType, targetLocationId: string | null) => {
         // Optimistic Update
         if (targetLocationId === location.id) {
             // Moving IN (Left -> Right)
@@ -98,11 +108,11 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                         </div>
                         <div className="flex-1 overflow-y-auto p-3 space-y-2">
                             {optimisticLeft.map(item => {
-                                const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
+                                const { icon: ItemIcon, color, bg } = (item.category && ITEM_ICONS[item.category]) || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
                                 return (
                                     <div key={item.id} className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3 hover:border-primary-300 dark:hover:border-primary-500 hover:shadow-sm transition-all shadow-sm">
                                         <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
-                                            {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
+                                            {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
@@ -145,7 +155,7 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                         </div>
                         <div className="flex-1 overflow-y-auto p-3 space-y-2">
                             {optimisticRight.map(item => {
-                                const { icon: ItemIcon, color, bg } = ITEM_ICONS[item.category] || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
+                                const { icon: ItemIcon, color, bg } = (item.category && ITEM_ICONS[item.category]) || ITEM_ICONS[item.type] || ITEM_ICONS['default'];
                                 return (
                                     <div key={item.id} className="group bg-white dark:bg-gray-800 border border-primary-100 dark:border-gray-600 rounded-xl p-3 flex items-center gap-3 hover:border-red-200 dark:hover:border-red-800 transition-colors shadow-sm">
                                         <Button
@@ -159,7 +169,7 @@ export function LocationDetailView({ location, allItems, onClose, onUpdate }: { 
                                             <div className="md:hidden"><Trash2 className="h-4 w-4" /></div>
                                         </Button>
                                         <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${item.image ? 'bg-gray-100' : bg}`}>
-                                            {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
+                                            {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon className={`h-4 w-4 ${color}`} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>

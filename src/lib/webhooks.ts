@@ -15,13 +15,13 @@ export type WebhookEvent =
 export interface WebhookPayload {
     event: WebhookEvent;
     timestamp: string;
-    data: any;
+    data: Record<string, unknown>;
 }
 
 /**
  * Trigger webhooks for a specific event
  */
-export async function triggerWebhooks(event: WebhookEvent, data: any): Promise<void> {
+export async function triggerWebhooks(event: WebhookEvent, data: Record<string, unknown>): Promise<void> {
     try {
         const webhooks = await prisma.webhookConfig.findMany({
             where: { active: true }
@@ -87,13 +87,13 @@ async function sendWebhook(
                 lastError: response.ok ? null : `HTTP ${response.status}`,
             }
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`Webhook ${webhook.id} error:`, error);
         await prisma.webhookConfig.update({
             where: { id: webhook.id },
             data: {
                 lastRun: new Date(),
-                lastError: error.message || "Unknown error",
+                lastError: error instanceof Error ? error.message : "Unknown error",
             }
         });
     }
@@ -195,7 +195,7 @@ export async function testWebhook(id: string) {
             success: !updated?.lastError,
             error: updated?.lastError || undefined
         };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 }

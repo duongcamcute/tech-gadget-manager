@@ -1,5 +1,5 @@
 import {
-    LucideIcon, Package, Zap,
+    Package,
     Smartphone, Tablet, Laptop, Monitor, Tv, Camera, Gamepad2, Headset, Speaker,
     Mouse, Keyboard, HardDrive, Server, Router, Printer, Mic, Watch, Box,
     Fan, Lightbulb, Plug, Battery, Wrench, Key, Shield, HelpCircle,
@@ -9,15 +9,22 @@ import {
     Wifi, Bluetooth, Cast, Bell, Lock, Thermometer,
     CassetteTape, Disc, Clapperboard, Film, Radio,
     Wallet, CreditCard, Gift, Map, Umbrella,
-    Cable, Headphones,
+    Cable,
     // Location Icons
     Home, Building, Warehouse, Store, MapPin,
-    Sofa, Bed, Bath, Utensils,
-    Library, BookOpen,
+    Sofa, Bed, Utensils,
+    Library,
     Container, Backpack, Luggage,
-    User, Users, UserCircle,
-    LayoutGrid, Grid3x3, Table, Layers
+    User, Users,
+    Table, Layers,
+    type LucideIcon
 } from "lucide-react";
+
+interface IconConfig {
+    icon: LucideIcon;
+    color: string;
+    bg: string;
+}
 
 export const ITEM_TYPES = [
     // Core Devices
@@ -65,7 +72,7 @@ export const ITEM_STATUS = {
     Lost: { label: "Thất lạc", color: "bg-red-50 text-red-700 border-red-200 ring-1 ring-red-100" },
 } as const;
 
-export const ITEM_ICONS: Record<string, any> = {
+export const ITEM_ICONS: Record<string, IconConfig> = {
     // ... (Keep existing first)
     'Phone': { icon: Smartphone, color: 'text-blue-500', bg: 'bg-blue-50' },
     'Tablet': { icon: Tablet, color: 'text-purple-500', bg: 'bg-purple-50' },
@@ -148,7 +155,7 @@ export const ITEM_ICONS: Record<string, any> = {
     'default': { icon: Box, color: 'text-gray-400', bg: 'bg-gray-50' },
 };
 
-export const LOCATION_ICONS: Record<string, any> = {
+export const LOCATION_ICONS: Record<string, IconConfig> = {
     // Rooms & Spaces
     'Home': { icon: Home, color: 'text-blue-500', bg: 'bg-blue-50' },
     'Room': { icon: Sofa, color: 'text-indigo-500', bg: 'bg-indigo-50' },

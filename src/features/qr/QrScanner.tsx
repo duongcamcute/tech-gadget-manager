@@ -14,7 +14,6 @@ interface QrScannerProps {
 export function QrScanner({ onScan, onClose }: QrScannerProps) {
     const [isScanning, setIsScanning] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [hasPermission, setHasPermission] = useState<boolean | null>(null);
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -43,12 +42,10 @@ export function QrScanner({ onScan, onClose }: QrScannerProps) {
                     // Error callback (ignore - continuous scanning)
                 }
             );
-            setHasPermission(true);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Scanner error:", err);
             setIsScanning(false);
-            if (err.toString().includes("Permission")) {
-                setHasPermission(false);
+            if (String(err).includes("Permission")) {
                 setError("Vui lòng cho phép truy cập camera để quét QR");
             } else {
                 setError("Không thể khởi động camera. Vui lòng thử lại.");
@@ -108,10 +105,15 @@ export function QrScanner({ onScan, onClose }: QrScannerProps) {
     };
 
     useEffect(() => {
-        startScanner();
+        // Start scanner on mount
+        const initScanner = async () => {
+            await startScanner();
+        };
+        initScanner();
         return () => {
             stopScanner();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

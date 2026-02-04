@@ -63,7 +63,7 @@ if (typeof window !== 'undefined') {
             if (state?.mode) {
                 applyTheme(state.mode);
             }
-        } catch (e) {
+        } catch {
             // Ignore parse errors, apply default
             applyTheme('light');
         }

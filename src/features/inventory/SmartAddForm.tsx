@@ -566,13 +566,13 @@ export function SmartAddForm({ locations, onSuccess }: SmartAddFormProps) {
                                                             form.watch("locationId") === loc.id ? "opacity-100" : "opacity-0"
                                                         )}
                                                     />
-                                                    <div style={{ marginLeft: loc.level * 16 }} className="flex items-center gap-2 truncate">
+                                                    <div style={{ marginLeft: (loc.level || 0) * 16 }} className="flex items-center gap-2 truncate">
                                                         {(() => {
-                                                            if (loc.icon) {
+                                                            if (loc.icon && typeof loc.icon === 'string') {
                                                                 const { icon: Icon, color } = LOCATION_ICONS[loc.icon] || LOCATION_ICONS['default'] || ITEM_ICONS['default'];
                                                                 return <Icon size={14} className={color} />;
                                                             }
-                                                            return <span>{loc.type === 'Container' ? '📦' : loc.type === 'Person' ? '👤' : '🏠'}</span>
+                                                            return <span>{loc.type === 'Container' ? '📦' : loc.type === 'Person' ? '👤' : '🏠'}</span>;
                                                         })()}
                                                         {loc.name}
                                                     </div>

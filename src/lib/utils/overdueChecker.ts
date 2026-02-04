@@ -2,8 +2,6 @@
  * Utility functions for checking overdue lending items
  */
 
-import { LendingRecord } from '@prisma/client';
-
 export interface OverdueInfo {
     isOverdue: boolean;
     daysOverdue: number;

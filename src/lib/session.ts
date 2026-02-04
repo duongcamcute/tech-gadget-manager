@@ -43,7 +43,7 @@ export async function verifySession(token: string) {
             algorithms: ['HS256'],
         });
         return payload as unknown as SessionPayload;
-    } catch (error) {
+    } catch {
         return null;
     }
 }
