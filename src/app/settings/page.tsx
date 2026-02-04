@@ -712,6 +712,38 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
 
+                                    {/* Default View Mode */}
+                                    <div className="space-y-4 pt-6 border-t border-gray-100">
+                                        <Label className="text-base font-semibold">Chế độ xem mặc định (Kho đồ)</Label>
+                                        <p className="text-xs text-muted-foreground -mt-2">Chọn cách hiển thị thiết bị mặc định khi mở trang Kho đồ</p>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {[
+                                                { value: 'grid', label: 'Lưới', icon: '🔲', desc: 'Icon thiết bị' },
+                                                { value: 'grid-thumb', label: 'Thumbnail', icon: '🖼️', desc: 'Ảnh thu nhỏ' },
+                                                { value: 'list', label: 'Danh sách', icon: '📋', desc: 'Chi tiết hàng' },
+                                            ].map(mode => {
+                                                const savedMode = typeof window !== 'undefined' ? localStorage.getItem('defaultViewMode') : 'grid';
+                                                const isActive = savedMode === mode.value || (!savedMode && mode.value === 'grid');
+                                                return (
+                                                    <button
+                                                        key={mode.value}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            localStorage.setItem('defaultViewMode', mode.value);
+                                                            toast(`Đã đặt chế độ xem mặc định: ${mode.label}`, 'success');
+                                                        }}
+                                                        className={`p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${isActive ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                                                    >
+                                                        <span className="text-2xl block mb-1">{mode.icon}</span>
+                                                        <span className={`font-semibold text-sm ${isActive ? 'text-primary-700' : 'text-gray-700'}`}>{mode.label}</span>
+                                                        <span className="text-[10px] text-gray-400 block">{mode.desc}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className="text-[10px] text-gray-400">💡 Tip: Khi F5 trang Kho đồ sẽ tự động hiển thị theo chế độ bạn chọn ở đây.</p>
+                                    </div>
+
                                     <div className="flex justify-end pt-4 border-t border-gray-100">
                                         <Button onClick={handleSaveTheme} disabled={loading} className="bg-gray-900 hover:bg-black text-white px-8 rounded-xl">
                                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -74,6 +74,23 @@ export default function InventoryManager({ initialItems, locations }: { initialI
     const searchParams = useSearchParams(); // Added useSearchParams
     const { toast } = useToast();
 
+    // Load default view mode from localStorage
+    useEffect(() => {
+        const savedMode = localStorage.getItem('defaultViewMode');
+        if (savedMode) {
+            if (savedMode === 'grid') {
+                setViewMode('grid');
+                setShowThumbnails(false);
+            } else if (savedMode === 'grid-thumb') {
+                setViewMode('grid');
+                setShowThumbnails(true);
+            } else if (savedMode === 'list') {
+                setViewMode('list');
+                setShowThumbnails(false);
+            }
+        }
+    }, []);
+
     // Auto-open Item Detail from URL
     useEffect(() => {
         const itemId = searchParams.get("item");
@@ -553,9 +570,19 @@ export default function InventoryManager({ initialItems, locations }: { initialI
                                             <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 line-clamp-2 leading-tight mb-2" title={item.name}>{item.name}</h3>
 
                                             <div className="flex flex-wrap gap-1">
-                                                {specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] text-orange-700 border border-orange-100 font-medium whitespace-nowrap" title="Công suất">⚡ {specs.power}</span>}
-                                                {specs.length && <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] text-emerald-700 border border-emerald-100 font-medium whitespace-nowrap" title="Độ dài">📏 {specs.length}</span>}
-                                                {specs.capacity && <span className="bg-purple-50 px-1.5 py-0.5 rounded text-[10px] text-purple-700 border border-purple-100 font-medium whitespace-nowrap" title="Dung lượng">🔋 {specs.capacity}</span>}
+                                                {/* Check displayBadges array - if exists only show selected, else show all */}
+                                                {(() => {
+                                                    const badges = specs.displayBadges || ['power', 'length', 'capacity']; // default show all
+                                                    return (
+                                                        <>
+                                                            {badges.includes('power') && specs.power && <span className="bg-orange-50 px-1.5 py-0.5 rounded text-[10px] text-orange-700 border border-orange-100 font-medium whitespace-nowrap" title="Công suất">⚡ {specs.power}</span>}
+                                                            {badges.includes('length') && specs.length && <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] text-emerald-700 border border-emerald-100 font-medium whitespace-nowrap" title="Độ dài">📏 {specs.length}</span>}
+                                                            {badges.includes('capacity') && specs.capacity && <span className="bg-purple-50 px-1.5 py-0.5 rounded text-[10px] text-purple-700 border border-purple-100 font-medium whitespace-nowrap" title="Dung lượng">🔋 {specs.capacity}</span>}
+                                                            {badges.includes('interface') && specs.interface && <span className="bg-blue-50 px-1.5 py-0.5 rounded text-[10px] text-blue-700 border border-blue-100 font-medium whitespace-nowrap" title="Kết nối">🔌 {specs.interface}</span>}
+                                                            {badges.includes('bandwidth') && specs.bandwidth && <span className="bg-cyan-50 px-1.5 py-0.5 rounded text-[10px] text-cyan-700 border border-cyan-100 font-medium whitespace-nowrap" title="Tốc độ">⚡ {specs.bandwidth}</span>}
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
 

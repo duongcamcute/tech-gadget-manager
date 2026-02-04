@@ -713,7 +713,7 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                                 {(() => {
                                     const currentSpecs = form.watch("specs") || {};
                                     // Filter out null/undefined values to avoid display issues
-                                    const entries = Object.entries(currentSpecs).filter(([_, v]) => v !== null && v !== undefined);
+                                    const entries = Object.entries(currentSpecs).filter(([k, v]) => v !== null && v !== undefined && k !== 'displayBadges');
 
                                     const updateSpec = (key: string, val: string) => {
                                         const newSpecs = { ...currentSpecs, [key]: val };
@@ -749,6 +749,60 @@ function EditMode({ item, locations, onCancel, onClose }: { item: any, locations
                                                 onAdd={(key, val) => updateSpec(key, val)}
                                             />
                                         </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+
+                        {/* Display Badges Selection */}
+                        <div className="col-span-2 space-y-2">
+                            <Label className="flex items-center gap-2">
+                                Hiển thị trên Card
+                                <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">Badge</span>
+                            </Label>
+                            <p className="text-[10px] text-gray-500 -mt-1">Chọn thông số sẽ hiển thị dưới dạng badge trên card của thiết bị</p>
+                            <div className="bg-gradient-to-r from-orange-50 to-emerald-50 rounded-lg p-3 border border-orange-200/50">
+                                {(() => {
+                                    const currentSpecs = form.watch("specs") || {};
+                                    const displayBadges: string[] = currentSpecs.displayBadges || ['power', 'length', 'capacity'];
+                                    const allBadgeOptions = [
+                                        { key: 'power', label: 'Công suất', icon: '⚡', color: 'bg-orange-100 border-orange-200 text-orange-700' },
+                                        { key: 'length', label: 'Độ dài', icon: '📏', color: 'bg-emerald-100 border-emerald-200 text-emerald-700' },
+                                        { key: 'capacity', label: 'Dung lượng', icon: '🔋', color: 'bg-purple-100 border-purple-200 text-purple-700' },
+                                        { key: 'interface', label: 'Kết nối', icon: '🔌', color: 'bg-blue-100 border-blue-200 text-blue-700' },
+                                        { key: 'bandwidth', label: 'Tốc độ', icon: '⚡', color: 'bg-cyan-100 border-cyan-200 text-cyan-700' },
+                                    ];
+
+                                    const toggleBadge = (key: string) => {
+                                        let newBadges = [...displayBadges];
+                                        if (newBadges.includes(key)) {
+                                            newBadges = newBadges.filter(b => b !== key);
+                                        } else {
+                                            newBadges.push(key);
+                                        }
+                                        form.setValue("specs", { ...currentSpecs, displayBadges: newBadges }, { shouldDirty: true });
+                                    };
+
+                                    return (
+                                        <div className="flex flex-wrap gap-2">
+                                            {allBadgeOptions.map(opt => {
+                                                const isChecked = displayBadges.includes(opt.key);
+                                                const hasValue = currentSpecs[opt.key];
+                                                return (
+                                                    <button
+                                                        key={opt.key}
+                                                        type="button"
+                                                        onClick={() => toggleBadge(opt.key)}
+                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all text-xs font-medium ${isChecked ? opt.color + ' shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'} ${!hasValue ? 'opacity-50' : ''}`}
+                                                        title={hasValue ? `${opt.label}: ${currentSpecs[opt.key]}` : `Chưa có ${opt.label}`}
+                                                    >
+                                                        <span>{opt.icon}</span>
+                                                        <span>{opt.label}</span>
+                                                        {isChecked && <Check size={12} className="ml-1" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     );
                                 })()}
                             </div>
